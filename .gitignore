@@ -1,0 +1,15 @@
+*
+!*/
+**/src
+
+!/.gitignore
+!/.gitmodules
+
+!/.profile
+!/.bashrc
+!/.bash_logout
+!/.bash_colors.d/*
+!/.dircolors.d/*
+
+!/.vimrc
+!/.vim/bundle/Vundle.vim

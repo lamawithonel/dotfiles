@@ -1,0 +1,56 @@
+#----------------------------------------------------------------------
+# This file defines the default bash(1) color theme.  It consists of
+# several function, _tput_COLOR, each containing a tput(1) command to
+# set the foreground color.
+#
+# NOTE: If you are are adapting this framework to a theme, try to keep
+# the colors to the core 16-color set using the following names:
+#
+#	BRWHITE, LGRAY, DGRAY, BLACK
+#	RED, BRRED, GREEN, RGREEN, MAGENTA, BRMAGENTA, CYAN, BRCYAN,
+#	BRYELLOW, ORANGE, BLUE, VIOLET
+#
+
+# Basic properties
+function __tput_BOLD()		{ tput bold }
+function __tput_RESET()		{ tput sgr0 }
+
+# The core ANSI colors hard-coded to their primary values.
+function __tput_BLACK()		{ tput sgr0; tput setaf 0 '' ''	}
+function __tput_RED()		{ tput sgr0; tput setaf 1 '' ''	}
+function __tput_GREEN()		{ tput sgr0; tput setaf 2 '' ''	}
+function __tput_YELLOW()	{ tput sgr0; tput setaf 3 '' ''	}
+function __tput_BLUE()		{ tput sgr0; tput setaf 4 '' ''	}
+function __tput_MAGENTA()	{ tput sgr0; tput setaf 5 '' ''	}
+function __tput_CYAN()		{ tput sgr0; tput setaf 6 '' ''	}
+function __tput_WHITE()		{ tput sgr0; tput setaf 7 '' ''	}
+
+# The core ANSI colors hard-coded to their secondary values,
+# usually called "bright"
+function __tput_BRBLACK()	{ tput bold; tput setaf 0 '' ''	}
+function __tput_BRRED()		{ tput bold; tput setaf 1 '' ''	}
+function __tput_BRGREEN()	{ tput bold; tput setaf 2 '' ''	}
+function __tput_BRYELLOW()	{ tput bold; tput setaf 3 '' ''	}
+function __tput_BRBLUE()	{ tput bold; tput setaf 4 '' ''	}
+function __tput_BRMAGENTA()	{ tput bold; tput setaf 5 '' ''	}
+function __tput_BRCYAN()	{ tput bold; tput setaf 6 '' ''	}
+function __tput_BRWHITE()	{ tput bold; tput setaf 7 '' ''	}
+
+# A few aliases for the ambiguously named colors
+function __tput_ORANGE()	{ tput sgr0; tput setaf 3 '' ''	}
+function __tput_LGRAY()		{ tput sgr0; tput setaf 7 '' ''	}
+function __tput_DGRAY()		{ tput bold; tput setaf 0 '' ''	}
+function __tput_VIOLET()	{ tput bold; tput setaf 4 '' ''	}
+
+# A few names for theming, useful if you want to set multiple shades of
+# of a single color.
+function __tput_BASE03()	{ tput sgr0; tput setaf 0 '' ''	}
+function __tput_BASE02()	{ tput sgr0; tput setaf 0 '' ''	}
+function __tput_BASE01()	{ tput bold; tput setaf 7 '' ''	}
+function __tput_BASE00()	{ tput bold; tput setaf 7 '' ''	}
+function __tput_BASE0()		{ tput bold; tput setaf 0 '' ''	}
+function __tput_BASE1()		{ tput sgr0; tput setaf 7 '' ''	}
+function __tput_BASE2()		{ tput sgr0; tput setaf 7 '' ''	}
+function __tput_BASE3()		{ tput sgr0; tput setaf 7 '' ''	}
+
+# vi:ts=4:sw=4:noexpandtab:tw=72:ft=sh
