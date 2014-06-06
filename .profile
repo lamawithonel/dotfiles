@@ -23,7 +23,7 @@ else
 fi
 
 # Add the private /bin directory to $PATH
-if [ -d "${HOME}/bin" ]; then
+if [ -d "${HOME}/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/bin" 2>&1); then
 	PATH="${HOME}/bin:${PATH}"
 fi
 
