@@ -30,14 +30,19 @@ fi
 # Setup the gnupg environment
 if [ -f "${HOME}/.gpg-agent-info" ]; then
 	ps xao pid | grep $(sed -n -e 's/^.*gpg-agent:\([[:digit:]]*\).*$/\1/p' ~/.gpg-agent-info) > /dev/null ; agent_status=$?
-	if [ "${agent_status}" -eq '0' ]; then
-		. "${HOME}/.gpg-agent-info"
-		export GPG_AGENT_INFO
-		export SSH_AUTH_SOCK
-		export SSH_AGENT_PID
-	elif which gpg-agent >/dev/null 2>&1; then
-		$(gpg-agent --daemon --enable-ssh-support --write-env-file "${HOME}/.gpg-agent-info")
-	fi
+fi
+
+if [ "${agent_status}" = '0' ]; then
+	. "${HOME}/.gpg-agent-info"
+	export GPG_AGENT_INFO
+	export SSH_AUTH_SOCK
+	export SSH_AGENT_PID
+elif which gpg-agent >/dev/null 2>&1; then
+	gpg-agent --daemon --enable-ssh-support --write-env-file "${HOME}/.gpg-agent-info" > /dev/null
+	. "${HOME}/.gpg-agent-info"
+	export GPG_AGENT_INFO
+	export SSH_AUTH_SOCK
+	export SSH_AGENT_PID
 fi
 unset agent_status
 
