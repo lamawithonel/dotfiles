@@ -16,7 +16,7 @@ fi
 # The defult umask is set in /etc/profile or using pam_umask(8), but we
 # set it here, too, to ensure a secure default.  You can change it if you
 # want.
-if [ "$(id -ru)" -gt 999 ] && [ "$(id -gn)" = "$(id -un)" ]; then
+if [ $(id -ru) -gt 999 ] && [ "$(id -gn)" = "$(id -un)" ]; then
 	umask 0027
 else
 	umask 0022
