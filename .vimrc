@@ -72,6 +72,7 @@
     syntax enable
     filetype plugin on
     filetype indent on
+    set backspace=indent,eol,start
     set ts=4
     set sw=4
     set history=256
