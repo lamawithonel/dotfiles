@@ -185,18 +185,14 @@ if [ "$fancy_prompt" = 'Y' ]; then
 		EXIT="$?"
 		# }}}
 
-		# {{{ Start with a clean slate
-		PS1=""
-		# }}}
-
 		# {{{ Command number & status
 		#
 		# This portion prints the bash command sequence number, coloring
 		# the output based on the exit status of the last command.
 		if [ $EXIT -eq 0 ]; then
-			PS1+="\[$(__tput_GREEN)\][\!]\[$(__tput_RESET)\] "
+			PS1="\[$(__tput_GREEN)\][\!]\[$(__tput_RESET)\] "
 		else
-			PS1+="\[$(__tput_RED)\][\!]\[$(__tput_RESET)\] "
+			PS1="\[$(__tput_RED)\][\!]\[$(__tput_RESET)\] "
 		fi
 		# }}} Command number & status
 
@@ -241,7 +237,7 @@ if [ "$fancy_prompt" = 'Y' ]; then
 		# this portion will print the working branch name, colored based on
 		# the commit status.
 		#
-		if [ $? -eq 0 ] && which git >/dev/null 2>&1; then
+		if which git >/dev/null 2>&1; then
 			local git_status="$(git status -unormal 2>&1)"
 			if ! [[ "$git_status" =~ Not\ a\ git\ repo ]]; then
 				# parse the porcelain output of git status
