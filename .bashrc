@@ -87,8 +87,12 @@ shopt -s checkwinsize
 # Priveledged users should never enable this, because it opens up the
 # shell to command injection attacks.
 
-if [ -f /etc/bash_completion ] && ! shopt -oq posix && [ ${EUID} -ne 0 ]; then
-	. /etc/bash_completion
+if ! shopt -oq posix && [ ${EUID} -ne 0 ]; then
+	if [ -f /etc/bash_completion ]; then
+		. /etc/bash_completion
+	elif [ -f /etc/profile.d/bash-completion.sh ]; then
+		. /etc/profile.d/bash-completion.sh
+	fi
 fi
 # }}} Bash Completion
 
