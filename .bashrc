@@ -257,7 +257,7 @@ if [ "$fancy_prompt" = 'Y' ]; then
 
 		# {{{ Prompt character
 		# (# for root, $ for everybody else)
-		PS1+="\$ "
+		PS1+='\$ '
 		# }}}
 	}
 
