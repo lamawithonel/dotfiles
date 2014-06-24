@@ -87,8 +87,12 @@ shopt -s checkwinsize
 # Priveledged users should never enable this, because it opens up the
 # shell to command injection attacks.
 
-if [ -f /etc/bash_completion ] && ! shopt -oq posix && [ ${EUID} -ne 0 ]; then
-	. /etc/bash_completion
+if ! shopt -oq posix && [ ${EUID} -ne 0 ]; then
+	if [ -f /etc/bash_completion ]; then
+		. /etc/bash_completion
+	elif [ -f /etc/profile.d/bash-completion.sh ]; then
+		. /etc/profile.d/bash-completion.sh
+	fi
 fi
 # }}} Bash Completion
 
@@ -117,11 +121,23 @@ if [ "$colorful_prompt" = 'Y' -o "$colorful_commands" = 'Y' ] || [ "$fancy_promp
 
 		# dircolors(1)
 		if [ -f ~/.dircolors.d/${dircolors_theme} ]; then
-			eval $(dircolors ~/.dircolors.d/${dircolors_theme})
+			if [ -x /usr/local/bin/gdircolors ]; then
+				eval $(gdircolors ~/.dircolors.d/${dircolors_theme})
+			else
+				eval $(dircolors ~/.dircolors.d/${dircolors_theme})
+			fi
 		elif [ $tput_colors -ge 256 ] && [ -f ~/.dircolors.d/default.256color ]; then
-			eval $(dircolors ~/.dircolors.d/default.256color)
+			if [ -x /usr/local/bin/gdircolors ]; then
+				eval $(gdircolors ~/.dircolors.d/default.256color)
+			else
+				eval $(dircolors ~/.dircolors.d/default.256color)
+			fi
 		elif [ -f ~/.dircolors.d/default ]; then
-			eval $(dircolors ~/.dircolors.d/default)
+			if [ -x /usr/local/bin/gdircolors ]; then
+				eval $(gdircolors ~/.dircolors.d/default)
+			else
+				eval $(dircolors ~/.dircolors.d/default)
+			fi
 		fi
 	fi
 else
@@ -173,18 +189,14 @@ if [ "$fancy_prompt" = 'Y' ]; then
 		EXIT="$?"
 		# }}}
 
-		# {{{ Start with a clean slate
-		PS1=""
-		# }}}
-
 		# {{{ Command number & status
 		#
 		# This portion prints the bash command sequence number, coloring
 		# the output based on the exit status of the last command.
 		if [ $EXIT -eq 0 ]; then
-			PS1+="\[$(__tput_GREEN)\][\!]\[$(__tput_RESET)\] "
+			PS1="\[$(__tput_GREEN)\][\!]\[$(__tput_RESET)\] "
 		else
-			PS1+="\[$(__tput_RED)\][\!]\[$(__tput_RESET)\] "
+			PS1="\[$(__tput_RED)\][\!]\[$(__tput_RESET)\] "
 		fi
 		# }}} Command number & status
 
@@ -229,8 +241,7 @@ if [ "$fancy_prompt" = 'Y' ]; then
 		# this portion will print the working branch name, colored based on
 		# the commit status.
 		#
-		local git_bin=$(which git 2>/dev/null)
-		if [ $? -eq 0 ] && [ -x "$git_bin" ]; then
+		if which git >/dev/null 2>&1; then
 			local git_status="$(git status -unormal 2>&1)"
 			if ! [[ "$git_status" =~ Not\ a\ git\ repo ]]; then
 				# parse the porcelain output of git status
@@ -299,10 +310,10 @@ if [ "$colorful_commands" = 'Y' -a $tput_colors -ge 4 ]; then
 
 	# Enable color support in ls(1) and add a few handy aliases
 	if [ -x '/usr/local/bin/gls' ]; then
-		alias ls='ls -F --color=auto'
-		alias ll='ls -lF --color=auto'
-		alias la='ls -alF --color=auto'
-		alias l='ls -CF --color=auto'
+		alias ls='gls -F --color=auto'
+		alias ll='gls -lF --color=auto'
+		alias la='gls -alF --color=auto'
+		alias l='gls -CF --color=auto'
 	else
 		alias ls='ls -F --color=auto'
 		alias ll='ls -lF --color=auto'
