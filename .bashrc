@@ -326,12 +326,31 @@ else
 	alias la='ls -A'
 	alias l='ls -CF'
 fi
-
-# Source an un-tracked aliases file for private and per-machine commands
-if [ -f ~/.bash_aliases ]; then
-	. ~/.bash_aliases
-fi
 # }}} Functions & Aliases
+
+# {{{ Misc. Environment Variables
+
+# gpg-agent(1)
+GPG_TTY=$(tty)
+
+# Define a few finite-length POSIX.1 EREs
+#
+# IPv4 addresses
+IPv4_ADDRESS='(([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})\.){3}([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})'
+# IPv4 CIDR subnet notation
+IPv4_SUBNET="${IPv4_ADDRESS}(\/[[:digit:]]{1,2})?"
+# hostnames
+HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
+
+export GPG_TTY IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
+# }}} Misc. Environment Variables
+
+# {{{ Local Additions
+# Source an un-tracked file for private and per-machine commands
+if [ -f ~/.bash.local ]; then
+	. ~/.bash.local
+fi
+# }}} Local Additions
 
 # {{{ $PATH Print
 #
