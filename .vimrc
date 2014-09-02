@@ -11,9 +11,8 @@
         " Plugins
         " -------
         Plugin 'altercation/vim-colors-solarized'
-        Plugin 'nvie/vim-flake8'
-        Plugin 'godlygeek/tabular'
         Plugin 'scrooloose/syntastic'
+        Plugin 'godlygeek/tabular'
         Plugin 'rodjek/vim-puppet'
     call vundle#end()
     filetype plugin indent on
