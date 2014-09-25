@@ -83,6 +83,11 @@
     au FileType ruby   setl sw=2 sts=2 et
     au FileType vim    setl sw=4 sts=4 et
 
+    " Syntastic settings
+    " ------------------
+    let g:syntastic_puppet_checkers = ['puppet', 'puppetlint']
+    let g:syntastic_yaml_checkers   = ['yamlxs']
+
     " Theming
     " -------
     set background=dark
