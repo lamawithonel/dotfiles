@@ -34,17 +34,9 @@ fi
 
 if [ "${agent_status}" = '0' ]; then
 	. "${HOME}/.gpg-agent-info"
-	export GPG_AGENT_INFO
-	export SSH_AUTH_SOCK
-	export SSH_AGENT_PID
+	export GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID
 elif which gpg-agent >/dev/null 2>&1; then
-	gpg-agent --daemon --enable-ssh-support --write-env-file "${HOME}/.gpg-agent-info" > /dev/null
-	. "${HOME}/.gpg-agent-info"
-	export GPG_AGENT_INFO
-	export SSH_AUTH_SOCK
-	export SSH_AGENT_PID
+	eval $(gpg-agent --daemon --enable-ssh-support --write-env-file "${HOME}/.gpg-agent-info")
+	export GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID
 fi
 unset agent_status
-
-
-
