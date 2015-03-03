@@ -12,6 +12,8 @@
         " -------
         Plugin 'altercation/vim-colors-solarized'
         Plugin 'scrooloose/syntastic'
+        Plugin 'ynkdir/vim-vimlparser'
+        Plugin 'syngan/vim-vimlint'
         Plugin 'godlygeek/tabular'
         Plugin 'rodjek/vim-puppet'
     call vundle#end()
