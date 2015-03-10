@@ -79,6 +79,10 @@
     set history=256
     set viminfo='256,\"1024
 
+    " File type detection
+    " -------------------
+    au BufNewFile,BufRead *.markdown,*.mdown,*.mkd,*.mkdn,*.mdwn,*.md set ft=markdown
+
     " Per file type indentation
     " -------------------------
     au FileType python setl sw=4 sts=4 et
