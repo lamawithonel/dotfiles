@@ -118,9 +118,13 @@
         autocmd BufWinEnter * let w:m2=matchadd('ColumnWarn3', '\%121v.\+', -1)
     augroup END
 
-    " Test Pattern
-    " ------------
+    " Column warning test pattern
+    " ---------------------------
     "    10........20        30........40        50........60          72......80        90........100       110.......120......130       140
+
+    " Per file type column warning exemptions
+    " ---------------------------------------
+    au FileType pf autocmd! ColumnWarn
 
     " Trailing space warnings
     " -----------------------
