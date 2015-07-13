@@ -139,6 +139,13 @@ if [ "$colorful_prompt" = 'Y' -o "$colorful_commands" = 'Y' ] || [ "$fancy_promp
 				eval $(dircolors ~/.dircolors.d/default)
 			fi
 		fi
+	else
+		function __tput_GREEN  { return; }
+		function __tput_RESET  { return; }
+		function __tput_YELLOW { return; }
+		function __tput_RESET  { return; }
+		function __tput_RED    { return; }
+		function __tput_RESET  { return; }
 	fi
 else
 	tput_colors=1
