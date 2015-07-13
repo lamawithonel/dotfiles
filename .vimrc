@@ -91,6 +91,7 @@
 
     " Syntastic settings
     " ------------------
+    let g:syntastic_css_checkers      = ['phpcs']
     let g:syntastic_markdown_checkers = ['mdl']
     let g:syntastic_puppet_checkers   = ['puppet', 'puppetlint']
     let g:syntastic_python_checkers   = ['flake8']
