@@ -113,10 +113,10 @@ if [ "$colorful_prompt" = 'Y' -o "$colorful_commands" = 'Y' ] || [ "$fancy_promp
 	if [ $tput_colors -ge 8 ]; then
 
 		# __tput_COLOR function theming
-		if [ "$color_theme" != "default" ]; then
-			. ${HOME}/.bash_colors.d/${color_theme}
+		if [ -f ~/.bash_colors.d/${color_theme} ]; then
+			. ~/.bash_colors.d/${color_theme}
 		else
-			. ${HOME}/.bash_colors.d/default
+			. ~/.bash_colors.d/default
 		fi
 
 		# dircolors(1)
