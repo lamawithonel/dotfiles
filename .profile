@@ -22,10 +22,20 @@ else
 	umask 0022
 fi
 
+# Add RVM to PATH for scripting
+if [ -d "${HOME}/.rvm/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/\.rvm/bin" 2>&1); then
+	PATH="${HOME}/.rvm/bin:${PATH}"
+fi
+
 # Add the private /bin directory to $PATH
 if [ -d "${HOME}/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/bin" 2>&1); then
 	PATH="${HOME}/bin:${PATH}"
 fi
+
+export PATH
+
+# Load RVM into a shell session *as a function*
+[ -s "${HOME}/.rvm/scripts/rvm" ] && . "${HOME}/.rvm/scripts/rvm"
 
 # Setup the gnupg environment
 if [ -f "${HOME}/.gpg-agent-info" ]; then
