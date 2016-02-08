@@ -79,6 +79,13 @@
     set history=256
     set viminfo='256,\"1024
 
+    set colorcolumn=72,80,140
+
+    " Column test pattern
+    " ---------------------------
+    "    10........20        30........40        50........60          72......80        90........100       110.......120       130...... 140
+    "    |         |         |         |         |         |           |       |         |         |         |         |         |         |
+
     " File type detection
     " -------------------
     au BufNewFile,BufRead *.markdown,*.mdown,*.mkd,*.mkdn,*.mdwn,*.md set ft=markdown
@@ -107,24 +114,6 @@
     let g:solarized_termcolors=256
     let g:solarized_hitrail=1
 
-    " Column warnings
-    " ---------------
-    augroup ColumnWarn
-        hi ColumnWarn1 ctermbg=0 guibg=#073642
-        hi ColumnWarn2 ctermbg=0 guibg=#073642 ctermfg=245 guifg=#93a1a1
-        hi ColumnWarn3 ctermbg=0 guibg=#073642 ctermfg=166 guifg=#cb4b16
-        autocmd BufWinEnter * let w:m2=matchadd('ColumnWarn1', '\%73v.\+', -1)
-        autocmd BufWinEnter * let w:m2=matchadd('ColumnWarn2', '\%81v.\+', -1)
-        autocmd BufWinEnter * let w:m2=matchadd('ColumnWarn3', '\%121v.\+', -1)
-    augroup END
-
-    " Column warning test pattern
-    " ---------------------------
-    "    10........20        30........40        50........60          72......80        90........100       110.......120......130       140
-
-    " Per file type column warning exemptions
-    " ---------------------------------------
-    au FileType pf autocmd! ColumnWarn
 
     " Trailing space warnings
     " -----------------------
