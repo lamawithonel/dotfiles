@@ -343,15 +343,33 @@ fi
 
 if [ "${gpg_agent_status}" = '0' ]; then
 	. "${HOME}/.gpg-agent-info"
-	export GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID
+	export GPG_AGENT_INFO
 elif which gpg-agent >/dev/null 2>&1; then
-	eval $(gpg-agent --daemon --enable-ssh-support --write-env-file "${HOME}/.gpg-agent-info")
-	export GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID
+	eval $(gpg-agent --daemon --write-env-file "${HOME}/.gpg-agent-info")
+	export GPG_AGENT_INFO
 fi
 
 GPG_TTY=$(tty)
 
 # }}} Setup gpg-agent(1)
+
+# {{{ Setup ssh-agent(1)
+
+if [ -x "$(which ssh-agent)" ]; then
+	function ssh_agent_status() {
+		ps -Ao uid,pid,comm | grep -q "^${UID} ${SSH_AGENT_PID} ssh-agent$"
+		return $?
+	}
+
+	if [ ! -S "${SSH_AUTH_SOCK}" ] || ! ssh_agent_status; then
+		[ -f "${HOME}/.ssh-agent-info" ] && . "${HOME}/.ssh-agent-info"
+		if [ ! -S "${SSH_AUTH_SOCK}" ] || ! ssh_agent_status; then
+			eval $(ssh-agent | head -n 2 | tee "${HOME}/.ssh-agent-info")
+		fi
+	fi
+fi
+
+# }}} Setup ssh-agent(1)
 
 # {{{ Misc. Environment Variables
 
