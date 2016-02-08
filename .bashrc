@@ -335,10 +335,26 @@ else
 fi
 # }}} Functions & Aliases
 
+# {{{ Setup gpg-agent(1)
+
+if [ -f "${HOME}/.gpg-agent-info" ]; then
+	ps xao pid | grep $(sed -n -e 's/^.*gpg-agent:\([[:digit:]]*\).*$/\1/p' ~/.gpg-agent-info) > /dev/null ; gpg_agent_status=$?
+fi
+
+if [ "${gpg_agent_status}" = '0' ]; then
+	. "${HOME}/.gpg-agent-info"
+	export GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID
+elif which gpg-agent >/dev/null 2>&1; then
+	eval $(gpg-agent --daemon --enable-ssh-support --write-env-file "${HOME}/.gpg-agent-info")
+	export GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID
+fi
+
+GPG_TTY=$(tty)
+
+# }}} Setup gpg-agent(1)
+
 # {{{ Misc. Environment Variables
 
-# gpg-agent(1)
-GPG_TTY=$(tty)
 
 # Define a few finite-length POSIX.1 EREs
 #
@@ -372,7 +388,7 @@ fi
 # }}} $PATH Print
 
 # {{{ Cleanup
-unset INTERACTIVE colorful_commands colorful_prompt fancy_prompt
+unset INTERACTIVE colorful_commands colorful_prompt fancy_prompt gpg_agent_status
 # }}} Cleanup
 
 # }}} (statements)

@@ -36,17 +36,3 @@ export PATH
 
 # Load RVM into a shell session *as a function*
 [ -s "${HOME}/.rvm/scripts/rvm" ] && . "${HOME}/.rvm/scripts/rvm"
-
-# Setup the gnupg environment
-if [ -f "${HOME}/.gpg-agent-info" ]; then
-	ps xao pid | grep $(sed -n -e 's/^.*gpg-agent:\([[:digit:]]*\).*$/\1/p' ~/.gpg-agent-info) > /dev/null ; agent_status=$?
-fi
-
-if [ "${agent_status}" = '0' ]; then
-	. "${HOME}/.gpg-agent-info"
-	export GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID
-elif which gpg-agent >/dev/null 2>&1; then
-	eval $(gpg-agent --daemon --enable-ssh-support --write-env-file "${HOME}/.gpg-agent-info")
-	export GPG_AGENT_INFO SSH_AUTH_SOCK SSH_AGENT_PID
-fi
-unset agent_status
