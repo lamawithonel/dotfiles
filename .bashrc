@@ -337,19 +337,25 @@ fi
 
 # {{{ Setup gpg-agent(1)
 
-if [ -f "${HOME}/.gpg-agent-info" ]; then
-	ps xao pid | grep $(sed -n -e 's/^.*gpg-agent:\([[:digit:]]*\).*$/\1/p' ~/.gpg-agent-info) > /dev/null ; gpg_agent_status=$?
-fi
+if [ -x "$(which gpg-agent)" ]; then
+	function gpg_agent_status() {
+		ps -Ao uid,pid,comm | grep -q "^${UID} ${GPG_AGENT_PID} gpg-agent$"
+		return $?
+	}
 
-if [ "${gpg_agent_status}" = '0' ]; then
-	. "${HOME}/.gpg-agent-info"
-	export GPG_AGENT_INFO
-elif which gpg-agent >/dev/null 2>&1; then
-	eval $(gpg-agent --daemon --write-env-file "${HOME}/.gpg-agent-info")
-	export GPG_AGENT_INFO
-fi
+	GPG_AGENT_PID=$(echo "${GPG_AGENT_INFO}" | cut -f2 -d:); export GPG_AGENT_PID
+	if ! gpg_agent_status; then
+		[ -f "${HOME}/.gpg-agent-info" ] && . "${HOME}/.gpg-agent-info"
+		export GPG_AGENT_INFO
+		GPG_AGENT_PID=$(echo "${GPG_AGENT_INFO}" | cut -f2 -d:); export GPG_AGENT_PID
+		if ! gpg_agent_status ]; then
+			eval $(gpg-agent --daemon --write-env-file "${HOME}/.gpg-agent-info")
+			GPG_AGENT_PID=$(echo "${GPG_AGENT_INFO}" | cut -f2 -d:); export GPG_AGENT_PID
+		fi
+	fi
 
-GPG_TTY=$(tty)
+	GPG_TTY=$(tty); export GPG_TTY
+fi
 
 # }}} Setup gpg-agent(1)
 
@@ -424,7 +430,8 @@ fi
 # }}} RVM
 
 # {{{ Cleanup
-unset INTERACTIVE colorful_commands colorful_prompt fancy_prompt gpg_agent_status
+unset INTERACTIVE colorful_commands colorful_prompt fancy_prompt
+unset -f gpg_agent_status ssh_agent_status
 # }}} Cleanup
 
 # }}} (statements)
