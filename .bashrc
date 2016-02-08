@@ -375,17 +375,35 @@ if [ -f ~/.bash.local ]; then
 fi
 # }}} Local Additions
 
-# {{{ $PATH Print
-#
-# This last step prints  the all-important $PATH variable for manual
-# verification.
+# {{{ $PATH Setup
 
+# Add the private /bin directory to $PATH
+if [ -d "${HOME}/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/bin" 2>&1); then
+	PATH="${HOME}/bin:${PATH}"
+fi
+
+# Add RVM to $PATH (must be first in the order or rvm(1) wll throw an error)
+if [ -d "${HOME}/.rvm/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/\.rvm/bin" 2>&1); then
+	PATH="${HOME}/.rvm/bin:${PATH}"
+fi
+
+export PATH
+
+# Print $PATH for manual verification
 if [ "$print_path" = 'Y' ] && [ $tput_colors -ge 8 ]; then
 	printf "$(__tput_CYAN)PATH$(__tput_RESET)=$(__tput_YELLOW)\"$(__tput_VIOLET)${PATH}$(__tput_YELLOW)\"$(__tput_RESET)\n"
 elif [ "$print_path" = 'Y' ]; then
 	echo "PATH=\"${PATH}\""
 fi
-# }}} $PATH Print
+
+# }}} $PATH Setup
+
+# {{{ RVM
+
+# Load RVM into a shell session *as a function*
+[ -s "${HOME}/.rvm/scripts/rvm" ] && . "${HOME}/.rvm/scripts/rvm"
+
+# }}} RVM
 
 # {{{ Cleanup
 unset INTERACTIVE colorful_commands colorful_prompt fancy_prompt gpg_agent_status
