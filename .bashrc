@@ -24,7 +24,7 @@ case "${-}" in *i*) INTERACTIVE=1;; esac
 # Note: booleans in this section must be either 'Y' or 'N'
 
 # Should the $PATH variable be printed for varification? (boolean)
-print_path=Y			
+print_path=Y
 
 # Toggles colorization of ls(1) and grep(1) (boolean)
 colorful_commands=Y
@@ -407,7 +407,8 @@ if [ -d "${HOME}/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/bin" 2>&1); then
 fi
 
 # Add RVM to $PATH (must be first in the order or rvm(1) wll throw an error)
-if [ -d "${HOME}/.rvm/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/\.rvm/bin" 2>&1); then
+if [ -d "$HOME/.rvm/bin" ]; then
+	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.rvm\/bin//g')"
 	PATH="${HOME}/.rvm/bin:${PATH}"
 fi
 
