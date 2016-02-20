@@ -2,6 +2,9 @@
 !*/
 **/src
 
+!/.config/plasma-workspace/env/*
+!/.config/plasma-workspace/shutdown/*
+
 !/.gitignore
 !/.gitmodules
 
