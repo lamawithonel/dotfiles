@@ -339,7 +339,7 @@ fi
 
 if [ -x "$(which gpg-agent)" ]; then
 	function gpg_agent_status() {
-		ps -Ao uid,pid,comm | grep -q "^${UID} ${GPG_AGENT_PID} gpg-agent$"
+		ps -Ao uid,pid,comm | egrep -q "^[[:blank:]]*${UID}[[:blank:]]+${GPG_AGENT_PID}[[:blank:]]+gpg-agent$"
 		return $?
 	}
 
@@ -349,6 +349,7 @@ if [ -x "$(which gpg-agent)" ]; then
 		export GPG_AGENT_INFO
 		GPG_AGENT_PID=$(echo "${GPG_AGENT_INFO}" | cut -f2 -d:); export GPG_AGENT_PID
 		if ! gpg_agent_status ]; then
+			echo 'Could not find a running gpg-agent.  Starting one now.'
 			eval $(gpg-agent --daemon --write-env-file "${HOME}/.gpg-agent-info")
 			GPG_AGENT_PID=$(echo "${GPG_AGENT_INFO}" | cut -f2 -d:); export GPG_AGENT_PID
 		fi
@@ -360,16 +361,16 @@ fi
 # }}} Setup gpg-agent(1)
 
 # {{{ Setup ssh-agent(1)
-
 if [ -x "$(which ssh-agent)" ]; then
 	function ssh_agent_status() {
-		ps -Ao uid,pid,comm | grep -q "^${UID} ${SSH_AGENT_PID} ssh-agent$"
+		ps -Ao uid,pid,comm | egrep -q "^[[:blank:]]*${UID}[[:blank:]]+${SSH_AGENT_PID}[[:blank:]]+ssh-agent$"
 		return $?
 	}
 
 	if [ ! -S "${SSH_AUTH_SOCK}" ] || ! ssh_agent_status; then
 		[ -f "${HOME}/.ssh-agent-info" ] && . "${HOME}/.ssh-agent-info"
 		if [ ! -S "${SSH_AUTH_SOCK}" ] || ! ssh_agent_status; then
+			echo 'Could not find a running ssh-agent.  Starting one now.'
 			eval $(ssh-agent | head -n 2 | tee "${HOME}/.ssh-agent-info")
 		fi
 	fi
