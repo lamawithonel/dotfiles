@@ -407,10 +407,16 @@ if [ -d "${HOME}/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/bin" 2>&1); then
 	PATH="${HOME}/bin:${PATH}"
 fi
 
-# Add RVM to $PATH (must be first in the order or rvm(1) wll throw an error)
+# Add RVM to $PATH
 if [ -d "$HOME/.rvm/bin" ]; then
 	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.rvm\/bin//g')"
 	PATH="${HOME}/.rvm/bin:${PATH}"
+fi
+
+# Add the RubyGems bin directory to $PATH (must be first in the order or rvm(1) wll throw an error)
+if [ -d "$HOME/.gem/bin" ]; then
+	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.gem\/bin//g')"
+	PATH="${HOME}/.gem/bin:${PATH}"
 fi
 
 export PATH
