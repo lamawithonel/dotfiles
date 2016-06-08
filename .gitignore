@@ -2,6 +2,7 @@
 !*/
 **/src
 
+!/.config/user-dirs.dirs
 !/.config/plasma-workspace/env/*
 !/.config/plasma-workspace/shutdown/*
 
