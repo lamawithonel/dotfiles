@@ -407,6 +407,12 @@ if [ -d "${HOME}/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/bin" 2>&1); then
 	PATH="${HOME}/bin:${PATH}"
 fi
 
+# Add pyenv to $PATH
+if [ -d "$HOME/.pyenv/bin" ]; then
+	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.pyenv\/bin//g')"
+	PATH="$HOME/.pyenv/bin:$PATH"
+fi
+
 # Add RVM to $PATH
 if [ -d "$HOME/.rvm/bin" ]; then
 	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.rvm\/bin//g')"
@@ -429,6 +435,10 @@ elif [ "$print_path" = 'Y' ]; then
 fi
 
 # }}} $PATH Setup
+
+# {{{ pyenv
+[ -x "$(which pyenv)" ] && eval "$(pyenv init -)" && eval "$(pyenv virtualenv-init -)"
+# }}}
 
 # {{{ RVM
 
