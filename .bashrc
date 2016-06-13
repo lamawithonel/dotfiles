@@ -90,6 +90,8 @@ shopt -s checkwinsize
 if ! shopt -oq posix && [ ${EUID} -ne 0 ]; then
 	if [ -f /etc/bash_completion ]; then
 		. /etc/bash_completion
+	elif [ -f /etc/profile.d/bash_completion.sh ]; then
+		. /etc/profile.d/bash_completion.sh
 	elif [ -f /etc/profile.d/bash-completion.sh ]; then
 		. /etc/profile.d/bash-completion.sh
 	fi
