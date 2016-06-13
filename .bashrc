@@ -412,6 +412,16 @@ if [ -d "$HOME/.pyenv/bin" ]; then
 	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.pyenv\/bin//g')"
 	PATH="$HOME/.pyenv/bin:$PATH"
 fi
+if $(which pyenv >/dev/null 2>&1); then
+	if [ -d "$HOME/.pyenv/shims" ]; then
+		PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.pyenv\/shims//g')"
+		PATH="$HOME/.pyenv/shims:$PATH"
+	fi
+	if [ -d "$HOME/.pyenv/plugins/pyenv-virtualenv/shims" ]; then
+		PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.pyenv\/plugins\/pyenv-virtualenv\/shims//g')"
+		PATH="$HOME/.pyenv/plugins/pyenv-virtualenv/shims:$PATH"
+	fi
+fi
 
 # Add RVM to $PATH
 if [ -d "$HOME/.rvm/bin" ]; then
@@ -437,7 +447,7 @@ fi
 # }}} $PATH Setup
 
 # {{{ pyenv
-[ -x "$(which pyenv)" ] && eval "$(pyenv init -)" && eval "$(pyenv virtualenv-init -)"
+(which pyenv >/dev/null 2>&1) && eval "$(pyenv init - | grep -v 'PATH')" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
 # }}}
 
 # {{{ RVM
