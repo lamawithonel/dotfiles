@@ -81,7 +81,7 @@
     set history=256
     set viminfo='256,\"1024
 
-    set colorcolumn=72,80,140
+    set colorcolumn=72,80,100,120,140
 
     " Column test pattern
     " ---------------------------
