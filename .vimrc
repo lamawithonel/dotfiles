@@ -17,6 +17,7 @@
         Plugin 'godlygeek/tabular'
         Plugin 'rodjek/vim-puppet'
         Plugin 'noprompt/vim-yardoc'
+        Plugin 'wfleming/vim-codeclimate'
     call vundle#end()
     filetype plugin indent on
 
