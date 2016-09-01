@@ -304,6 +304,9 @@ alias rm='rm -i'
 alias cp='cp -i'
 alias mv='mv -i'
 
+# Make tee append by default (for safety)
+alias tee='tee -a'
+
 if [ "$colorful_commands" = 'Y' -a $tput_colors -ge 4 ]; then
 	# Enable color support in grep(1)
 	if [ -x '/usr/local/bin/ggrep' ]; then
