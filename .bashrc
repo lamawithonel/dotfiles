@@ -409,6 +409,10 @@ if [ -d "${HOME}/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/bin" 2>&1); then
 	PATH="${HOME}/bin:${PATH}"
 fi
 
+if [ -d "$HOME/.perl/5/perlbrew" ]; then
+	. ~/.perl/5/perlbrew/etc/bashrc
+fi
+
 # Add pyenv to $PATH
 if [ -d "$HOME/.pyenv/bin" ]; then
 	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.pyenv\/bin//g')"
