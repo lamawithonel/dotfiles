@@ -2,7 +2,7 @@
 
 if [ -x "$(which gpg-agent)" ]; then
     gpg_agent_status() {
-        ps -Ao uid,pid,comm | egrep -q "^[[:blank:]]*$(uid -ru)[[:blank:]]+${GPG_AGENT_PID}[[:blank:]]+gpg-agent$"
+        ps -Ao uid,pid,comm | egrep -q "^[[:blank:]]*$(id -ru)[[:blank:]]+${GPG_AGENT_PID}[[:blank:]]+gpg-agent$"
         return $?
     }
 
