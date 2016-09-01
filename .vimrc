@@ -102,6 +102,7 @@
     let g:syntastic_markdown_checkers = ['mdl']
     let g:syntastic_puppet_checkers   = ['puppet', 'puppetlint']
     let g:syntastic_python_checkers   = ['flake8']
+    let g:syntastic_rst_checkers      = ['rstcheck']
     let g:syntastic_ruby_checkers     = ['mri', 'rubocop', 'reek', 'flog']
     let g:syntastic_sh_checkers       = ['sh', 'checkbashims', 'bashate', 'shellcheck']
     let g:syntastic_viml_checkers     = ['vimlint']
