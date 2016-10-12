@@ -1,71 +1,30 @@
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-"{{{ ## Vundle Plugin Manager ##
+"{{{ ## Plugin Functions ##
+    function! BuildComposer(info)
+        if a:info.status != 'unchanged' || a:info.force
+            !cargo build --release
+            UpdateRemotePlugins
+        endif
+    endfunction
+"}}}
 
-    filetype off
-    set rtp+=~/.vim/bundle/Vundle.vim " add Vundle to the runtime path
-    call vundle#begin()               " initialize
+"{{{ ## vim-plug ##
+    call plug#begin()
 
         " Let Vundle manage Vundle
-        Plugin 'gmarik/Vundle.vim'
+        "Plugin 'gmarik/Vundle.vim'
 
         " Plugins
         " -------
-        Plugin 'altercation/vim-colors-solarized'
-        Plugin 'scrooloose/syntastic'
-        Plugin 'ynkdir/vim-vimlparser'
-        Plugin 'syngan/vim-vimlint'
-        Plugin 'godlygeek/tabular'
-        Plugin 'rodjek/vim-puppet'
-        Plugin 'noprompt/vim-yardoc'
-        Plugin 'wfleming/vim-codeclimate'
-    call vundle#end()
-    filetype plugin indent on
-
-    "{{{ (Vundle Examples)
-
-        " Repos on GitHub
-        " ---------------
-
-        "Plugin 'tpope/vim-fugitive'
-        "Plugin 'Lokaltog/vim-easymotion'
-        "Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
-        "Plugin 'tpope/vim-rails.git'
-
-        " vim-scripts.org repos
-        " ---------------------
-
-        "Plugin 'L9'
-        "Plugin 'FuzzyFinder'
-
-        " Generic Git repos
-        " -----------------
-
-        "Plugin 'git://git.wincent.com/command-t.git'
-
-        " Special Overrides
-        " -----------------
-
-        " Set the runtimepath (rtp) to a sub-directory of a repo
-        "Plugin 'rstacruz/sparkup', {'rtp': 'vim/'}
-
-        " Change the name of a plugin
-        "Plugin 'user/L9', {'name': 'newL9'} 
-
-    "}}}
-
-    "{{{ (Vundle Command Reference)
-
-
-    " :PluginList          - list configured bundles
-    " :PluginInstall(!)    - install(update) bundles
-    " :PluginSearch(!) foo - search(or refresh cache first) for foo
-    " :PluginClean(!)      - confirm(or auto-approve) removal of unused bundles
-    "
-    " NOTE: comments after Plugin command are not allowed.
-    "
-    " See Also: ":h vundle" and "https://github.com/gmarik/vundle/wiki"
-
-    "}}}
+        Plug 'altercation/vim-colors-solarized'
+        Plug 'scrooloose/syntastic'
+        Plug 'ynkdir/vim-vimlparser'
+        Plug 'syngan/vim-vimlint'
+        Plug 'godlygeek/tabular'
+        Plug 'rodjek/vim-puppet'
+        Plug 'noprompt/vim-yardoc'
+        Plug 'wfleming/vim-codeclimate'
+    call plug#end()
 "}}}
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
