@@ -307,6 +307,11 @@ alias mv='mv -i'
 # Make tee append by default (for safety)
 alias tee='tee -a'
 
+# Use $COLUMNS as the sdiff width, if available
+if [ -n "${COLUMNS}" ]; then
+	alias sdiff='sdiff -w $COLUMNS'
+fi
+
 if [ "$colorful_commands" = 'Y' -a $tput_colors -ge 4 ]; then
 	# Enable color support in grep(1)
 	if [ -x '/usr/local/bin/ggrep' ]; then
