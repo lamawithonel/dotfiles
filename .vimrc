@@ -80,6 +80,7 @@
     set sw=4
     set history=256
     set viminfo='256,\"1024
+    set ruler
 
     set colorcolumn=72,80,100,120,140
 
