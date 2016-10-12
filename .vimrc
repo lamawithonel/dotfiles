@@ -23,6 +23,7 @@
         Plug 'rodjek/vim-puppet'
         Plug 'noprompt/vim-yardoc'
         Plug 'wfleming/vim-codeclimate'
+        Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
 
         " Color Schemes
         " -------------
