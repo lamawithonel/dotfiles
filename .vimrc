@@ -16,7 +16,6 @@
 
         " Plugins
         " -------
-        Plug 'altercation/vim-colors-solarized'
         Plug 'scrooloose/syntastic'
         Plug 'ynkdir/vim-vimlparser'
         Plug 'syngan/vim-vimlint'
@@ -24,6 +23,11 @@
         Plug 'rodjek/vim-puppet'
         Plug 'noprompt/vim-yardoc'
         Plug 'wfleming/vim-codeclimate'
+
+        " Color Schemes
+        " -------------
+        Plug 'altercation/vim-colors-solarized'
+        "Plug 'mhartington/oceanic-next'
     call plug#end()
 "}}}
 
@@ -72,10 +76,14 @@
 
     " Theming
     " -------
+    set t_Co=256
     set background=dark
+
     colorscheme solarized
     let g:solarized_termcolors=256
     let g:solarized_hitrail=1
+
+    "colorscheme OceanicNext
 
 
     " Trailing space warnings
