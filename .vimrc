@@ -25,8 +25,9 @@
         Plug 'wfleming/vim-codeclimate'
         Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
 
-        " Color Schemes
+        " Color Schemes & Theming
         " -------------
+        Plug 'chriskempson/base16-vim'
         Plug 'altercation/vim-colors-solarized'
         "Plug 'mhartington/oceanic-next'
     call plug#end()
@@ -79,6 +80,8 @@
     " -------
     set t_Co=256
     set background=dark
+
+    let base16colorspace=256
 
     colorscheme solarized
     let g:solarized_termcolors=256
