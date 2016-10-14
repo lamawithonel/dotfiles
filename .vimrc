@@ -30,6 +30,7 @@
         Plug 'chriskempson/base16-vim'
         Plug 'altercation/vim-colors-solarized'
         "Plug 'mhartington/oceanic-next'
+        "Plug 'trusktr/seti.vim'
     call plug#end()
 "}}}
 
@@ -79,15 +80,20 @@
     " Theming
     " -------
     set t_Co=256
-    set background=dark
 
-    let base16colorspace=256
+    "if filereadable(expand("~/.vimrc_background"))
+    "    "let base16colorspace=256
+    "    source ~/.vimrc_background
+    "endif
 
     colorscheme solarized
+    set background=dark
     let g:solarized_termcolors=256
     let g:solarized_hitrail=1
 
     "colorscheme OceanicNext
+
+    "colorscheme seti
 
 
     " Trailing space warnings
