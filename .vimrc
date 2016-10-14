@@ -44,6 +44,7 @@
     set backspace=indent,eol,start
     set ts=4
     set sw=4
+    set expandtab
     set history=256
     set viminfo='256,\"1024
     set ruler
