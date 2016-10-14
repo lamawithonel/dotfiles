@@ -98,7 +98,8 @@
 
     " Trailing space warnings
     " -----------------------
-    hi TrailingSpace ctermbg=red guibg=#dc322f
+    hi TrailingBlanks ctermbg=red guibg=#dc322f
+    call matchadd('TrailingBlanks', '[[:blank:]]\+$')
 
 " }}} end options
 
