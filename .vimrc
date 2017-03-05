@@ -27,6 +27,8 @@
 
         " Color Schemes & Theming
         " -------------
+        Plug 'vim-airline/vim-airline'
+        Plug 'vim-airline/vim-airline-themes'
         Plug 'chriskempson/base16-vim'
         Plug 'altercation/vim-colors-solarized'
         "Plug 'mhartington/oceanic-next'
@@ -77,6 +79,19 @@
     let g:syntastic_sh_checkers       = ['sh', 'shellcheck', 'checkbashims', 'bashate']
     let g:syntastic_viml_checkers     = ['vimlint']
     let g:syntastic_yaml_checkers     = ['yamlxs']
+
+    " Vim-Airline
+    " -----------
+    let g:airline_theme = 'base16_solarized'
+    if !exists('g:airline_symbols')
+        let g:airline_symbols = {}
+    endif
+    let g:airline_left_sep  = '▶'
+    let g:airline_right_sep = '◀'
+    let g:airline_symbols.branch = '𝌎'
+    let g:airline_symbols.branch = '⎇'
+    let g:airline_symbols.branch = 'ᚵ'
+    let g:airline_symbols.branch = 'ᚴ'
 
     " Theming
     " -------
