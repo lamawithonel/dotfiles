@@ -117,6 +117,10 @@
     hi TrailingBlanks ctermbg=red guibg=#dc322f
     call matchadd('TrailingBlanks', '[[:blank:]]\+$')
 
+    " Key Bindings
+    " ------------
+    map <F7> :set spell! spelllang=en_us spellfile=~/.vim/spellfile.add<cr>
+
 " }}} end options
 
 
