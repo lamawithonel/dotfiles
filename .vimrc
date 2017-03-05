@@ -24,6 +24,7 @@
         Plug 'noprompt/vim-yardoc'
         Plug 'wfleming/vim-codeclimate'
         Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
+        Plug 'terryma/vim-multiple-cursors'
 
         " Color Schemes & Theming
         " -------------
