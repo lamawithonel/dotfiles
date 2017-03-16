@@ -460,6 +460,13 @@ fi
 
 # }}} $PATH Setup
 
+# {{{ NVM
+
+export NVM_DIR="/home/lucas/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+
+# }}}
+
 # {{{ pyenv
 (which pyenv >/dev/null 2>&1) && eval "$(pyenv init - | grep -v 'PATH')" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
 # }}}
