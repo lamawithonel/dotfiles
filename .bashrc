@@ -348,22 +348,7 @@ fi
 # {{{ Setup gpg-agent(1)
 
 if [ -x "$(which gpg-agent)" ]; then
-	function gpg_agent_status() {
-		ps -Ao uid,pid,comm | egrep -q "^[[:blank:]]*${UID}[[:blank:]]+${GPG_AGENT_PID}[[:blank:]]+gpg-agent$"
-		return $?
-	}
-
-	GPG_AGENT_PID=$(echo "${GPG_AGENT_INFO}" | cut -f2 -d:); export GPG_AGENT_PID
-	if ! gpg_agent_status; then
-		[ -f "${HOME}/.gpg-agent-info" ] && . "${HOME}/.gpg-agent-info"
-		export GPG_AGENT_INFO
-		GPG_AGENT_PID=$(echo "${GPG_AGENT_INFO}" | cut -f2 -d:); export GPG_AGENT_PID
-		if ! gpg_agent_status ]; then
-			echo 'Could not find a running gpg-agent.  Starting one now.'
-			eval $(gpg-agent --daemon --write-env-file "${HOME}/.gpg-agent-info")
-			GPG_AGENT_PID=$(echo "${GPG_AGENT_INFO}" | cut -f2 -d:); export GPG_AGENT_PID
-		fi
-	fi
+	gpgconf --launch gpg-agent
 
 	GPG_TTY=$(tty); export GPG_TTY
 fi
