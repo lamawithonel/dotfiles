@@ -25,6 +25,12 @@
         Plug 'wfleming/vim-codeclimate'
         Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
         Plug 'terryma/vim-multiple-cursors'
+        Plug 'tangledhelix/vim-kickstart'
+        Plug 'hashivim/vim-consul'
+        Plug 'hashivim/vim-packer'
+        Plug 'hashivim/vim-terraform'
+        Plug 'hashivim/vim-vagrant'
+        Plug 'hashivim/vim-vaultproject'
 
         " Color Schemes & Theming
         " -------------
