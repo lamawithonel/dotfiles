@@ -23,7 +23,6 @@
         Plug 'rodjek/vim-puppet'
         Plug 'noprompt/vim-yardoc'
         Plug 'wfleming/vim-codeclimate'
-        Plug 'euclio/vim-markdown-composer', { 'do': function('BuildComposer') }
         Plug 'terryma/vim-multiple-cursors'
         Plug 'tangledhelix/vim-kickstart'
         Plug 'hashivim/vim-consul'
