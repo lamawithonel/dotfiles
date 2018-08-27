@@ -307,9 +307,15 @@ alias mv='mv -i'
 # Make tee append by default (for safety)
 alias tee='tee -a'
 
-# Use $COLUMNS as the sdiff width, if available
-if [ -n "${COLUMNS}" ]; then
-	alias sdiff='sdiff -w $COLUMNS'
+# Use $COLUMNS as the sdiff width
+if which sdiff > /dev/null 2>&1; then
+	function sdiff() {
+		if [ -n "$COLUMNS" ]; then
+			$(which sdiff) -w $COLUMNS $@
+		else
+			$(which sdiff) $@
+		fi
+	}
 fi
 
 if [ "$colorful_commands" = 'Y' -a $tput_colors -ge 4 ]; then
@@ -385,7 +391,7 @@ IPv4_SUBNET="${IPv4_ADDRESS}(\/[[:digit:]]{1,2})?"
 # hostnames
 HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
 
-export GPG_TTY IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
+export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
 # }}} Misc. Environment Variables
 
 # {{{ Local Additions
