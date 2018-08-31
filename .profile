@@ -1,3 +1,5 @@
+#!/bin/sh
+#-----------------------------------------------------------------------
 # ~/.profile
 #
 # This file is read by POSIX-compliant shells when invoked as login shells.
@@ -5,19 +7,16 @@
 # will read the first one it encounters and ignore the rest.
 # See the INVOCATION section of the bash(1) man page for more information.
 
-# if running bash
-if [ -n "${BASH_VERSION}" ]; then
-	# include .bashrc if it exists
-	if [ -f "${HOME}/.bashrc" ]; then
-	. "${HOME}/.bashrc"
-	fi
-fi
-
-# The defult umask is set in /etc/profile or using pam_umask(8), but we
-# set it here, too, to ensure a secure default.  You can change it if you
-# want.
+# Set a secure umask(2)
+#shellcheck disable=2046
 if [ $(id -ru) -gt 999 ] && [ "$(id -gn)" = "$(id -un)" ]; then
 	umask 0027
 else
 	umask 0022
 fi
+
+#shellcheck disable=1090
+[ -e ~/.profile.local ] && . ~/.profile.local
+
+# vim:foldmethod=marker
+# vi:ts=4:sw=4:noexpandtab

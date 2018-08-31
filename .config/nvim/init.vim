@@ -36,9 +36,6 @@
         Plug 'vim-airline/vim-airline'
         Plug 'vim-airline/vim-airline-themes'
         Plug 'chriskempson/base16-vim'
-        Plug 'altercation/vim-colors-solarized'
-        "Plug 'mhartington/oceanic-next'
-        "Plug 'trusktr/seti.vim'
     call plug#end()
 "}}}
 
@@ -91,7 +88,7 @@
 
     " Vim-Airline
     " -----------
-    let g:airline_theme = 'base16_solarized'
+    let g:airline_theme = 'base16_default'
     if !exists('g:airline_symbols')
         let g:airline_symbols = {}
     endif
@@ -104,22 +101,25 @@
 
     " Theming
     " -------
-    set t_Co=256
 
-    "if filereadable(expand("~/.vimrc_background"))
-    "    "let base16colorspace=256
-    "    source ~/.vimrc_background
-    "endif
+    if (&t_Co >= 256) && (($TERM !~# '^konsole') && ($KONSOLE != 'true'))
+        let base16colorspace = 256
+    elseif (&t_Co >= 88)
+        set t_Co=88
+        let base16colorspace = 88
+    elseif (&t_Co >= 16)
+        set t_Co=16
+        let base16colorspace = 16
+    elseif (&t_Co >=8)
+        set t_Co=8
+        let base16colorspace = 8
+    endif
 
-    colorscheme solarized
-    set background=dark
-    let g:solarized_termcolors=256
-    let g:solarized_hitrail=1
-
-    "colorscheme OceanicNext
-
-    "colorscheme seti
-
+    if filereadable(expand("~/.vimrc_background"))
+       source ~/.vimrc_background
+    else
+       colorscheme base16-default-dark
+    endif
 
     " Trailing space warnings
     " -----------------------

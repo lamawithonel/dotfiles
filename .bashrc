@@ -1,303 +1,191 @@
-# ~/.bashrc
-#
-# This file is sourced by bash(1) for interactive shells which are not
-# login shells, not called with the -l or -p options, and not called as
-# 'sh', as in the symbolic link at /bin/sh.  It's also common to source
-# this file from ~/.bash_profile, ~/.bash_login or ~/.profile.
-#
+#!/usr/bin/env bash
 
-##
-# Sanity checks
-#
-# {{{ (sanity checks)
-# Before doing anything, check that the shell is both bash(1) and
-# running interactively.  Return if it is not.
-case "${-}" in *i*) INTERACTIVE=1;; esac
-[ -z "$BASH_VERSION" ] && return
-[ -z "$INTERACTIVE"  ] && return
-# }}} Sanity Check
+# This file is only for Bash.  Exit if the shell is NOT Bash.
+[ -n "$BASH_VERSION" ] || exit 1
 
-##
-# Configuration variables for this file
-#
-# {{{ (config)
-# Note: booleans in this section must be either 'Y' or 'N'
+# Define and setup XDG directories
+[[ -n "$BASH_CONFIG_HOME" ]] ||	BASH_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}/bash"
+[[ -n "$BASH_DATA_HOME" ]]   || BASH_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/bash"
+[[ -d "$BASH_CONFIG_HOME" ]] || mkdir -pZ "$BASH_CONFIG_HOME" >&/dev/null || mkdir -p "$BASH_CONFIG_HOME"
+[[ -d "$BASH_DATA_HOME" ]]   || mkdir -pZ "$BASH_DATA_HOME" >&/dev/null   || mkdir -p "$BASH_DATA_HOME"
 
-# Should the $PATH variable be printed for varification? (boolean)
-print_path=Y
+# It's common to source this file from other places.  If this happens for
+# a non-interactive shell, it's OK-- and probably a good idea-- to skip anything
+# related to interactivity.  Namely, that means everything afer this.
+case "${-}" in
+	*i*) ;;
+	*) exit 1 ;;
+esac
 
-# Toggles colorization of ls(1) and grep(1) (boolean)
-colorful_commands=Y
+# {{{ Miscellaneous shell options
 
-# Toggles colorization of the prompt (boolean)
-colorful_prompt=Y
+# Check the window size after each command and, if necessary, update the
+# values of LINES and COLUMNS.
+shopt -s checkwinsize
 
-# Adds a lot of extra status info in the prompt, implies color
-# (boolean)
-fancy_prompt=Y
+# If set, the pattern "**" used in a pathname expansion context will match
+# all files and zero or more directories and subdirectories.
+shopt -s globstar
 
-# The basename of a color theme file in ~/.bash_colors.d/,
-# defaults to 'default'
-color_theme=solarized
+# }}}
 
-# The basename of a dircolors(1) database file in ~/.dircolors.d/,
-# defaults to 'default' or 'default.256' depending on terminal support.
-dircolors_theme=solarized.ansi-dark
-
-# }}} (config)
-
-##
-# Shell options (built-in)
-#
-# {{{ (shell options)
-
-# Trim the working directory string in $PS1 to this many elements
-PROMPT_DIRTRIM=4
-
-# Don't put duplicate lines or lines starting with space in the history.
-HISTCONTROL=ignoreboth
-
-# Number of commands to keep in the scrollback history
-HISTSIZE=1000
-
-# Maximum size of ~/.bash_history, in bytes
-HISTFILESIZE=2000
+# {{{ History Settings
 
 # Append to the history file, don't overwrite it
 shopt -s histappend
 
-# Check the window size after each command and, if necessary,
-# update the values of LINES and COLUMNS.
-shopt -s checkwinsize
+# Store history in the XDG-standard location
+HISTFILE="${BASH_DATA_HOME}/history"; export HISTFILE
 
-# If set, the pattern "**" used in a pathname expansion context will
-# match all files and zero or more directories and subdirectories.
-#shopt -s globstar
+# Ignore lines starting with a [:space:] and lines which are duplicates of
+# the previous command.  Also, erase older duplicates.
+HISTCONTROL=ignoreboth,erasedups
 
+# Number of commands to keep in the scrollback history
+HISTSIZE=1000
+
+# Maximum size of $HISTFILE, in bytes
+HISTFILESIZE=2000
+
+export HISTFILE HISTCONTROL HISTSIZE HISTFILESIZE
 # }}}
 
-##
-# Script statements
+# {{{ System Bash Completion
 #
-# {{{ (statements)
-
-# {{{ Bash Completion
-#
-# Enable programmable completion features for non-root users.
-# Priveledged users should never enable this, because it opens up the
-# shell to command injection attacks.
-
-if ! shopt -oq posix && [ ${EUID} -ne 0 ]; then
+# Enable programmable completion features for non-root users.  Ignore for
+# for priveledged users who may be open to shell command injection attacks.
+if ! shopt -oq posix && [ $EUID -ne 0 ]; then
 	if [ -f /etc/bash_completion ]; then
-		. /etc/bash_completion
+		#shellcheck disable=1091
+		source /etc/bash_completion
 	elif [ -f /etc/profile.d/bash_completion.sh ]; then
-		. /etc/profile.d/bash_completion.sh
+		#shellcheck disable=1091
+		source /etc/profile.d/bash_completion.sh
 	elif [ -f /etc/profile.d/bash-completion.sh ]; then
-		. /etc/profile.d/bash-completion.sh
+		#shellcheck disable=1091
+		source /etc/profile.d/bash-completion.sh
 	fi
 fi
 # }}} Bash Completion
 
-# {{{ Color Support
-#
-# This portion determins if the terminal supports color then, based on
-# the configuration varibles set near the top, it will set a few state
-# variables.
+# {{{ Color
 
-if [ "$colorful_prompt" = 'Y' -o "$colorful_commands" = 'Y' ] || [ "$fancy_prompt" = 'Y' ]; then
-	# Use tput(1) to determin how many colors the terminal supports.
-	# Capture the value for later use.
-	tput_colors=$(tput colors 2>/dev/null) || tput_colors=1
-	export tput_colors colorful_prompt colorful_commands fancy_prompt
-
-	# If the terminal supports at least 16 colors, source the color theme
-	# and setup dircolors(1)
-	if [ $tput_colors -ge 8 ]; then
-
-		# __tput_COLOR function theming
-		if [ -f ~/.bash_colors.d/${color_theme} ]; then
-			. ~/.bash_colors.d/${color_theme}
-		else
-			. ~/.bash_colors.d/default
-		fi
-
-		# dircolors(1)
-		if [ -f ~/.dircolors.d/${dircolors_theme} ]; then
-			if [ -x /usr/local/bin/gdircolors ]; then
-				eval $(gdircolors ~/.dircolors.d/${dircolors_theme})
-			else
-				eval $(dircolors ~/.dircolors.d/${dircolors_theme})
-			fi
-		elif [ $tput_colors -ge 256 ] && [ -f ~/.dircolors.d/default.256color ]; then
-			if [ -x /usr/local/bin/gdircolors ]; then
-				eval $(gdircolors ~/.dircolors.d/default.256color)
-			else
-				eval $(dircolors ~/.dircolors.d/default.256color)
-			fi
-		elif [ -f ~/.dircolors.d/default ]; then
-			if [ -x /usr/local/bin/gdircolors ]; then
-				eval $(gdircolors ~/.dircolors.d/default)
-			else
-				eval $(dircolors ~/.dircolors.d/default)
-			fi
-		fi
-	else
-		function __tput_GREEN  { return; }
-		function __tput_RESET  { return; }
-		function __tput_YELLOW { return; }
-		function __tput_RESET  { return; }
-		function __tput_RED    { return; }
-		function __tput_RESET  { return; }
+if [ -z "$KONSOLE_PROFILE_NAME" ]; then
+	BASE16_SHELL="$HOME/.local/share/base16-shell/"
+	if [ -s "${BASE16_SHELL}/profile_helper.sh" ]; then
+		eval "$("${BASE16_SHELL}/profile_helper.sh")"
 	fi
+fi
+
+# Use tput(1) to determine the number of supported colors.
+TERMINAL_COLORS="$(tput colors 2>/dev/null || echo -1)"
+
+# If the terminal supports at least 8 colors, source the color theme and
+# setup dircolors(1)
+if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+	# shellcheck source=.config/bash/colors.bash
+	[ -f "${BASH_CONFIG_HOME}/colors.bash" ] && source "${BASH_CONFIG_HOME}/colors.bash"
+
+	# dircolors(1)
+	case "$OSTYPE" in
+		*-gnu)
+			if command -v dircolors >&/dev/null; then
+				eval "$(dircolors ~/.config/coreutils/dir_colors)"
+			fi
+			;;
+		bsd*)
+			if command -v gdircolors >&/dev/null; then
+				eval "$(gdircolors ~/.config/coreutils/dir_colors)"
+			fi
+			;;
+	esac
 else
-	tput_colors=1
+	# shellcheck source=.config/bash/colors_null.bash
+	[ -f ~/.config/bash/colors_null.bash ] && source ~/.config/bash/colors_null.bash
 fi
 # }}} Color Support
 
 # {{{ Prompt Setup
 
+# Trim the working directory string in $PS1 to this many elements
+PROMPT_DIRTRIM=4
 
-# For normal usage, the end-result will look like this:
+##
+# __prompt_command()
 #
-#    [1] user@host:~ $
+# This function is executed each time the shell returns, dynamically generating
+# the prompt.  It takes no arguments, however it reads a few environment
+# variables.
 #
-# If you're in a Git repo, it would look like this:
-#
-#    [1] user@host:~ [master] $
-#
-# And if you've access the machine via SSH, it would look like this:
-#
-#    [1] (192.168.1.1)user@host:~ [master] $
-#
+__prompt_command() {
 
-# {{{ Debian chroot(2)
-#
-# Setup a variable identifying the Debian chroot(2).  This shouldn't
-# change except at shell invocation, so do it outside the
-# __prompt_command() to save cycles.
-
-if [ -z "$debian_chroot" ] && [ -r /etc/debian_chroot ]; then
-	debian_chroot=$(cat /etc/debian_chroot)
-fi
-# }}} Debian chroot(2)
-
-if [ "$fancy_prompt" = 'Y' ]; then
-
-	##
-	# __prompt_command()
-	#
-	# This function is executed each time the shell returns, dynamically
-	# generating the prompt.  It takes no arguments, however it reads a
-	# few environment variables.
-	#
-	function __prompt_command() {
-
-		# {{{ Last command status capture
-		# Before anything else, capture the exit status of the last
-		# command.
-		EXIT="$?"
-		# }}}
-
-		# {{{ Command number & status
-		#
-		# This portion prints the bash command sequence number, coloring
-		# the output based on the exit status of the last command.
-		if [ $EXIT -eq 0 ]; then
-			PS1="\[$(__tput_GREEN)\][\!]\[$(__tput_RESET)\] "
-		else
-			PS1="\[$(__tput_RED)\][\!]\[$(__tput_RESET)\] "
-		fi
-		# }}} Command number & status
-
-		# {{{ SSH client IP
-		#
-		# If connected via SSH, this will print the IP address of the client
-		# machine.
-		if [ -n "$SSH_CLIENT" ]; then
-			PS1+="\[$(__tput_YELLOW)\]("${SSH_CLIENT%% *}")\[$(__tput_RESET)\]"
-		fi
-		# }}} SSH client IP
- 
-		# {{{ Debian chroot(2)
-		PS1+="${debian_chroot:+($debian_chroot)}"
-		# }}}
-
-		# {{{ Basic Information
-		#
-		# This staple of the prompt is a common default in many
-		# operating systems, most notably Debian and Ubuntu.  It is based
-		# on the OpenSSH syntax for sftp(1) and scp(1), providing a
-		# solid peice of text for copy-paste operations.
-		#
-		if [ $tput_colors -ge 16 ] || [ $tput_colors -ge 8 ] && [ $(tput bold 2>/dev/null) ]; then
-			if [ $EUID -eq 0 ]; then
-				PS1+="\[$(__tput_BRRED)\]\h\[$(__tput_BLUE)\]:\[$(__tput_BASE05)\]\w\[$(__tput_RESET)\] "
-			else
-				PS1+="\[$(__tput_BRGREEN)\]\u@\h\[$(__tput_BLUE)\]:\[$(__tput_BASE05)\]\w\[$(__tput_RESET)\] "
-			fi
-		else
-			if [ $EUID -eq 0 ]; then
-				PS1+="\[$(__tput_RED)\]\h\[$(__tput_RESET)\]:\w "
-			else
-				PS1+="\[$(__tput_GREEN)\]\u@\h\[$(__tput_RESET)\]:\w "
-			fi
-		fi
-		# }}} Basic Information
-
-		# {{{ Git status
-		#
-		# If the current working directory is part of a git(1) repository
-		# this portion will print the working branch name, colored based on
-		# the commit status.
-		#
-		if which git >/dev/null 2>&1; then
-			local git_status="$(git status -unormal 2>&1)"
-			if ! [[ "$git_status" =~ Not\ a\ git\ repo ]]; then
-				# parse the porcelain output of git status
-				if [[ "$git_status" =~ nothing\ to\ commit ]]; then
-					local git_color=$(__tput_GREEN)
-				elif [[ "$git_status" =~ nothing\ added\ to\ commit\ but\ untracked\ files\ present ]]; then
-					local git_color=$(__tput_VIOLET)
-				else
-					local git_color=$(__tput_RED)
-				fi
-
-				if [[ "$git_status" =~ On\ branch\ ([^[:space:]]+) ]]; then
-					branch=${BASH_REMATCH[1]}
-				else
-					# Detached HEAD. (branch=HEAD is a faster alternative.)
-					branch="($(git describe --all --contains --abbrev=4 HEAD 2> /dev/null || echo HEAD))"
-				fi
-
-				# add the result to prompt
-				PS1+="\[${git_color}\][${branch}]\[$(__tput_RESET)\] "
-			fi
-		fi
-		# }}} Git status
-
-		# {{{ Prompt character
-		# (# for root, $ for everybody else)
-		PS1+='\$ '
-		# }}}
-	}
-
-	PROMPT_COMMAND=__prompt_command
-
-elif [ $tput_colors -ge 8 ] && [ "$colorful_promt" = 'Y' ]; then
-
-	if [ $EUID -eq 0 ]; then
-		PS1="${debian_chroot:+($debian_chroot)}\[$(__tput_BRRED)\]\h\[$(__tput_BLUE)\]:\[$(__tput_BASE05)\]\w\[$(__tput_RESET)\] "
+	# Start with a boxed timestamp.  Color based on exit status of the previous
+	# command.
+	# shellcheck disable=SC2086
+	if [[ "${PIPESTATUS[-1]}" -eq '0' ]]; then
+		PS1="${ANSI[GREEN]}[\\t]${ANSI[RESET]} "
 	else
-		PS1="${debian_chroot:+($debian_chroot)}\[$(__tput_BRGREEN)\]\u@\h\[$(__tput_BLUE)\]:\[$(__tput_BASE05)\]\w\[$(__tput_RESET)\] "
+		PS1="${ANSI[BRRED]}[\\t]${ANSI[RESET]} "
 	fi
 
-else
-	PS1="${debian_chroot:+($debian_chroot)}\u@\h:\w \$ "; export PS1
+	# If connected via SSH, display IP address of the client.
+	[ -n "$SSH_CLIENT" ] && PS1+="${BASE16[BASE0A]}(${SSH_CLIENT%% *})${ANSI[RESET]}"
 
-fi
+	# Username, Host, and Working Directory
+	if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+		# Gentoo-style, color-indicated root prompt
+		if [ $EUID -eq 0 ]; then
+			PS1+="${BASE16[BASE09]}\\h${BASE16[BASE0D]}:${BASE16[BASE05]}\\w${ANSI[RESET]} "
+		else
+			PS1+="${BASE16[BASE0B]}\\u@\\h${BASE16[BASE05]}:${BASE16[BASE0A]}\\w${ANSI[RESET]} "
+		fi
+	else
+		PS1+="\\u@\\h:\\w"
+	fi
+
+	# Display Git status and working branch, if applicable.
+	# TODO: Cleanup using `git status --short`
+	if command -v git >&/dev/null; then
+		local git_status
+		git_status="$(git status -unormal 2>&1)"
+		if ! [[ "$git_status" =~ Not\ a\ git\ repo ]]; then
+			# parse the porcelain output of git status
+			if [[ "$git_status" =~ nothing\ to\ commit ]]; then
+				local git_color=${BASE16[BASE0B]}
+			elif [[ "$git_status" =~ nothing\ added\ to\ commit\ but\ untracked\ files\ present ]]; then
+				local git_color=${BASE16[BASE0D]}
+			else
+				local git_color=${BASE16[BASE08]}
+			fi
+
+			if [[ "$git_status" =~ On\ branch\ ([^[:space:]]+) ]]; then
+				branch=${BASH_REMATCH[1]}
+			else
+				# Detached HEAD. (branch=HEAD is a faster alternative.)
+				branch="($(git describe --all --contains --abbrev=4 HEAD 2>/dev/null || echo HEAD))"
+			fi
+
+			# add the result to prompt
+			PS1+="${git_color}[${branch}]${ANSI[RESET]} "
+		fi
+	fi
+
+	# Bash prompt character ('#' for root, '$' for everybody else)
+	PS1+='\$ '
+}
+
+# shellcheck disable=SC2086
+PROMPT_COMMAND=__prompt_command; export PROMPT_COMMAND
+
 # }}} Prompt Setup
 
 # {{{ Functions & Aliases
+
+if command -v nvim >&/dev/null; then
+	alias vi='nvim'
+elif command -v vim >&/dev/null; then
+	alias vi='vim'
+fi
 
 # Make common file operations interactive for safety
 alias rm='rm -i'
@@ -308,41 +196,38 @@ alias mv='mv -i'
 alias tee='tee -a'
 
 # Use $COLUMNS as the sdiff width
-if which sdiff > /dev/null 2>&1; then
-	function sdiff() {
-		if [ -n "$COLUMNS" ]; then
-			$(which sdiff) -w $COLUMNS $@
-		else
-			$(which sdiff) $@
-		fi
-	}
-fi
+[ -n "$COLUMNS" ] && alias sdiff='sdiff -w $COLUMNS'
 
-if [ "$colorful_commands" = 'Y' -a $tput_colors -ge 4 ]; then
-	# Enable color support in grep(1)
-	if [ -x '/usr/local/bin/ggrep' ]; then
-		alias grep='ggrep --color=auto'
-		alias fgrep='gfgrep --color=auto'
-		alias egrep='gegrep --color=auto'
+if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+	# Enable color support in grep(1) and ls(1), and add a few short-hands
+	case "$OSTYPE" in
+		*-gnu)
+			alias grep='grep --color=auto'
+			alias fgrep='fgrep --color=auto'
+			alias egrep='egrep --color=auto'
 
-	else
-		alias grep='grep --color=auto'
-		alias fgrep='fgrep --color=auto'
-		alias egrep='egrep --color=auto'
-	fi
+			alias ls='ls -F --color=auto'
+			alias ll='ls -lF --color=auto'
+			alias la='ls -alF --color=auto'
+			alias l='ls -CF --color=auto'
+			;;
+		bsd*)
+			if [ -x '/usr/local/bin/ggrep' ]; then
+				alias grep='ggrep --color=auto'
+				alias fgrep='gfgrep --color=auto'
+				alias egrep='gegrep --color=auto'
+			fi
 
-	# Enable color support in ls(1) and add a few handy aliases
-	if [ -x '/usr/local/bin/gls' ]; then
-		alias ls='gls -F --color=auto'
-		alias ll='gls -lF --color=auto'
-		alias la='gls -alF --color=auto'
-		alias l='gls -CF --color=auto'
-	else
-		alias ls='ls -F --color=auto'
-		alias ll='ls -lF --color=auto'
-		alias la='ls -alF --color=auto'
-		alias l='ls -CF --color=auto'
-	fi
+			if [ -x '/usr/local/bin/gls' ]; then
+				alias ls='gls -F --color=auto'
+				alias ll='gls -lF --color=auto'
+				alias la='gls -alF --color=auto'
+				alias l='gls -CF --color=auto'
+			fi
+			;;
+		*)
+			;;
+	esac
 else
 	alias ls='ls -F'
 	alias ll='ls -alF'
@@ -353,7 +238,7 @@ fi
 
 # {{{ Setup gpg-agent(1)
 
-if [ -x "$(which gpg-agent)" ]; then
+if [ -x "$(command -v gpg-agent)" ]; then
 	gpgconf --launch gpg-agent
 
 	GPG_TTY=$(tty); export GPG_TTY
@@ -362,17 +247,19 @@ fi
 # }}} Setup gpg-agent(1)
 
 # {{{ Setup ssh-agent(1)
-if [ -x "$(which ssh-agent)" ]; then
-	function ssh_agent_status() {
-		ps -Ao uid,pid,comm | egrep -q "^[[:blank:]]*${UID}[[:blank:]]+${SSH_AGENT_PID}[[:blank:]]+ssh-agent$"
+if [ -x "$(command -v ssh-agent)" ]; then
+	function __ssh_agent_status() {
+		#shellcheck disable=SC2009
+		ps -Ao uid,pid,comm | grep -Eq "^[[:blank:]]*${UID}[[:blank:]]+${SSH_AGENT_PID}[[:blank:]]+ssh-agent$"
 		return $?
 	}
 
-	if [ ! -S "${SSH_AUTH_SOCK}" ] || ! ssh_agent_status; then
-		[ -f "${HOME}/.ssh-agent-info" ] && . "${HOME}/.ssh-agent-info"
-		if [ ! -S "${SSH_AUTH_SOCK}" ] || ! ssh_agent_status; then
+	if [ ! -S "${SSH_AUTH_SOCK}" ] || ! __ssh_agent_status; then
+		#shellcheck source=.ssh-agent-info
+		[ -f ~/.ssh-agent-info ] && source ~/.ssh-agent-info
+		if [ ! -S "${SSH_AUTH_SOCK}" ] || ! __ssh_agent_status; then
 			echo 'Could not find a running ssh-agent.  Starting one now.'
-			eval $(ssh-agent | head -n 2 | tee "${HOME}/.ssh-agent-info")
+			eval "$(ssh-agent | head -n 2 | tee ~/.ssh-agent-info)"
 		fi
 	fi
 fi
@@ -387,7 +274,7 @@ fi
 # IPv4 addresses
 IPv4_ADDRESS='(([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})\.){3}([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})'
 # IPv4 CIDR subnet notation
-IPv4_SUBNET="${IPv4_ADDRESS}(\/[[:digit:]]{1,2})?"
+IPv4_SUBNET="${IPv4_ADDRESS}(\\/[[:digit:]]{1,2})?"
 # hostnames
 HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
 
@@ -396,56 +283,59 @@ export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
 
 # {{{ Local Additions
 # Source an un-tracked file for private and per-machine commands
-if [ -f ~/.bash.local ]; then
-	. ~/.bash.local
+if [ -f ~/.bashrc.local ]; then
+	#shellcheck disable=1090
+	source ~/.bashrc.local
 fi
 # }}} Local Additions
 
+# {{{ Perlbrew
+#shellcheck disable=1090
+[[ -d ~/.local/share/perlbrew ]] && source ~/.local/share/perlbrew/etc/bashrc
+
+# }}}
+
+# {{{ RVM
+
+# Load RVM into a shell session *as a function*
+#shellcheck disable=1090
+[[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
+
+# }}} RVM
+
 # {{{ $PATH Setup
 
-# Add the private /bin directory to $PATH
-if [ -d "${HOME}/bin" ] && ! $(echo $PATH | egrep -q "${HOME}/bin" 2>&1); then
-	PATH="${HOME}/bin:${PATH}"
-fi
+__ensure_path_contains() {
+	local _dir
 
-if [ -d "$HOME/.perl/5/perlbrew" ]; then
-	. ~/.perl/5/perlbrew/etc/bashrc
-fi
+	[[ "$#" -ge 1 ]] || return
+
+	for _dir in "$@"; do
+		[[ -d "$_dir" ]] || continue
+		if ! [[ $PATH =~ /^(${_dir}:)|:${_dir}:|(:${_dir})$|^(${_dir})$/ ]]; then
+			PATH="${1}:${PATH}"
+		fi
+	done
+}
+
+# Add the private /bin directory to $PATH
+__ensure_path_contains ~/bin ~/.rvm/bin ~/.pyenv/bin ~/.cabal/bin
 
 # Add pyenv to $PATH
-if [ -d "$HOME/.pyenv/bin" ]; then
-	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.pyenv\/bin//g')"
-	PATH="$HOME/.pyenv/bin:$PATH"
-fi
-if $(which pyenv >/dev/null 2>&1); then
-	if [ -d "$HOME/.pyenv/shims" ]; then
-		PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.pyenv\/shims//g')"
-		PATH="$HOME/.pyenv/shims:$PATH"
-	fi
-	if [ -d "$HOME/.pyenv/plugins/pyenv-virtualenv/shims" ]; then
-		PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.pyenv\/plugins\/pyenv-virtualenv\/shims//g')"
-		PATH="$HOME/.pyenv/plugins/pyenv-virtualenv/shims:$PATH"
-	fi
+if [ -d ~/.pyenv/bin ]; then
+	__ensure_path_contains ~/.pyenv/bin
 fi
 
-# Add RVM to $PATH
-if [ -d "$HOME/.rvm/bin" ]; then
-	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.rvm\/bin//g')"
-	PATH="${HOME}/.rvm/bin:${PATH}"
-fi
-
-# Add the RubyGems bin directory to $PATH (must be first in the order or rvm(1) wll throw an error)
-if [ -d "$HOME/.gem/bin" ]; then
-	PATH="$(echo $PATH | sed 's/:[[:alnum:]\/]\+\.gem\/bin//g')"
-	PATH="${HOME}/.gem/bin:${PATH}"
+if command -v pyenv >&/dev/null; then
+	__ensure_path_contains ~/.pyenv/shims ~/.pyenv/plugins/pyenv-virtualenv/shims
 fi
 
 export PATH
 
 # Print $PATH for manual verification
-if [ "$print_path" = 'Y' ] && [ $tput_colors -ge 8 ]; then
-	printf "$(__tput_CYAN)PATH$(__tput_RESET)=$(__tput_YELLOW)\"$(__tput_VIOLET)${PATH}$(__tput_YELLOW)\"$(__tput_RESET)\n"
-elif [ "$print_path" = 'Y' ]; then
+if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+	echo "PATH=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE03]}\\1${BASE16[BASE0C]}\\2/g" <<<"$PATH")"
+else
 	echo "PATH=\"${PATH}\""
 fi
 
@@ -453,28 +343,23 @@ fi
 
 # {{{ NVM
 
-export NVM_DIR="/home/lucas/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"
+[[ -d ~/.nvm ]] && export NVM_DIR="$HOME/.nvm"
+#shellcheck disable=1090
+[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+#shellcheck disable=1090
+[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
 
 # }}}
 
 # {{{ pyenv
-(which pyenv >/dev/null 2>&1) && eval "$(pyenv init - | grep -v 'PATH')" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
+if command -v pyenv >&/dev/null; then
+	eval "$(pyenv init - | grep -v 'PATH')" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
+fi
 # }}}
 
-# {{{ RVM
-
-# Load RVM into a shell session *as a function*
-[ -s "${HOME}/.rvm/scripts/rvm" ] && . "${HOME}/.rvm/scripts/rvm"
-
-# }}} RVM
-
 # {{{ Cleanup
-unset INTERACTIVE colorful_commands colorful_prompt fancy_prompt
-unset -f gpg_agent_status ssh_agent_status
+unset -f __ssh_agent_status
 # }}} Cleanup
 
-# }}} (statements)
-
 # vim:foldmethod=marker
-# vi:ts=4:sw=4:noexpandtab:tw=72:ft=sh
+# vi:ts=4:sw=4:noexpandtab
