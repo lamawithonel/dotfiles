@@ -11,9 +11,6 @@
 "{{{ ## vim-plug ##
     call plug#begin()
 
-        " Let Vundle manage Vundle
-        "Plugin 'gmarik/Vundle.vim'
-
         " Plugins
         " -------
         Plug 'scrooloose/syntastic'
@@ -42,7 +39,9 @@
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "{{{ ## Options & Settings ##
 
+    scriptencoding utf-8
     set nocompatible
+    set number
     syntax enable
     filetype plugin on
     filetype indent on
@@ -102,17 +101,17 @@
     " Theming
     " -------
 
-    if (&t_Co >= 256) && (($TERM !~# '^konsole') && ($KONSOLE != 'true'))
-        let base16colorspace = 256
+    if (&t_Co >= 256) && (($TERM !~# '^konsole') && empty($KONSOLE_PROFILE_NAME))
+        let g:base16colorspace = 256
     elseif (&t_Co >= 88)
         set t_Co=88
-        let base16colorspace = 88
+        let g:base16colorspace = 88
     elseif (&t_Co >= 16)
         set t_Co=16
-        let base16colorspace = 16
+        let g:base16colorspace = 16
     elseif (&t_Co >=8)
         set t_Co=8
-        let base16colorspace = 8
+        let g:base16colorspace = 8
     endif
 
     if filereadable(expand("~/.vimrc_background"))
