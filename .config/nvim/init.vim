@@ -1,11 +1,14 @@
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 "{{{ ## Plugin Functions ##
-    function! BuildComposer(info)
-        if a:info.status != 'unchanged' || a:info.force
-            !cargo build --release
-            UpdateRemotePlugins
-        endif
-    endfunction
+    "Initialize vim-markdown-composer
+    if has('nvim')
+        function! BuildComposer(info)
+            if a:info.status != 'unchanged' || a:info.force
+                !cargo build --release
+                UpdateRemotePlugins
+            endif
+        endfunction
+    endif
 "}}}
 
 "{{{ ## vim-plug ##
@@ -27,6 +30,10 @@
         Plug 'hashivim/vim-terraform'
         Plug 'hashivim/vim-vagrant'
         Plug 'hashivim/vim-vaultproject'
+
+        if has('nvim')
+            Plug 'euclio/vim-markdown-composer'
+        endif
 
         " Color Schemes & Theming
         " -------------
