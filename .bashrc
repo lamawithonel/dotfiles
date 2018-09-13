@@ -123,21 +123,21 @@ __prompt_command() {
 	# command.
 	# shellcheck disable=SC2086
 	if [[ "${PIPESTATUS[-1]}" -eq '0' ]]; then
-		PS1="${ANSI[GREEN]}[\\t]${ANSI[RESET]} "
+		PS1="\[${ANSI[GREEN]}\][\\t]\[${ANSI[RESET]}\] "
 	else
-		PS1="${ANSI[BRRED]}[\\t]${ANSI[RESET]} "
+		PS1="\[${ANSI[BRRED]}\][\\t]\[${ANSI[RESET]}\] "
 	fi
 
 	# If connected via SSH, display IP address of the client.
-	[ -n "$SSH_CLIENT" ] && PS1+="${BASE16[BASE0A]}(${SSH_CLIENT%% *})${ANSI[RESET]}"
+	[ -n "$SSH_CLIENT" ] && PS1+="\[${BASE16[BASE0A]}\](${SSH_CLIENT%% *})\[${ANSI[RESET]}\]"
 
 	# Username, Host, and Working Directory
 	if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 		# Gentoo-style, color-indicated root prompt
 		if [ $EUID -eq 0 ]; then
-			PS1+="${BASE16[BASE09]}\\h${BASE16[BASE0D]}:${BASE16[BASE05]}\\w${ANSI[RESET]} "
+			PS1+="\[${BASE16[BASE09]}\]\\h\[${BASE16[BASE0D]}\]:\[${BASE16[BASE05]}\]\\w\[${ANSI[RESET]}\] "
 		else
-			PS1+="${BASE16[BASE0B]}\\u@\\h${BASE16[BASE05]}:${BASE16[BASE0A]}\\w${ANSI[RESET]} "
+			PS1+="\[${BASE16[BASE0B]}\]\\u@\\h\[${BASE16[BASE05]}\]:\[${BASE16[BASE0A]}\]\\w\[${ANSI[RESET]}\] "
 		fi
 	else
 		PS1+="\\u@\\h:\\w"
@@ -166,7 +166,7 @@ __prompt_command() {
 			fi
 
 			# add the result to prompt
-			PS1+="${git_color}[${branch}]${ANSI[RESET]} "
+			PS1+="\[${git_color}\][${branch}]\[${ANSI[RESET]}\] "
 		fi
 	fi
 
