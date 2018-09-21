@@ -10,8 +10,8 @@
 [[ -d "$BASH_DATA_HOME" ]]   || mkdir -pZ "$BASH_DATA_HOME" >&/dev/null   || mkdir -p "$BASH_DATA_HOME"
 
 # It's common to source this file from other places.  If this happens for
-# a non-interactive shell, it's OK-- and probably a good idea-- to skip anything
-# related to interactivity.  Namely, that means everything afer this.
+# a non-interactive shell, it's a good idea to skip anything related to
+# interactivity.  Namely, everything afer this.
 case "${-}" in
 	*i*) ;;
 	*) exit 1 ;;
@@ -318,13 +318,8 @@ __ensure_path_contains() {
 	done
 }
 
-# Add the private /bin directory to $PATH
+# Add private /bin directories to $PATH
 __ensure_path_contains ~/bin ~/.rvm/bin ~/.pyenv/bin ~/.cabal/bin
-
-# Add pyenv to $PATH
-if [ -d ~/.pyenv/bin ]; then
-	__ensure_path_contains ~/.pyenv/bin
-fi
 
 if command -v pyenv >&/dev/null; then
 	__ensure_path_contains ~/.pyenv/shims ~/.pyenv/plugins/pyenv-virtualenv/shims
@@ -334,7 +329,7 @@ export PATH
 
 # Print $PATH for manual verification
 if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
-	echo "PATH=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE03]}\\1${BASE16[BASE0C]}\\2/g" <<<"$PATH")"
+	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE06]}\\1${BASE16[BASE0C]}\\2/g" <<<"$PATH")"
 else
 	echo "PATH=\"${PATH}\""
 fi
@@ -343,11 +338,11 @@ fi
 
 # {{{ NVM
 
-[[ -d ~/.nvm ]] && export NVM_DIR="$HOME/.nvm"
+[[ -d ~/.nvm ]] && export NVM_DIR="${HOME}/.nvm"
 #shellcheck disable=1090
-[[ -s "$NVM_DIR/nvm.sh" ]] && source "$NVM_DIR/nvm.sh"
+[[ -s "${NVM_DIR}/nvm.sh" ]] && source "${NVM_DIR}/nvm.sh"
 #shellcheck disable=1090
-[[ -s "$NVM_DIR/bash_completion" ]] && source "$NVM_DIR/bash_completion"
+[[ -s "${NVM_DIR}/bash_completion" ]] && source "${NVM_DIR}/bash_completion"
 
 # }}}
 
