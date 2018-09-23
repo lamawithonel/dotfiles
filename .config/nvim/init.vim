@@ -30,6 +30,7 @@
         Plug 'hashivim/vim-terraform'
         Plug 'hashivim/vim-vagrant'
         Plug 'hashivim/vim-vaultproject'
+        Plug 'gentoo/gentoo-syntax'
 
         if has('nvim')
             Plug 'euclio/vim-markdown-composer'
@@ -49,6 +50,7 @@
     scriptencoding utf-8
     set nocompatible
     set number
+    set mouse=a
     syntax enable
     filetype plugin on
     filetype indent on
