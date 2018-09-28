@@ -175,7 +175,7 @@ __prompt_command() {
 }
 
 # shellcheck disable=SC2086
-PROMPT_COMMAND=__prompt_command; export PROMPT_COMMAND
+PROMPT_COMMAND=__prompt_command
 
 # }}} Prompt Setup
 
