@@ -119,32 +119,37 @@ dir_is_a_git_repo() {
 }
 
 ##
-# __prompt_command()
+# _prompt_command()
 #
 # This function is executed each time the shell returns, dynamically generating
 # the prompt.  It takes no arguments, however it reads a few environment
 # variables.
 #
-__prompt_command() {
+_prompt_command() {
 
 	# Start with a boxed timestamp.  Color based on exit status of the previous
 	# command.
 	# shellcheck disable=SC2086
 	if [[ "${PIPESTATUS[-1]}" -eq '0' ]]; then
+		# shellcheck disable=SC1117
 		PS1="\[${ANSI[GREEN]}\][\\t]\[${ANSI[RESET]}\] "
 	else
+		# shellcheck disable=SC1117
 		PS1="\[${ANSI[BRRED]}\][\\t]\[${ANSI[RESET]}\] "
 	fi
 
 	# If connected via SSH, display IP address of the client.
+	# shellcheck disable=SC1117
 	[ -n "$SSH_CLIENT" ] && PS1+="\[${BASE16[BASE0A]}\](${SSH_CLIENT%% *})\[${ANSI[RESET]}\]"
 
 	# Username, Host, and Working Directory
 	if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 		# Gentoo-style, color-indicated root prompt
 		if [ $EUID -eq 0 ]; then
+			# shellcheck disable=SC1117
 			PS1+="\[${BASE16[BASE09]}\]\\h\[${BASE16[BASE0D]}\]:\[${BASE16[BASE05]}\]\\w\[${ANSI[RESET]}\] "
 		else
+			# shellcheck disable=SC1117
 			PS1+="\[${BASE16[BASE0B]}\]\\u@\\h\[${BASE16[BASE05]}\]:\[${BASE16[BASE0A]}\]\\w\[${ANSI[RESET]}\] "
 		fi
 	else
@@ -170,6 +175,7 @@ __prompt_command() {
 
 		branch="$(git symbolic-ref -q --short HEAD || echo "($(git describe --all --contains HEAD))")"
 
+		# shellcheck disable=SC1117
 		PS1+="\[${git_color}\][${branch}]\[${ANSI[RESET]}\] "
 	fi
 
@@ -178,7 +184,7 @@ __prompt_command() {
 }
 
 # shellcheck disable=SC2086
-PROMPT_COMMAND=__prompt_command
+PROMPT_COMMAND=_prompt_command
 
 # }}} Prompt Setup
 
