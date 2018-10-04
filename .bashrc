@@ -110,6 +110,14 @@ fi
 # Trim the working directory string in $PS1 to this many elements
 PROMPT_DIRTRIM=4
 
+git_is_available() {
+	command -v git &>/dev/null
+}
+
+dir_is_a_git_repo() {
+	git rev-parse --git-dir &>/dev/null
+}
+
 ##
 # __prompt_command()
 #
@@ -144,30 +152,25 @@ __prompt_command() {
 	fi
 
 	# Display Git status and working branch, if applicable.
-	# TODO: Cleanup using `git status --short`
-	if command -v git >&/dev/null; then
-		local git_status
+	# FIXME: Git's standard status format may change from version to version.
+	#        This should instead use `git status --porcelain`, which uses
+	#        a stable, versioned output format.
+	if git_is_available && dir_is_a_git_repo; then
+		local git_status git_color branch
+
 		git_status="$(git status -unormal 2>&1)"
-		if ! [[ "$git_status" =~ Not\ a\ git\ repo ]]; then
-			# parse the porcelain output of git status
-			if [[ "$git_status" =~ nothing\ to\ commit ]]; then
-				local git_color=${BASE16[BASE0B]}
-			elif [[ "$git_status" =~ nothing\ added\ to\ commit\ but\ untracked\ files\ present ]]; then
-				local git_color=${BASE16[BASE0D]}
-			else
-				local git_color=${BASE16[BASE08]}
-			fi
 
-			if [[ "$git_status" =~ On\ branch\ ([^[:space:]]+) ]]; then
-				branch=${BASH_REMATCH[1]}
-			else
-				# Detached HEAD. (branch=HEAD is a faster alternative.)
-				branch="($(git describe --all --contains --abbrev=4 HEAD 2>/dev/null || echo HEAD))"
-			fi
-
-			# add the result to prompt
-			PS1+="\[${git_color}\][${branch}]\[${ANSI[RESET]}\] "
+		if [[ "$git_status" =~ nothing\ to\ commit ]]; then
+			git_color=${ANSI[GREEN]}
+		elif [[ "$git_status" =~ nothing\ added\ to\ commit\ but\ untracked\ files\ present ]]; then
+			git_color=${ANSI[MAGENTA]}
+		else
+			git_color=${ANSI[RED]}
 		fi
+
+		branch="$(git symbolic-ref -q --short HEAD || echo "($(git describe --all --contains HEAD))")"
+
+		PS1+="\[${git_color}\][${branch}]\[${ANSI[RESET]}\] "
 	fi
 
 	# Bash prompt character ('#' for root, '$' for everybody else)
