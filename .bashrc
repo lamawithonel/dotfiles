@@ -1,20 +1,20 @@
 #!/usr/bin/env bash
 
 # This file is only for Bash.  Exit if the shell is NOT Bash.
-[ -n "$BASH_VERSION" ] || exit 1
+[[ -n "$BASH_VERSION" ]] || exit 1
 
-# Define and setup XDG directories
-[[ -n "$BASH_CONFIG_HOME" ]] ||	BASH_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}/bash"
-[[ -n "$BASH_DATA_HOME" ]]   || BASH_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/bash"
+# Setup XDG directories
+[[ -n "$BASH_CONFIG_HOME" ]] || BASH_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}/bash"
+[[ -n "$BASH_DATA_HOME"   ]] || BASH_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/bash"
 [[ -d "$BASH_CONFIG_HOME" ]] || mkdir -pZ "$BASH_CONFIG_HOME" >&/dev/null || mkdir -p "$BASH_CONFIG_HOME"
-[[ -d "$BASH_DATA_HOME" ]]   || mkdir -pZ "$BASH_DATA_HOME" >&/dev/null   || mkdir -p "$BASH_DATA_HOME"
+[[ -d "$BASH_DATA_HOME"   ]] || mkdir -pZ "$BASH_DATA_HOME" >&/dev/null   || mkdir -p "$BASH_DATA_HOME"
 
 # It's common to source this file from other places.  If this happens for
 # a non-interactive shell, it's a good idea to skip anything related to
 # interactivity.  Namely, everything afer this.
 case "${-}" in
 	*i*) ;;
-	*) exit 1 ;;
+	*) return ;;
 esac
 
 # {{{ Miscellaneous shell options
