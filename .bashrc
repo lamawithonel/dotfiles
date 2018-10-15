@@ -4,8 +4,13 @@
 [[ -n "$BASH_VERSION" ]] || exit 1
 
 # Setup XDG directories
-[[ -n "$BASH_CONFIG_HOME" ]] || BASH_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}/bash"
-[[ -n "$BASH_DATA_HOME"   ]] || BASH_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/bash"
+XDG_CACHE_HOME=${XDG_CACHE_HOME:-${HOME}/.cache}
+XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-${HOME}/.config}
+XDG_DATA_HOME=${XDG_DATA_HOME:-${HOME}/.local/share}
+export XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME
+
+[[ -n "$BASH_CONFIG_HOME" ]] || export BASH_CONFIG_HOME="${XDG_CONFIG_HOME}/bash"
+[[ -n "$BASH_DATA_HOME"   ]] || export BASH_DATA_HOME="${XDG_DATA_HOME}/bash"
 [[ -d "$BASH_CONFIG_HOME" ]] || mkdir -pZ "$BASH_CONFIG_HOME" >&/dev/null || mkdir -p "$BASH_CONFIG_HOME"
 [[ -d "$BASH_DATA_HOME"   ]] || mkdir -pZ "$BASH_DATA_HOME" >&/dev/null   || mkdir -p "$BASH_DATA_HOME"
 
@@ -71,7 +76,7 @@ fi
 # {{{ Color
 
 if [ -z "$KONSOLE_PROFILE_NAME" ]; then
-	BASE16_SHELL="$HOME/.local/share/base16-shell/"
+	BASE16_SHELL="${XDG_DATA_HOME}/base16-shell/"
 	if [ -s "${BASE16_SHELL}/profile_helper.sh" ]; then
 		eval "$("${BASE16_SHELL}/profile_helper.sh")"
 	fi
@@ -90,18 +95,20 @@ if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 	case "$OSTYPE" in
 		*-gnu)
 			if command -v dircolors >&/dev/null; then
-				eval "$(dircolors ~/.config/coreutils/dir_colors)"
+				eval "$(dircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
 			fi
 			;;
 		bsd*)
 			if command -v gdircolors >&/dev/null; then
-				eval "$(gdircolors ~/.config/coreutils/dir_colors)"
+				eval "$(gdircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
 			fi
 			;;
 	esac
 else
-	# shellcheck source=.config/bash/colors_null.bash
-	[ -f ~/.config/bash/colors_null.bash ] && source ~/.config/bash/colors_null.bash
+	if [ -f "${XDG_CONFIG_HOME}/bash/colors_null.bash" ]; then
+		# shellcheck source=.config/bash/colors_null.bash
+		source "${XDG_CONFIG_HOME}/bash/colors_null.bash"
+	fi
 fi
 # }}} Color Support
 
@@ -247,36 +254,16 @@ fi
 
 # {{{ Setup gpg-agent(1)
 
-if [ -x "$(command -v gpg-agent)" ]; then
-	gpgconf --launch gpg-agent
-
+if command -v gpg-agent &> /dev/null; then
+	# TODO: Delay calling `gpg-agent-connect` with `preexec()`
+	# See: https://github.com/rcaloras/bash-preexec
+	gpg-agent-connect UpdateStartupTTY /bye &> /dev/null
 	GPG_TTY=$(tty); export GPG_TTY
 fi
 
 # }}} Setup gpg-agent(1)
 
-# {{{ Setup ssh-agent(1)
-if [ -x "$(command -v ssh-agent)" ]; then
-	function __ssh_agent_status() {
-		#shellcheck disable=SC2009
-		ps -Ao uid,pid,comm | grep -Eq "^[[:blank:]]*${UID}[[:blank:]]+${SSH_AGENT_PID}[[:blank:]]+ssh-agent$"
-		return $?
-	}
-
-	if [ ! -S "${SSH_AUTH_SOCK}" ] || ! __ssh_agent_status; then
-		#shellcheck source=.ssh-agent-info
-		[ -f ~/.ssh-agent-info ] && source ~/.ssh-agent-info
-		if [ ! -S "${SSH_AUTH_SOCK}" ] || ! __ssh_agent_status; then
-			echo 'Could not find a running ssh-agent.  Starting one now.'
-			eval "$(ssh-agent | head -n 2 | tee ~/.ssh-agent-info)"
-		fi
-	fi
-fi
-
-# }}} Setup ssh-agent(1)
-
 # {{{ Misc. Environment Variables
-
 
 # Define a few finite-length POSIX.1 EREs
 #
@@ -291,6 +278,7 @@ export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
 # }}} Misc. Environment Variables
 
 # {{{ Local Additions
+
 # Source an un-tracked file for private and per-machine commands
 if [ -f ~/.bashrc.local ]; then
 	#shellcheck disable=1090
@@ -300,7 +288,7 @@ fi
 
 # {{{ Perlbrew
 #shellcheck disable=1090
-[[ -d ~/.local/share/perlbrew ]] && source ~/.local/share/perlbrew/etc/bashrc
+[[ -d ${XDG_DATA_HOME}/perlbrew ]] && source ${XDG_DATA_HOME}/perlbrew/etc/bashrc
 
 # }}}
 
@@ -314,7 +302,7 @@ fi
 
 # {{{ $PATH Setup
 
-__ensure_path_contains() {
+_ensure_path_contains() {
 	local _dir
 
 	[[ "$#" -ge 1 ]] || return
@@ -328,10 +316,10 @@ __ensure_path_contains() {
 }
 
 # Add private /bin directories to $PATH
-__ensure_path_contains ~/bin ~/.rvm/bin ~/.pyenv/bin ~/.cabal/bin
+_ensure_path_contains ~/bin ~/.rvm/bin ~/.pyenv/bin ~/.cabal/bin
 
 if command -v pyenv >&/dev/null; then
-	__ensure_path_contains ~/.pyenv/shims ~/.pyenv/plugins/pyenv-virtualenv/shims
+	_ensure_path_contains ~/.pyenv/shims ~/.pyenv/plugins/pyenv-virtualenv/shims
 fi
 
 export PATH
@@ -360,10 +348,6 @@ if command -v pyenv >&/dev/null; then
 	eval "$(pyenv init - | grep -v 'PATH')" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
 fi
 # }}}
-
-# {{{ Cleanup
-unset -f __ssh_agent_status
-# }}} Cleanup
 
 # vim:foldmethod=marker
 # vi:ts=4:sw=4:noexpandtab

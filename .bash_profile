@@ -8,8 +8,8 @@
 [[ -s ~/.profile ]] && source ~/.profile
 
 # Setup XDG directories
-[[ -n "$BASH_CONFIG_HOME" ]] || BASH_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}/bash"
-[[ -n "$BASH_DATA_HOME"   ]] || BASH_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}/bash"
+[[ -n "$BASH_CONFIG_HOME" ]] || export BASH_CONFIG_HOME="${XDG_CONFIG_HOME}/bash"
+[[ -n "$BASH_DATA_HOME"   ]] || export BASH_DATA_HOME="${XDG_DATA_HOME}/bash"
 [[ -d "$BASH_CONFIG_HOME" ]] || mkdir -pZ "$BASH_CONFIG_HOME" >&/dev/null || mkdir -p "$BASH_CONFIG_HOME"
 [[ -d "$BASH_DATA_HOME"   ]] || mkdir -pZ "$BASH_DATA_HOME" >&/dev/null   || mkdir -p "$BASH_DATA_HOME"
 
