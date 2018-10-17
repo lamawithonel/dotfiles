@@ -31,6 +31,7 @@
         Plug 'hashivim/vim-vagrant'
         Plug 'hashivim/vim-vaultproject'
         Plug 'gentoo/gentoo-syntax'
+        Plug 'rust-lang/rust.vim'
 
         if has('nvim')
             Plug 'euclio/vim-markdown-composer'
