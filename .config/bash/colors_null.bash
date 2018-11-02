@@ -61,7 +61,7 @@ BASE16[BASE0D]=''
 BASE16[BASE0E]=''
 BASE16[BASE0F]=''
 
-typeset -r ANSI
-typeset -r BASE16
+typeset ANSI
+typeset BASE16
 
 export ANSI BASE16
