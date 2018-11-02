@@ -35,6 +35,12 @@ fi
 export XDG_CONFIG_HOME XDG_DATA_HOME XDG_CACHE_HOME XDG_RUNTIME_PATH
 # }}} XDG_RUNTIME_DIR
 
+CARGO_HOME="${XDG_DATA_HOME}/cargo"
+PYENV_ROOT="${XDG_DATA_HOME}/pyenv"
+NVM_DIR="${XDG_DATA_HOME}/nvm"
+
+export CARGO_HOME PYENV_ROOT NVM_DIR
+
 # {{{ Secret Agents
 if command -v gnome-keyring-daemon > /dev/null 2>&1; then
 	eval "$(gnome-keyring-daemon --start 2> /dev/null)"

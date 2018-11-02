@@ -40,7 +40,7 @@ shopt -s globstar
 shopt -s histappend
 
 # Store history in the XDG-standard location
-HISTFILE="${BASH_DATA_HOME}/history"; export HISTFILE
+HISTFILE="${BASH_DATA_HOME}/history"
 
 # Ignore lines starting with a [:space:] and lines which are duplicates of
 # the previous command.  Also, erase older duplicates.
@@ -286,56 +286,84 @@ if [ -f ~/.bashrc.local ]; then
 fi
 # }}} Local Additions
 
-# {{{ Perlbrew
-#shellcheck disable=1090
-[[ -d ${XDG_DATA_HOME}/perlbrew ]] && source ${XDG_DATA_HOME}/perlbrew/etc/bashrc
-
-# }}}
-
-# {{{ RVM
-
-# Load RVM into a shell session *as a function*
-#shellcheck disable=1090
-[[ -s ~/.rvm/scripts/rvm ]] && source ~/.rvm/scripts/rvm
-
-# }}} RVM
-
 # {{{ $PATH Setup
 
-_ensure_path_contains() {
+_string_in() {
+	local _element
+	local _search_string
+
+	_search_string=$1 && shift
+
+	for _element; do
+		[[ "$_element" == "$_search_string" ]] && return 0
+	done
+	return 1
+}
+
+_join_strings() {
+	local IFS
+	IFS="$1" && shift
+	echo "$*"
+}
+
+_remove_from_path() {
+	[[ $# -ge 1 ]] || return 1
+
 	local _dir
+	local -a _del_pattern
+	local -a _path_dirs
+	local -a _new_path
 
-	[[ "$#" -ge 1 ]] || return
+	for _dir; do
+		read -r -a _del_pattern <<< "$_dir"
+		read -r -a _path_dirs <<< "${PATH//:/ }"
+		read -r -a _new_path <<< "${_path_dirs[@]//$_del_pattern}"
+		PATH="$(_join_strings ':' "${_new_path[@]}")"
+	done
+}
 
-	for _dir in "$@"; do
-		[[ -d "$_dir" ]] || continue
-		if ! [[ $PATH =~ /^(${_dir}:)|:${_dir}:|(:${_dir})$|^(${_dir})$/ ]]; then
-			PATH="${1}:${PATH}"
+_ensure_path_contains() {
+	[[ $# -ge 1 ]] || return 1
+
+	local _dir
+	for _dir; do
+		#shellcheck disable=SC2086
+		if _string_in "$_dir" ${PATH//:/ }; then
+			[ -d "$_dir" ] || _remove_from_path "$_dir"
+			continue
+		else
+			[ -d "$_dir" ] && PATH="${1}:${PATH}"
 		fi
 	done
 }
 
 # Add private /bin directories to $PATH
-_ensure_path_contains ~/bin ~/.rvm/bin ~/.pyenv/bin ~/.cabal/bin
+_ensure_path_contains ~/bin
+_ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
+_ensure_path_contains "${PYENV_ROOT}/bin"
 
 if command -v pyenv >&/dev/null; then
-	_ensure_path_contains ~/.pyenv/shims ~/.pyenv/plugins/pyenv-virtualenv/shims
+	_ensure_path_contains "${PYENV_ROOT}/shims"
+	_ensure_path_contains "${PYENV_ROOT}/plugins/pyenv-virtualenv/shims"
 fi
 
 export PATH
 
-# Print $PATH for manual verification
-if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
-	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE06]}\\1${BASE16[BASE0C]}\\2/g" <<<"$PATH")"
-else
-	echo "PATH=\"${PATH}\""
-fi
+unset -f _ensure_path_contains _remove_from_path _join_strings _string_in
 
 # }}} $PATH Setup
 
+# {{{ Perlbrew
+
+#shellcheck disable=1090
+[[ -d "${XDG_DATA_HOME}/perlbrew" ]] && source "${XDG_DATA_HOME}/perlbrew/etc/bashrc"
+
+# }}}
+
 # {{{ NVM
 
-[[ -d ~/.nvm ]] && export NVM_DIR="${HOME}/.nvm"
 #shellcheck disable=1090
 [[ -s "${NVM_DIR}/nvm.sh" ]] && source "${NVM_DIR}/nvm.sh"
 #shellcheck disable=1090
@@ -344,10 +372,31 @@ fi
 # }}}
 
 # {{{ pyenv
+
 if command -v pyenv >&/dev/null; then
 	eval "$(pyenv init - | grep -v 'PATH')" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
 fi
+
 # }}}
+
+# {{{ RVM
+
+# Load RVM into a shell session *as a function*
+#shellcheck disable=1090
+[[ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ]] && source "${XDG_DATA_HOME}/rvm/scripts/rvm"
+
+# }}} RVM
+
+# {{{ $PATH print
+
+# Print $PATH for manual verification
+if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE06]}\\1${BASE16[BASE0C]}\\2/g" <<<"$PATH")"
+else
+	echo "PATH=\"${PATH}\""
+fi
+
+# }}} $PATH print
 
 # vim:foldmethod=marker
 # vi:ts=4:sw=4:noexpandtab
