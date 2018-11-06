@@ -23,7 +23,7 @@ XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
 
 if [ -z "$XDG_RUNTIME_DIR" ]; then
 	echo 'error: XDG_RUNTIME_DIR not set in the environment.'
-	XDG_RUNTIME_DIR="/tmp/runtime-$(id -un)"
+	XDG_RUNTIME_DIR="/tmp/runtime-$(id -un)"; export XDG_RUNTIME_DIR
 fi
 
 if [ ! -d "$XDG_RUNTIME_DIR" ]; then
