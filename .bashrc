@@ -94,12 +94,12 @@ if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 	# dircolors(1)
 	case "$OSTYPE" in
 		*-gnu)
-			if command -v dircolors >&/dev/null; then
+			if hash dircolors 2>/dev/null; then
 				eval "$(dircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
 			fi
 			;;
 		bsd*)
-			if command -v gdircolors >&/dev/null; then
+			if hash gdircolors 2>/dev/null; then
 				eval "$(gdircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
 			fi
 			;;
@@ -118,7 +118,7 @@ fi
 PROMPT_DIRTRIM=4
 
 git_is_available() {
-	command -v git &>/dev/null
+	hash git 2>/dev/null
 }
 
 dir_is_a_git_repo() {
@@ -197,9 +197,9 @@ PROMPT_COMMAND=_prompt_command
 
 # {{{ Functions & Aliases
 
-if command -v nvim >&/dev/null; then
+if hash nvim 2>/dev/null; then
 	alias vi='nvim'
-elif command -v vim >&/dev/null; then
+elif hash vim 2>/dev/null; then
 	alias vi='vim'
 fi
 
@@ -254,7 +254,7 @@ fi
 
 # {{{ Setup gpg-agent(1)
 
-if command -v gpg-agent &> /dev/null; then
+if hash gpg-agent 2>/dev/null; then
 	# TODO: Delay calling `gpg-agent-connect` with `preexec()`
 	# See: https://github.com/rcaloras/bash-preexec
 	gpg-agent-connect UpdateStartupTTY /bye &> /dev/null
@@ -344,7 +344,7 @@ _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
 _ensure_path_contains "${PYENV_ROOT}/bin"
 
-if command -v pyenv >&/dev/null; then
+if hash pyenv 2>/dev/null; then
 	_ensure_path_contains "${PYENV_ROOT}/shims"
 	_ensure_path_contains "${PYENV_ROOT}/plugins/pyenv-virtualenv/shims"
 fi
@@ -373,7 +373,7 @@ unset -f _ensure_path_contains _remove_from_path _join_strings _string_in
 
 # {{{ pyenv
 
-if command -v pyenv >&/dev/null; then
+if hash pyenv 2>/dev/null; then
 	eval "$(pyenv init - | grep -v 'PATH')" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
 fi
 

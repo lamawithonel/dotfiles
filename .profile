@@ -42,16 +42,16 @@ NVM_DIR="${XDG_DATA_HOME}/nvm"
 export CARGO_HOME PYENV_ROOT NVM_DIR
 
 # {{{ Secret Agents
-if command -v gnome-keyring-daemon > /dev/null 2>&1; then
+if hash gnome-keyring-daemon 2>/dev/null; then
 	eval "$(gnome-keyring-daemon --start 2> /dev/null)"
-elif command -v gpg-agent > /dev/null 2>&1; then
+elif hash gpg-agent 2>/dev/null; then
 	if systemctl --user -q is-active gpg-agent.socket > /dev/null 2>&1; then
 		gpg-connect-agent /bye
 	else
 		gpgconf --launch gpg-agent
 	fi
 	SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket 2> /dev/null)"
-elif command -v ssh-agent > /dev/null 2>&1; then
+elif hash ssh-agent 2>/dev/null; then
 	_ssh_agent_pid() {
 		ps -U "$(id -u)" -o pid,comm | awk '/^[[:blank:]]*[[:digit:]]+[[:blank:]]+ssh-agent$/ {print $1}'
 	}
