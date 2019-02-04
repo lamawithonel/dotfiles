@@ -32,6 +32,8 @@
         Plug 'hashivim/vim-vaultproject'
         Plug 'gentoo/gentoo-syntax'
         Plug 'rust-lang/rust.vim'
+        Plug 'vim-scripts/dhcpd.vim'
+        Plug 'https://anongit.gentoo.org/git/proj/eselect-syntax.git'
 
         if has('nvim')
             Plug 'euclio/vim-markdown-composer'
