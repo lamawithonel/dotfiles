@@ -7,6 +7,29 @@
 # will read the first one it encounters and ignore the rest.
 # See the INVOCATION section of the bash(1) man page for more information.
 
+# {{{ Traps & Cleanup
+trap cleanup EXIT
+
+_cleanup() {
+	unset -f _get_fmode _cleanup
+}
+# }}}
+
+# {{{ Local Functions
+_get_fmode() {
+	_uname_s="$(uname -s)"
+
+	case "$_uname_s" in
+		'Darwin'|"*BSD")
+			stat -f '%OLp' "$1"
+			;;
+		*)
+			stat -c '%a' "$1"
+			;;
+	esac
+}
+# }}}
+
 # {{{ Set a secure `umask(2)`
 #shellcheck disable=2046
 if [ $(id -ru) -gt 999 ] && [ "$(id -gn)" = "$(id -un)" ]; then
@@ -28,7 +51,7 @@ fi
 
 if [ ! -d "$XDG_RUNTIME_DIR" ]; then
 	mkdir -m 0700 "/tmp/runtime-$(id -un)"
-elif [ ! "$(stat -c '%a' "$XDG_RUNTIME_DIR")" = '700' ]; then
+elif [ ! "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ]; then
 	chmod 0700 "$XDG_RUNTIME_DIR"
 fi
 
@@ -62,6 +85,7 @@ elif hash ssh-agent 2>/dev/null; then
 fi
 export SSH_AUTH_SOCK SSH_AGENT_PID
 # }}} Secrets Agents
+
 
 #shellcheck disable=1090
 [ -e ~/.profile.local ] && . ~/.profile.local

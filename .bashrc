@@ -60,7 +60,10 @@ export HISTFILE HISTCONTROL HISTSIZE HISTFILESIZE
 # Enable programmable completion features for non-root users.  Ignore for
 # for priveledged users who may be open to shell command injection attacks.
 if ! shopt -oq posix && [ $EUID -ne 0 ]; then
-	if [ -f /etc/bash_completion ]; then
+	if [ -f /usr/local/etc/profile.d/bash_completion.sh ]; then
+		#shellcheck disable=1091
+		source /usr/local/etc/profile.d/bash_completion.sh
+	elif [ -f /etc/bash_completion ]; then
 		#shellcheck disable=1091
 		source /etc/bash_completion
 	elif [ -f /etc/profile.d/bash_completion.sh ]; then
