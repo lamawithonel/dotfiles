@@ -10,6 +10,7 @@ fi
 if [ $SHLVL -eq 1 ]; then
 	clear
 	tput E3 >&/dev/null || echo -ne "\033[3J" >&/dev/null
+	hash sudo 2>/dev/null && sudo -k
 fi
 
 # vim:foldmethod=marker
