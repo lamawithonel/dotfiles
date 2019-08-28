@@ -11,7 +11,7 @@
 trap cleanup EXIT
 
 _cleanup() {
-	unset -f _get_fmode _cleanup
+	unset -f _get_fmode _ssh_agent_pid _cleanup
 }
 # }}}
 
@@ -27,6 +27,10 @@ _get_fmode() {
 			stat -c '%a' "$1"
 			;;
 	esac
+}
+
+_ssh_agent_pid() {
+	ps -U "$(id -u)" -o pid,comm | awk '/^[[:blank:]]*[[:digit:]]+[[:blank:]]+ssh-agent$/ {print $1}'
 }
 # }}}
 
@@ -75,13 +79,9 @@ elif hash gpg-agent 2>/dev/null; then
 	fi
 	SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket 2> /dev/null)"
 elif hash ssh-agent 2>/dev/null; then
-	_ssh_agent_pid() {
-		ps -U "$(id -u)" -o pid,comm | awk '/^[[:blank:]]*[[:digit:]]+[[:blank:]]+ssh-agent$/ {print $1}'
-	}
 	SSH_AUTH_SOCK="$XDG_RUNTIME_DIR/ssh-agent/ssh-agent.socket"
 	mkdir -m 0700 "$XDG_RUNTIME_DIR/ssh-agent"
 	eval "$(ssh-agent -s -a "$SSH_AUTH_SOCK" > /dev/null 2>&1)" || SSH_AGENT_PID=_ssh_agent_pid
-	unset -f _ssh_agent_pid
 fi
 export SSH_AUTH_SOCK SSH_AGENT_PID
 # }}} Secrets Agents
