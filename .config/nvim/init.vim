@@ -33,6 +33,7 @@
         Plug 'gentoo/gentoo-syntax'
         Plug 'rust-lang/rust.vim'
         Plug 'vim-scripts/dhcpd.vim'
+        Plug 'PProvost/vim-ps1'
         Plug 'https://anongit.gentoo.org/git/proj/eselect-syntax.git'
 
         if has('nvim')
