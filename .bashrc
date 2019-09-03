@@ -345,11 +345,11 @@ _ensure_path_contains ~/bin
 _ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
-_ensure_path_contains "${PYENV_ROOT}/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/pyenv/bin"
 
 if hash pyenv 2>/dev/null; then
-	_ensure_path_contains "${PYENV_ROOT}/shims"
-	_ensure_path_contains "${PYENV_ROOT}/plugins/pyenv-virtualenv/shims"
+	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/shims"
+	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/plugins/pyenv-virtualenv/shims"
 fi
 
 export PATH

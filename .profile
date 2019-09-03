@@ -43,11 +43,18 @@ fi
 export XDG_CONFIG_HOME XDG_DATA_HOME XDG_CACHE_HOME XDG_RUNTIME_PATH
 # }}} XDG_RUNTIME_DIR
 
-CARGO_HOME="${XDG_DATA_HOME}/cargo"
-PYENV_ROOT="${XDG_DATA_HOME}/pyenv"
-NVM_DIR="${XDG_DATA_HOME}/nvm"
+# {{{ Language environment directories
 
-export CARGO_HOME PYENV_ROOT NVM_DIR
+# These need to be set at install-time. They are set here to ensure they
+# are set for all shells, in case the default is not Bash.
+
+CARGO_HOME="${XDG_DATA_HOME}/cargo"
+NVM_DIR="${XDG_DATA_HOME}/nvm"
+PYENV_ROOT="${XDG_DATA_HOME}/pyenv"
+
+export CARGO_HOME NVM_DIR PYENV_ROOT
+
+# }}}
 
 #shellcheck disable=1090
 [ -e ~/.profile.local ] && . ~/.profile.local
