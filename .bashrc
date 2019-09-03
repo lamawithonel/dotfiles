@@ -101,7 +101,7 @@ if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 				eval "$(dircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
 			fi
 			;;
-		bsd*)
+		bsd*|darwin*)
 			if hash gdircolors 2>/dev/null; then
 				eval "$(gdircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
 			fi
@@ -230,7 +230,7 @@ if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 			alias la='ls -alF --color=auto'
 			alias l='ls -CF --color=auto'
 			;;
-		bsd*)
+		bsd*|darwin*)
 			if [ -x '/usr/local/bin/ggrep' ]; then
 				alias grep='ggrep --color=auto'
 				alias fgrep='gfgrep --color=auto'
