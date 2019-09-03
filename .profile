@@ -15,6 +15,22 @@ _cleanup() {
 }
 # }}}
 
+# {{{ Local Functions
+_get_fmode() {
+	_uname_s="$(uname -s)"
+
+	case "$_uname_s" in
+		'Darwin'|"*BSD")
+			stat -f '%OLp' "$1"
+			  ;;
+		*)
+			stat -c '%a' "$1"
+			;;
+	esac
+}
+# }}}
+
+
 # {{{ Set a secure `umask(2)`
 #shellcheck disable=2046
 if [ $(id -ru) -gt 999 ] && [ "$(id -gn)" = "$(id -un)" ]; then

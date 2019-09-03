@@ -237,7 +237,7 @@ if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 				alias egrep='gegrep --color=auto'
 			fi
 
-			if hash gls 2>/dev/null; the
+			if hash gls 2>/dev/null; then
 				alias ls='gls -F --color=auto'
 				alias ll='gls -lF --color=auto'
 				alias la='gls -alF --color=auto'
