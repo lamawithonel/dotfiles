@@ -231,13 +231,13 @@ if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 			alias l='ls -CF --color=auto'
 			;;
 		bsd*|darwin*)
-			if [ -x '/usr/local/bin/ggrep' ]; then
+			if hash ggrep 2>/dev/null; then
 				alias grep='ggrep --color=auto'
 				alias fgrep='gfgrep --color=auto'
 				alias egrep='gegrep --color=auto'
 			fi
 
-			if [ -x '/usr/local/bin/gls' ]; then
+			if hash gls 2>/dev/null; the
 				alias ls='gls -F --color=auto'
 				alias ll='gls -lF --color=auto'
 				alias la='gls -alF --color=auto'
