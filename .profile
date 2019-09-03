@@ -30,12 +30,11 @@ XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
 
 if [ -z "$XDG_RUNTIME_DIR" ]; then
-	echo 'error: XDG_RUNTIME_DIR not set in the environment.'
 	XDG_RUNTIME_DIR="/tmp/runtime-$(id -un)"; export XDG_RUNTIME_DIR
 fi
 
 if [ ! -d "$XDG_RUNTIME_DIR" ]; then
-	mkdir -m 0700 "/tmp/runtime-$(id -un)"
+	mkdir -m 0700 "/tmp/runtime-$(id -un)" 2>/dev/null
 elif [ ! "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ]; then
 	chmod 0700 "$XDG_RUNTIME_DIR"
 fi
