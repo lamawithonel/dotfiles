@@ -34,6 +34,8 @@
         Plug 'rust-lang/rust.vim'
         Plug 'vim-scripts/dhcpd.vim'
         Plug 'PProvost/vim-ps1'
+        Plug 'vim-scripts/groovyindent-unix'
+        Plug 'vim-scripts/groovy.vim'
         Plug 'https://anongit.gentoo.org/git/proj/eselect-syntax.git'
 
         if has('nvim')
@@ -76,6 +78,7 @@
     " File type detection
     " -------------------
     au BufNewFile,BufRead *.markdown,*.mdown,*.mkd,*.mkdn,*.mdwn,*.md set ft=markdown
+    au BufNewFile,BufRead Jenkinsfile set ft=groovy
 
     " Per file type indentation
     " -------------------------
