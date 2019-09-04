@@ -342,6 +342,7 @@ _ensure_path_contains() {
 
 # Add private /bin directories to $PATH
 _ensure_path_contains ~/bin
+_ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
