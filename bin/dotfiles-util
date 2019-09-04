@@ -1,0 +1,70 @@
+#!/bin/sh
+# vi:ts=4:sw=4:noet
+
+set -e
+
+trap _cleanup EXIT
+
+XDG_DATA_HOME=${XDG_DATA_HOME:-${HOME}/.local/share}; export XDG_DATA_HOME
+
+#readonly LOG_FILE="/tmp/$(basename "$0").log"
+readonly LOG_FILE='/dev/null'
+
+_cleanup() {
+	:
+}
+
+_usage() {
+	cat <<- EOF
+	Usage: ${0} <command>
+
+	These are the available commands:
+	    init	Install all necessary software.
+	    update	Update all software installed via init.
+EOF
+}
+
+_info() { echo "[INFO]    $*" | tee -a "$LOG_FILE" >&2 ; }
+_warn() { echo "[WARNING] $*" | tee -a "$LOG_FILE" >&2 ; }
+_err()  { echo "[ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; }
+
+_not_implemented() { _err 'NOT IMPLEMENTED' ; }
+
+_git_clone() {
+	[ $# -eq 2 ] || exit 1
+	if [ -d "$2" ]; then
+		return 0
+	else
+		git clone "$1" "$2"
+	fi
+}
+
+_init() {
+	# TODO: figure out how to store these for reuse in _update
+	_git_clone https://github.com/chriskempson/base16-shell.git "${HOME}/src/github/chriskempson/base16-shell"
+	_git_clone https://github.com/cskeeters/base16-konsole.git "${HOME}/src/github/cskeeters/base16-konsole"
+	_git_clone https://github.com/chriskempson/base16-xresources.git "${HOME}/src/github/chriskempson/base16-xresources"
+	_git_clone https://github.com/junegunn/vim-plug.git "${HOME}/src/github/junegunn/vim-plug"
+	_git_clone https://github.com/tfutils/tfenv.git "${XDG_DATA_HOME}/tfenv"
+}
+
+_update() {
+	_not_implemented
+}
+
+_main() {
+	case "$1" in
+		init)
+			_init
+			;;
+		update)
+			_update
+			;;
+		*)
+			_usage
+			;;
+	esac
+}
+
+_main "$@"
+
