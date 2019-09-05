@@ -1,0 +1,56 @@
+#!/bin/sh
+# vi:ts=4:sw=4:noet
+
+set -e
+trap _cleanup EXIT
+
+readonly _yadm_url='https://github.com/TheLocehiliosan/yadm.git'
+readonly _yadm_dev_key_url='https://pgp.key-server.io/download/0xed61ee2125054fdfd80778ff14db4fc2465a4b12'
+
+readonly XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
+readonly _yadm_home="${XDG_DATA_HOME}/yadm"
+readonly _home_bin="${HOME}/bin"
+
+_cleanup() {
+	unset GIT_DIR
+}
+
+_fail() { echo -e "$*" && exit 1 ; }
+
+_fail_git_verify() {
+	rm -rf "${_yadm_home}"
+	echo <<- EOF
+		ERROR: Could not verify trust of the Git repository.  Removing contents.
+
+		  It is possible the developer forgot to sign the latest tag.  If
+		  that is the case, you may be able to work around this with an older
+		  version.  Just edit the \$_version variable in this script to specify
+		  the tag or other valid refspec to use.
+	EOF
+	exit 1
+}
+
+_test_cmd() {
+	if ! hash "$1" 2>/dev/null; then
+		_fail "ERROR: Cannot find \`${1}\`. Please ensure \`${1}\` is installed then try again."
+	else
+		return 0
+	fi
+}
+
+_test_cmd git
+_test_cmd gpg
+
+gpg -q --fetch-keys "$_yadm_dev_key_url" || _fail 'ERROR: Could not install GPG keys'
+
+[ -d "$XDG_DATA_HOME"   ] || mkdir "$XDG_DATA_HOME"
+[ -d "$_home_bin"       ] || mkdir "$_home_bin"
+
+[ -d "$_yadm_home" ] || git clone "$_yadm_url" "$_yadm_home"
+
+GIT_DIR="${_yadm_home}/.git"; export GIT_DIR
+
+# TODO: Allow `_version` to be set on the command line, edit failure message.
+_version="$(git tag | tail -n1)"
+git --work-tree="$_yadm_home" checkout -q "$_version"
+git --work-tree="$_yadm_home" tag --verify || _fail_git_verify
