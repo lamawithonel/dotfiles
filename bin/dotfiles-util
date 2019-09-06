@@ -5,13 +5,16 @@ set -e
 
 trap _cleanup EXIT
 
-XDG_DATA_HOME=${XDG_DATA_HOME:-${HOME}/.local/share}; export XDG_DATA_HOME
+readonly XDG_DATA_HOME=${XDG_DATA_HOME:-${HOME}/.local/share}
+readonly XDG_CACHE_HOME="${XDG_CACHE_HOME:-~/.cache}"
 
-#readonly LOG_FILE="/tmp/$(basename "$0").log"
-readonly LOG_FILE='/dev/null'
+readonly LOG_FILE="/tmp/$(basename "$0").log"
+
+readonly _rvm_binscripts_url='https://raw.githubusercontent.com/rvm/rvm/stable/binscripts'
 
 _cleanup() {
-	:
+	rm -f "${XDG_CACHE_DIR}/rvm-installer"
+	rm -f "${XDG_CACHE_DIR}/rvm-installer.asc"
 }
 
 _usage() {
@@ -21,31 +24,86 @@ _usage() {
 	These are the available commands:
 	    init	Install all necessary software.
 	    update	Update all software installed via init.
-EOF
+	EOF
 }
 
-_info() { echo "[INFO]    $*" | tee -a "$LOG_FILE" >&2 ; }
+_info() { echo "[INFO]    $*" >>       "$LOG_FILE" 2>&1 ; }
 _warn() { echo "[WARNING] $*" | tee -a "$LOG_FILE" >&2 ; }
-_err()  { echo "[ERROR]   $*" | tee -a "$LOG_FILE" >&2 ; }
+_err()  { echo "[ERROR]   $*" | tee -a "$LOG_FILE" >&2 && exit 1 ; }
 
 _not_implemented() { _err 'NOT IMPLEMENTED' ; }
 
 _git_clone() {
 	[ $# -eq 2 ] || exit 1
+	_info "Cloning ${1} into ${2}"
 	if [ -d "$2" ]; then
+		_info "${2} already exists"
 		return 0
 	else
-		git clone "$1" "$2"
+		git clone "$1" "$2" || _warn "\`git clone`` of ${1} failed"
+	fi
+}
+
+_get_fmode() {
+	_uname_s="$(uname -s)"
+
+	case "$_uname_s" in
+		'Darwin'|"*BSD")
+			stat -f '%OLp' "$1"
+			  ;;
+		*)
+			stat -c '%a' "$1"
+			;;
+	esac
+}
+
+_prep() {
+	hash bash 2>/dev/null || _err "Cannot find Bash. Make sure it is installed and in \$PATH"
+	hash curl 2>/dev/null || _err "Cannot find cURL. Make sure it is installed and in \$PATH"
+	hash git 2>/dev/null  || _err "Cannot find Git. Make sure it is installed and in \$PATH"
+	hash gpg 2>/dev/null  || _err "Cannot find GnuPG. Make sure it is installed and in \$PATH"
+
+	[ -d "$XDG_CACHE_HOME" ] || mkdir -p "$XDG_CACHE_HOME"
+	[ -d "$XDG_DATA_HOME"  ] || mkdir -p "$XDG_DATA_HOME"
+}
+
+_pyenv_install() {
+	if _git_clone https://github.com/pyenv/pyenv.git "${XDG_DATA_HOME}/pyenv"; then
+		_git_clone https://github.com/pyenv/pyenv-doctor.git "${XDG_DATA_HOME}/pyenv/plugins/pyenv-doctor"
+		_git_clone https://github.com/pyenv/pyenv-update.git "${XDG_DATA_HOME}/pyenv/plugins/pyenv-update"
+		_git_clone https://github.com/pyenv/pyenv-which-ext.git "${XDG_DATA_HOME}/pyenv/plugins/pyenv-which-ext"
+		_git_clone https://github.com/pyenv/pyenv-virtualenv.git "${XDG_DATA_HOME}/pyenv/plugins/pyenv-virtualenv"
+		_git_clone https://github.com/pyenv/pyenv-pip-migrate.git "${XDG_DATA_HOME}/pyenv/plugins/pyenv-pip-migrate"
+		_git_clone https://github.com/pyenv/pyenv-pip-rehash.git "${XDG_DATA_HOME}/pyenv/plugins/pyenv-pip-rehash"
+		_git_clone https://github.com/pyenv/pyenv-version-ext.git "${XDG_DATA_HOME}/pyenv/plugins/pyenv-version-ext"
+	else
+		_warn 'Failed to install pyenv.  Skipping pyenv plugins.'
+		return 1
+	fi
+}
+
+_rvm_install() {
+	if [ ! -d "${XDG_DATA_DIR}/rvm" ]; then
+		curl -sSL "${_rvm_binscripts_url}/rvm-installer" -o "${XDG_CACHE_HOME}/rvm-installer"
+		curl -sSL "${_rvm_binscripts_url}/rvm-installer.asc" -o "${XDG_CACHE_HOME}/rvm-installer.asc"
+		gpg --verify "${XDG_CACHE_HOME}/rvm-installer.asc" "${XDG_CACHE_HOME}/rvm-installer" >> "$LOG_FILE" 2>&1
+		chmod 0775 "${XDG_CACHE_HOME}/rvm-installer"
+		"${XDG_CACHE_HOME}/rvm-installer" --branch stable --verify-downloads 2 >> "$LOG_FILE" 2>&1
 	fi
 }
 
 _init() {
+	_prep
+
 	# TODO: figure out how to store these for reuse in _update
-	_git_clone https://github.com/chriskempson/base16-shell.git "${HOME}/src/github/chriskempson/base16-shell"
+	_git_clone https://github.com/chriskempson/base16-shell.git "${XDG_DATA_HOME}/base16-shell"
 	_git_clone https://github.com/cskeeters/base16-konsole.git "${HOME}/src/github/cskeeters/base16-konsole"
 	_git_clone https://github.com/chriskempson/base16-xresources.git "${HOME}/src/github/chriskempson/base16-xresources"
 	_git_clone https://github.com/junegunn/vim-plug.git "${HOME}/src/github/junegunn/vim-plug"
 	_git_clone https://github.com/tfutils/tfenv.git "${XDG_DATA_HOME}/tfenv"
+
+	_pyenv_install
+	_rvm_install || _warn 'Failed to install rvm'
 }
 
 _update() {
@@ -67,4 +125,3 @@ _main() {
 }
 
 _main "$@"
-
