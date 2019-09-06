@@ -9,7 +9,8 @@ readonly XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
 readonly XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
 readonly XDG_CACHE_HOME="${XDG_CACHE_HOME:-~/.cache}"
 
-readonly LOG_FILE="/tmp/$(basename "$0").log"
+readonly SELF_NAME="$(basename "$0")"
+readonly LOG_FILE="/tmp/${SELF_NAME}.log"
 
 readonly _rvm_binscripts_url='https://raw.githubusercontent.com/rvm/rvm/stable/binscripts'
 
@@ -20,7 +21,7 @@ _cleanup() {
 
 _usage() {
 	cat <<- EOF
-	Usage: ${0} <command>
+	Usage: ${SELF_NAME} <command>
 
 	These are the available commands:
 	    init	Install all necessary software.
