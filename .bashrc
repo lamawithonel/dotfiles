@@ -80,7 +80,7 @@ fi
 # {{{ Color
 
 if [ -z "$KONSOLE_PROFILE_NAME" ]; then
-	BASE16_SHELL="${XDG_DATA_HOME}/base16-shell/"
+	BASE16_SHELL="${XDG_DATA_HOME}/base16/base16-shell/"
 	if [ -s "${BASE16_SHELL}/profile_helper.sh" ]; then
 		eval "$("${BASE16_SHELL}/profile_helper.sh")"
 	fi

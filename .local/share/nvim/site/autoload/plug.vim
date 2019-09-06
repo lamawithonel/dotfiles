@@ -1,1 +1,1 @@
-../../../../../src/github/junegunn/vim-plug/plug.vim
+../../../../../.config/nvim/plugged/vim-plug/plug.vim
