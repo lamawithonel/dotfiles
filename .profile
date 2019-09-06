@@ -30,7 +30,6 @@ _get_fmode() {
 }
 # }}}
 
-
 # {{{ Set a secure `umask(2)`
 #shellcheck disable=2046
 if [ $(id -ru) -gt 999 ] && [ "$(id -gn)" = "$(id -un)" ]; then
@@ -44,19 +43,20 @@ fi
 XDG_CACHE_HOME="${XDG_CACHE_HOME:-${HOME}/.cache}"
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
 XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
+XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/runtime-$(id -un)}"
 
-if [ -z "$XDG_RUNTIME_DIR" ]; then
-	XDG_RUNTIME_DIR="/tmp/runtime-$(id -un)"; export XDG_RUNTIME_DIR
-fi
+for _dir in "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"; do
+	[ -d "$_dir" ] || mkdir -p "$_dir"
+done
 
 if [ ! -d "$XDG_RUNTIME_DIR" ]; then
-	mkdir -m 0700 "/tmp/runtime-$(id -un)" 2>/dev/null
+	mkdir -m 0700 "$XDG_RUNTIME_DIR" 2>/dev/null
 elif [ ! "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ]; then
 	chmod 0700 "$XDG_RUNTIME_DIR"
 fi
 
-export XDG_CONFIG_HOME XDG_DATA_HOME XDG_CACHE_HOME XDG_RUNTIME_PATH
-# }}} XDG_RUNTIME_DIR
+export XDG_CONFIG_HOME XDG_DATA_HOME XDG_CACHE_HOME XDG_RUNTIME_DIR
+# }}}
 
 # {{{ Language environment directories
 

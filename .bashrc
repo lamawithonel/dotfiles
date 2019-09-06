@@ -3,12 +3,13 @@
 # This file is only for Bash.  Exit if the shell is NOT Bash.
 [[ -n "$BASH_VERSION" ]] || exit 1
 
-# Setup XDG directories
+# These should be set in /etc/profile or ~/.profile, but just in case...
 XDG_CACHE_HOME=${XDG_CACHE_HOME:-${HOME}/.cache}
 XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-${HOME}/.config}
 XDG_DATA_HOME=${XDG_DATA_HOME:-${HOME}/.local/share}
 export XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME
 
+# Setup XDG directories
 [[ -n "$BASH_CONFIG_HOME" ]] || export BASH_CONFIG_HOME="${XDG_CONFIG_HOME}/bash"
 [[ -n "$BASH_DATA_HOME"   ]] || export BASH_DATA_HOME="${XDG_DATA_HOME}/bash"
 [[ -d "$BASH_CONFIG_HOME" ]] || mkdir -pZ "$BASH_CONFIG_HOME" >&/dev/null || mkdir -p "$BASH_CONFIG_HOME"
