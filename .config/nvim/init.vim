@@ -21,6 +21,7 @@
         " Misc. Functionality Plugins
         " ---------------------------
         Plug 'godlygeek/tabular'
+        Plug 'neoclide/coc.nvim', {'branch': 'release'}
         Plug 'scrooloose/syntastic'
         Plug 'terryma/vim-multiple-cursors'
         Plug 'wfleming/vim-codeclimate'
@@ -150,6 +151,19 @@
     " Key Bindings
     " ------------
     map <F7> :set spell! spelllang=en_us spellfile=~/.vim/spellfile.add<cr>
+
+    " {{{ CoC tab-completion
+    function! s:check_back_space() abort
+        let col = col('.') - 1
+        return !col || getline('.')[col - 1]  =~? '\s'
+    endfunction
+
+    inoremap <silent><expr> <TAB>
+        \ pumvisible() ? "\<C-n>" :
+        \ <SID>check_back_space() ? "\<TAB>" :
+        \ coc#refresh()
+    " }}}
+
 
 " }}} end options
 
