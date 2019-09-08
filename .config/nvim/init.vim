@@ -93,6 +93,10 @@
     au FileType ruby   setl sw=2 sts=2 et
     au FileType vim    setl sw=4 sts=4 et
 
+    " CoC settings
+    " ------------
+    let g:coc_global_extensions = ['coc-powershell', 'coc-yaml']
+
     " Syntastic settings
     " ------------------
     let g:syntastic_css_checkers      = ['phpcs']
