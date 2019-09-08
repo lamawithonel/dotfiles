@@ -18,33 +18,34 @@
         " --------
         Plug 'junegunn/vim-plug'
 
-        " Plugins
-        " -------
-        Plug 'scrooloose/syntastic'
-        Plug 'ynkdir/vim-vimlparser'
-        Plug 'syngan/vim-vimlint'
+        " Misc. Functionality Plugins
+        " ---------------------------
         Plug 'godlygeek/tabular'
-        Plug 'rodjek/vim-puppet'
-        Plug 'noprompt/vim-yardoc'
-        Plug 'wfleming/vim-codeclimate'
+        Plug 'scrooloose/syntastic'
         Plug 'terryma/vim-multiple-cursors'
+        Plug 'wfleming/vim-codeclimate'
+
+        if has('nvim')
+            Plug 'euclio/vim-markdown-composer'
+        endif
+
+        " Filetype Plugins
+        " ----------------
+        Plug 'sheerun/vim-polyglot'
+
+        Plug 'syngan/vim-vimlint'
+        Plug 'ynkdir/vim-vimlparser'
         Plug 'tangledhelix/vim-kickstart'
+        Plug 'vim-scripts/dhcpd.vim'
+
         Plug 'hashivim/vim-consul'
         Plug 'hashivim/vim-packer'
         Plug 'hashivim/vim-terraform'
         Plug 'hashivim/vim-vagrant'
         Plug 'hashivim/vim-vaultproject'
-        Plug 'gentoo/gentoo-syntax'
-        Plug 'rust-lang/rust.vim'
-        Plug 'vim-scripts/dhcpd.vim'
-        Plug 'PProvost/vim-ps1'
-        Plug 'vim-scripts/groovyindent-unix'
-        Plug 'vim-scripts/groovy.vim'
-        Plug 'https://anongit.gentoo.org/git/proj/eselect-syntax.git'
 
-        if has('nvim')
-            Plug 'euclio/vim-markdown-composer'
-        endif
+        Plug 'gentoo/gentoo-syntax'
+        Plug 'https://anongit.gentoo.org/git/proj/eselect-syntax.git'
 
         " Color Schemes & Theming
         " -------------
