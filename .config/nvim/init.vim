@@ -14,6 +14,10 @@
 "{{{ ## vim-plug ##
     call plug#begin()
 
+        " vim-plug
+        " --------
+        Plug 'junegunn/vim-plug'
+
         " Plugins
         " -------
         Plug 'scrooloose/syntastic'
