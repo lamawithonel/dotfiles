@@ -20,6 +20,7 @@
 
         " Misc. Functionality Plugins
         " ---------------------------
+        Plug 'editorconfig/editorconfig-vim'
         Plug 'godlygeek/tabular'
         Plug 'neoclide/coc.nvim', {'branch': 'release'}
         Plug 'scrooloose/syntastic'
