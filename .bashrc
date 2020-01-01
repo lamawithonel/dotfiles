@@ -45,7 +45,7 @@ HISTFILE="${BASH_DATA_HOME}/history"
 
 # Ignore lines starting with a [:space:] and lines which are duplicates of
 # the previous command.  Also, erase older duplicates.
-HISTCONTROL=ignoreboth,erasedups
+HISTCONTROL=ignoreboth:erasedups
 
 # Number of commands to keep in the scrollback history
 HISTSIZE=1000
