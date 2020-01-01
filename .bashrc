@@ -367,6 +367,13 @@ unset -f _ensure_path_contains _remove_from_path _join_strings _string_in
 
 # }}}
 
+# {{{ SDKman
+
+#shellcheck disable=1090
+[[ -s "${XDG_DATA_HOME}/bin/sdkman-init.sh" ]] && source "${XDG_DATA_HOME}/bin/sdkman-init.sh"
+
+# }}}
+
 # {{{ NVM
 
 #shellcheck disable=1090
@@ -391,13 +398,6 @@ fi
 [[ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ]] && source "${XDG_DATA_HOME}/rvm/scripts/rvm"
 
 # }}} RVM
-
-# {{{ SDKman
-
-#shellcheck disable=1090
-[[ -s "${XDG_DATA_HOME}/bin/sdkman-init.sh" ]] && source "${XDG_DATA_HOME}/bin/sdkman-init.sh"
-
-# }}}
 
 # {{{ $PATH print
 
