@@ -158,16 +158,11 @@
     " ------------
     map <F7> :set spell! spelllang=en_us spellfile=~/.vim/spellfile.add<cr>
 
-    " {{{ CoC tab-completion
+    " {{{ CoC autocompletion
     function! s:check_back_space() abort
         let col = col('.') - 1
         return !col || getline('.')[col - 1]  =~? '\s'
     endfunction
-
-    inoremap <silent><expr> <TAB>
-        \ pumvisible() ? "\<C-n>" :
-        \ <SID>check_back_space() ? "\<TAB>" :
-        \ coc#refresh()
     " }}}
 
 
