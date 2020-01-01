@@ -118,7 +118,11 @@ _init() {
 }
 
 _update() {
-	_not_implemented
+	_prep
+
+	hash rvm 2>/dev/null && rvm get stable
+	hash pyenv 2>/dev/null && pyenv update
+	[ -d "$_iterm2_integrations_dir" ] && git -C "$_iterm2_integrations_dir" pull origin master
 }
 
 _main() {
