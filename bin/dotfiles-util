@@ -13,6 +13,9 @@ readonly SELF_NAME="$(basename "$0")"
 readonly LOG_FILE="/tmp/${SELF_NAME}.log"
 
 readonly _rvm_binscripts_url='https://raw.githubusercontent.com/rvm/rvm/stable/binscripts'
+readonly _iterm2_src='https://github.com/gnachman/iterm2-website.git'
+readonly _iterm2_dir="${XDG_DATA_HOME}/iterm2"
+readonly _iterm2_integrations_dir="${_iterm2_dir}/iterm2-website"
 
 _cleanup() {
 	rm -f "${XDG_CACHE_DIR}/rvm-installer"
@@ -85,13 +88,18 @@ _pyenv_install() {
 }
 
 _rvm_install() {
-	if [ ! -d "${XDG_DATA_DIR}/rvm" ]; then
+	if [ ! -d "${XDG_DATA_HOME}/rvm" ]; then
 		curl -sSL "${_rvm_binscripts_url}/rvm-installer" -o "${XDG_CACHE_HOME}/rvm-installer"
 		curl -sSL "${_rvm_binscripts_url}/rvm-installer.asc" -o "${XDG_CACHE_HOME}/rvm-installer.asc"
 		gpg --verify "${XDG_CACHE_HOME}/rvm-installer.asc" "${XDG_CACHE_HOME}/rvm-installer" >> "$LOG_FILE" 2>&1
 		chmod 0775 "${XDG_CACHE_HOME}/rvm-installer"
 		"${XDG_CACHE_HOME}/rvm-installer" --branch stable --verify-downloads 2 >> "$LOG_FILE" 2>&1
 	fi
+}
+
+_iterm2_integrations_install() {
+	[ -d "$_iterm2_dir" ] || mkdir "$_iterm2_dir"
+	[ -d "$_iterm2_integrations_dir" ] || git clone "$_iterm2_src" "$_iterm2_integrations_dir"
 }
 
 _init() {
@@ -106,6 +114,7 @@ _init() {
 
 	_pyenv_install
 	_rvm_install || _warn 'Failed to install rvm'
+	_iterm2_integrations_install || _warn 'Failed to install iTerm2 integrations'
 }
 
 _update() {

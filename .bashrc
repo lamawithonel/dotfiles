@@ -290,6 +290,11 @@ if [ -f ~/.bashrc.local ]; then
 fi
 # }}} Local Additions
 
+# {{{ iTerm2
+_iterm2_integration_script="${XDG_DATA_HOME}/iterm2/iterm2-website/source/shell_integration/bash"
+[ -f "$_iterm2_integration_script" ] && source "$_iterm2_integration_script"
+# }}}
+
 # {{{ $PATH Setup
 
 _string_in() {
