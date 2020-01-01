@@ -392,6 +392,13 @@ fi
 
 # }}} RVM
 
+# {{{ SDKman
+
+#shellcheck disable=1090
+[[ -s "${XDG_DATA_HOME}/bin/sdkman-init.sh" ]] && source "${XDG_DATA_HOME}/bin/sdkman-init.sh"
+
+# }}}
+
 # {{{ $PATH print
 
 # Print $PATH for manual verification
