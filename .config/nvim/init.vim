@@ -35,6 +35,7 @@
         " ----------------
         Plug 'sheerun/vim-polyglot'
 
+        Plug 'rhysd/vim-github-support'
         Plug 'syngan/vim-vimlint'
         Plug 'ynkdir/vim-vimlparser'
         Plug 'tangledhelix/vim-kickstart'
