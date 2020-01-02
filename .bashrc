@@ -284,7 +284,7 @@ _remove_from_path() {
 	for _dir; do
 		read -r -a _del_pattern <<< "$_dir"
 		read -r -a _path_dirs <<< "${PATH//:/ }"
-		read -r -a _new_path <<< "${_path_dirs[@]//$_del_pattern}"
+		read -r -a _new_path <<< "${_path_dirs[@]//${_del_pattern[0]}}"
 		PATH="$(_join_strings ':' "${_new_path[@]}")"
 	done
 }
@@ -426,6 +426,7 @@ fi
 
 # Print $PATH for manual verification
 if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+	# shellcheck disable=SC2001
 	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE06]}\\1${BASE16[BASE0C]}\\2/g" <<<"$PATH")"
 else
 	echo "PATH=\"${PATH}\""
