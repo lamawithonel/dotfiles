@@ -254,48 +254,6 @@ else
 	alias la='ls -A'
 	alias l='ls -CF'
 fi
-# }}} Functions & Aliases
-
-# {{{ Setup gpg-agent(1)
-
-if hash gpg-agent 2>/dev/null; then
-	# TODO: Delay calling `gpg-agent-connect` with `preexec()`
-	# See: https://github.com/rcaloras/bash-preexec
-	gpg-agent-connect UpdateStartupTTY /bye &> /dev/null
-	GPG_TTY=$(tty); export GPG_TTY
-fi
-
-# }}} Setup gpg-agent(1)
-
-# {{{ Misc. Environment Variables
-
-# Define a few finite-length POSIX.1 EREs
-#
-# IPv4 addresses
-IPv4_ADDRESS='(([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})\.){3}([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})'
-# IPv4 CIDR subnet notation
-IPv4_SUBNET="${IPv4_ADDRESS}(\\/[[:digit:]]{1,2})?"
-# hostnames
-HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
-
-export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
-# }}} Misc. Environment Variables
-
-# {{{ Local Additions
-
-# Source an un-tracked file for private and per-machine commands
-if [ -f ~/.bashrc.local ]; then
-	#shellcheck disable=1090
-	source ~/.bashrc.local
-fi
-# }}} Local Additions
-
-# {{{ iTerm2
-_iterm2_integration_script="${XDG_DATA_HOME}/iterm2/iterm2-website/source/shell_integration/bash"
-[ -f "$_iterm2_integration_script" ] && source "$_iterm2_integration_script"
-# }}}
-
-# {{{ $PATH Setup
 
 _string_in() {
 	local _element
@@ -346,8 +304,67 @@ _ensure_path_contains() {
 	done
 }
 
-# Add private /bin directories to $PATH
-_ensure_path_contains ~/bin
+export _ensure_path_contains _remove_from_path _join_strings _string_in
+
+# }}} Functions & Aliases
+
+# {{{ Setup gpg-agent(1)
+
+if hash gpg-agent 2>/dev/null; then
+	# TODO: Delay calling `gpg-agent-connect` with `preexec()`
+	# See: https://github.com/rcaloras/bash-preexec
+	gpg-agent-connect UpdateStartupTTY /bye &> /dev/null
+	GPG_TTY=$(tty); export GPG_TTY
+fi
+
+# }}} Setup gpg-agent(1)
+
+# {{{ Misc. Environment Variables
+
+# Define a few finite-length POSIX.1 EREs
+#
+# IPv4 addresses
+IPv4_ADDRESS='(([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})\.){3}([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})'
+# IPv4 CIDR subnet notation
+IPv4_SUBNET="${IPv4_ADDRESS}(\\/[[:digit:]]{1,2})?"
+# hostnames
+HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
+
+export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
+# }}} Misc. Environment Variables
+
+# {{{ Local Additions
+
+# Source an un-tracked file for private and per-machine commands
+if [ -f ~/.bashrc.local ]; then
+	#shellcheck disable=1090
+	source ~/.bashrc.local
+fi
+# }}} Local Additions
+
+# {{{ iTerm2
+
+_iterm2_integration_dir="${XDG_DATA_HOME}/iterm2/iterm2-website"
+_iterm2_integration_script="${_iterm2_integration_dir}/source/shell_integration/bash"
+_iterm2_check="${_iterm2_integration_dir}/source/utilities/it2check"
+
+if [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
+	# shellcheck source=./.local/share/iterm2/iterm2-website/source/shell_integration/bash
+	[ -f "$_iterm2_integration_script" ] && source "$_iterm2_integration_script"
+fi
+
+# }}}
+
+# {{{ $PATH Setup
+
+# Most of this could happen elsewhere in this script, but doing it all here
+# gives a clean look at what order they'll appear in the final $PATH variable.
+# Items added earlier will appear later in the variable (lower precedence).
+
+if [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
+	_ensure_path_contains "${XDG_DATA_HOME}/iterm2/iterm2-website/source/utilities"
+fi
+
 _ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
@@ -359,9 +376,10 @@ if hash pyenv 2>/dev/null; then
 	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/plugins/pyenv-virtualenv/shims"
 fi
 
-export PATH
+# Add private /bin directories to $PATH
+_ensure_path_contains ~/bin
 
-unset -f _ensure_path_contains _remove_from_path _join_strings _string_in
+export PATH
 
 # }}} $PATH Setup
 
@@ -414,6 +432,13 @@ else
 fi
 
 # }}} $PATH print
+
+# {{{ Cleanup
+
+unset -v _iterm2_check _iterm2_integration_script _iterm2_integration_dir
+unset -f _ensure_path_contains _remove_from_path _join_strings _string_in
+
+# }}}
 
 # vim:foldmethod=marker
 # vi:ts=4:sw=4:noexpandtab
