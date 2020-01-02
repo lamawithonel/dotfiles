@@ -355,15 +355,6 @@ fi
 
 # }}}
 
-# {{{ Perlbrew
-
-# Perlbrew needs to load before $PATH setup, because it modifies $PATH.
-
-#shellcheck disable=1090
-[[ -d "${XDG_DATA_HOME}/perlbrew" ]] && source "${XDG_DATA_HOME}/perlbrew/etc/bashrc"
-
-# }}}
-
 # {{{ $PATH Setup
 
 # Most of this could happen elsewhere in this script, but doing it all here
@@ -391,6 +382,13 @@ _ensure_path_contains ~/bin
 export PATH
 
 # }}} $PATH Setup
+
+# {{{ Perlbrew
+
+#shellcheck disable=1090
+[[ -d "${XDG_DATA_HOME}/perlbrew" ]] && source "${XDG_DATA_HOME}/perlbrew/etc/bashrc"
+
+# }}}
 
 # {{{ SDKman
 
