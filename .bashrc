@@ -311,10 +311,12 @@ export _ensure_path_contains _remove_from_path _join_strings _string_in
 # {{{ Setup gpg-agent(1)
 
 if hash gpg-agent 2>/dev/null; then
-	# TODO: Delay calling `gpg-agent-connect` with `preexec()`
-	# See: https://github.com/rcaloras/bash-preexec
-	gpg-agent-connect UpdateStartupTTY /bye &> /dev/null
-	GPG_TTY=$(tty); export GPG_TTY
+	gpg-connect-agent UpdateStartupTTY /bye &> /dev/null
+	GPG_TTY=$(tty)
+
+	SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+
+	export GPG_TTY SSH_AUTH_SOCK
 fi
 
 # }}} Setup gpg-agent(1)
