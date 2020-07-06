@@ -56,6 +56,16 @@ HISTFILESIZE=2000
 export HISTFILE HISTCONTROL HISTSIZE HISTFILESIZE
 # }}}
 
+# {{{ Third-Party Extensions
+
+[[ -d "${BASH_DATA_HOME}/ext" ]] || mkdir "${BASH_DATA_HOME}/ext"
+
+if [[ ! -d ${BASH_DATA_HOME}/ext/bash-preexec ]]; then
+	git clone https://github.com/rcaloras/bash-preexec.git "${BASH_DATA_HOME}/ext/bash-preexec"
+fi
+
+# }}}
+
 # {{{ System Bash Completion
 #
 # Enable programmable completion features for non-root users.  Ignore for
@@ -311,12 +321,14 @@ export _ensure_path_contains _remove_from_path _join_strings _string_in
 # {{{ Setup gpg-agent(1)
 
 if hash gpg-agent 2>/dev/null; then
-	gpg-connect-agent UpdateStartupTTY /bye &> /dev/null
 	GPG_TTY=$(tty)
-
 	SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
 
 	export GPG_TTY SSH_AUTH_SOCK
+
+	update_gpg_agent_startup_tty() {
+		gpg-connect-agent UpdateStartupTTY /bye &> /dev/null
+	}
 fi
 
 # }}} Setup gpg-agent(1)
@@ -351,7 +363,7 @@ _iterm2_integration_script="${_iterm2_integration_dir}/source/shell_integration/
 _iterm2_check="${_iterm2_integration_dir}/source/utilities/it2check"
 
 if [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
-	# shellcheck source=./.local/share/iterm2/iterm2-website/source/shell_integration/bash
+	# shellcheck source=.local/share/iterm2/iterm2-website/source/shell_integration/bash
 	[ -f "$_iterm2_integration_script" ] && source "$_iterm2_integration_script"
 fi
 
@@ -423,6 +435,19 @@ fi
 [[ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ]] && source "${XDG_DATA_HOME}/rvm/scripts/rvm"
 
 # }}} RVM
+
+# {{{ bash-preexec
+
+if [[ -f "${BASH_DATA_HOME}/ext/bash-preexec/bash-preexec.sh" ]]; then
+	#shellcheck source=.local/share/bash/ext/bash-preexec/bash-preexec.sh
+	source "${BASH_DATA_HOME}/ext/bash-preexec/bash-preexec.sh"
+
+	preexec_functions=(
+		update_gpg_agent_startup_tty
+	)
+fi
+
+# }}}
 
 # {{{ $PATH print
 
