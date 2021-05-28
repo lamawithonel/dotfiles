@@ -428,6 +428,14 @@ fi
 
 # }}}
 
+# {{{ pipenv
+
+if pipenv --version &> /dev/null; then
+	eval "$(pipenv --completion)"
+fi
+
+# }}}
+
 # {{{ RVM
 
 # Load RVM into a shell session *as a function*
