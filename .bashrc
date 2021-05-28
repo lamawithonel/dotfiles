@@ -265,56 +265,33 @@ else
 	alias l='ls -CF'
 fi
 
-_string_in() {
-	local _element
-	local _search_string
-
-	_search_string=$1 && shift
-
-	for _element; do
-		[[ "$_element" == "$_search_string" ]] && return 0
-	done
-	return 1
-}
-
-_join_strings() {
-	local IFS
-	IFS="$1" && shift
-	echo "$*"
-}
-
-_remove_from_path() {
-	[[ $# -ge 1 ]] || return 1
-
-	local _dir
-	local -a _del_pattern
-	local -a _path_dirs
-	local -a _new_path
-
-	for _dir; do
-		read -r -a _del_pattern <<< "$_dir"
-		read -r -a _path_dirs <<< "${PATH//:/ }"
-		read -r -a _new_path <<< "${_path_dirs[@]//${_del_pattern[0]}}"
-		PATH="$(_join_strings ':' "${_new_path[@]}")"
-	done
-}
-
+# An improved version of Red Hat's pathmunge() function
+#
+# Takes a fully-qualified directory path and adds it to the PATH variable.
+# By default it will add it to the begining of the PATH variable.  If the
+# second argument is set to "after" it will append it to the end of PATH
+# instead.  If the directory path does not exist or is not a directory, it
+# will remove the element from PATH.
 _ensure_path_contains() {
-	[[ $# -ge 1 ]] || return 1
+	# Must be a fully-qualifed path
+	echo "$1" | grep -qE '^/[[:print:]]+$' || return 1
 
-	local _dir
-	for _dir; do
-		#shellcheck disable=SC2086
-		if _string_in "$_dir" ${PATH//:/ }; then
-			[ -d "$_dir" ] || _remove_from_path "$_dir"
-			continue
-		else
-			[ -d "$_dir" ] && PATH="${1}:${PATH}"
+	if [ -d "$1" ]; then
+		if ! echo "$PATH" | grep -qE "(^|:)${1}($|:)"; then
+			if [ "$2" = 'after' ]; then
+				PATH="${PATH}:${1}"
+			else
+				PATH="${1}:${PATH}"
+			fi
 		fi
-	done
+	else
+		PATH="$(echo "$PATH" | sed "s:\(^|\:\)${1}::g")"
+	fi
+
+	export PATH
 }
 
-export _ensure_path_contains _remove_from_path _join_strings _string_in
+export _ensure_path_contains
 
 # }}} Functions & Aliases
 
@@ -472,7 +449,7 @@ fi
 # {{{ Cleanup
 
 unset -v _iterm2_check _iterm2_integration_script _iterm2_integration_dir
-unset -f _ensure_path_contains _remove_from_path _join_strings _string_in
+unset -f _ensure_path_contains
 
 # }}}
 
