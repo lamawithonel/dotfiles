@@ -108,12 +108,12 @@ if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 	# dircolors(1)
 	case "$OSTYPE" in
 		*-gnu)
-			if hash dircolors 2>/dev/null; then
+			if command -v dircolors &> /dev/null; then
 				eval "$(dircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
 			fi
 			;;
 		bsd*|darwin*)
-			if hash gdircolors 2>/dev/null; then
+			if command -v gdircolors &> /dev/null; then
 				eval "$(gdircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
 			fi
 			;;
@@ -132,7 +132,7 @@ fi
 PROMPT_DIRTRIM=4
 
 git_is_available() {
-	hash git 2>/dev/null
+	command -v git &> /dev/null
 }
 
 dir_is_a_git_repo() {
@@ -211,9 +211,9 @@ PROMPT_COMMAND=_prompt_command
 
 # {{{ Functions & Aliases
 
-if hash nvim 2>/dev/null; then
+if command -v nvim &> /dev/null; then
 	alias vi='nvim'
-elif hash vim 2>/dev/null; then
+elif command -v vim &> /dev/null; then
 	alias vi='vim'
 fi
 
@@ -242,13 +242,13 @@ if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
 			alias l='ls -CF --color=auto'
 			;;
 		bsd*|darwin*)
-			if hash ggrep 2>/dev/null; then
+			if command -v ggrep &> /dev/null; then
 				alias grep='ggrep --color=auto'
 				alias fgrep='gfgrep --color=auto'
 				alias egrep='gegrep --color=auto'
 			fi
 
-			if hash gls 2>/dev/null; then
+			if command -v gls &> /dev/null; then
 				alias ls='gls -F --color=auto'
 				alias ll='gls -lF --color=auto'
 				alias la='gls -alF --color=auto'
@@ -320,7 +320,7 @@ export _ensure_path_contains _remove_from_path _join_strings _string_in
 
 # {{{ Setup gpg-agent(1)
 
-if hash gpg-agent 2>/dev/null; then
+if command -v gpg-agent &> /dev/null; then
 	GPG_TTY=$(tty)
 	SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
 
@@ -385,7 +385,7 @@ _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/pyenv/bin"
 
-if hash pyenv 2>/dev/null; then
+if command -v pyenv &> /dev/null; then
 	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/shims"
 	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/plugins/pyenv-virtualenv/shims"
 fi
@@ -422,7 +422,7 @@ export PATH
 
 # {{{ pyenv
 
-if hash pyenv 2>/dev/null; then
+if command -v pyenv &> /dev/null; then
 	eval "$(pyenv init - | grep -v 'PATH')" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
 fi
 
