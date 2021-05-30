@@ -361,6 +361,7 @@ _ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/volta/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/pyenv/bin"
 
 if command -v pyenv &> /dev/null; then
