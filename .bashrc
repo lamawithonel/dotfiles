@@ -359,6 +359,7 @@ fi
 _ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/volta/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/pyenv/bin"
 
@@ -385,15 +386,6 @@ export PATH
 
 #shellcheck disable=1090
 [[ -s "${XDG_DATA_HOME}/bin/sdkman-init.sh" ]] && source "${XDG_DATA_HOME}/bin/sdkman-init.sh"
-
-# }}}
-
-# {{{ NVM
-
-#shellcheck disable=1090
-[[ -s "${NVM_DIR}/nvm.sh" ]] && source "${NVM_DIR}/nvm.sh"
-#shellcheck disable=1090
-[[ -s "${NVM_DIR}/bash_completion" ]] && source "${NVM_DIR}/bash_completion"
 
 # }}}
 
