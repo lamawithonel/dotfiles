@@ -97,7 +97,21 @@
 
     " CoC settings
     " ------------
-    let g:coc_global_extensions = ['coc-powershell', 'coc-yaml']
+    let g:coc_global_extensions = [
+        \'coc-eslint',
+        \'coc-json',
+        \'coc-markdownlint',
+        \'coc-pairs',
+        \'coc-powershell',
+        \'coc-prettier',
+        \'coc-pyright',
+        \'coc-rust-analyzer',
+        \'coc-sh',
+        \'coc-solargraph',
+        \'coc-tsserver',
+        \'coc-vimlsp',
+        \'coc-yaml'
+    \]
 
     " Syntastic settings
     " ------------------
