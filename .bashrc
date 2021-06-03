@@ -299,7 +299,10 @@ export _ensure_path_contains
 
 if command -v gpg-agent &> /dev/null; then
 	GPG_TTY=$(tty)
-	SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+
+	if [[ ! "$OSTYPE" =~ ^darwin ]]; then
+		SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+	fi
 
 	export GPG_TTY SSH_AUTH_SOCK
 
