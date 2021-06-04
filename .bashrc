@@ -409,6 +409,16 @@ fi
 
 # }}}
 
+# {{{ rustup
+
+if command -v rustup &>/dev/null; then
+	eval "$(rustup completions bash rustup)"
+	eval "$(rustup completions bash cargo)"
+fi
+
+# }}}
+
+
 # {{{ RVM
 
 # Load RVM into a shell session *as a function*
