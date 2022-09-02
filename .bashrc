@@ -404,7 +404,7 @@ fi
 # {{{ pipenv
 
 if pipenv --version &> /dev/null; then
-	eval "$(pipenv --completion)"
+	eval "$(pipenv --completion 2>/dev/null || _PIPENV_COMPLETE=bash_source pipenv)"
 fi
 
 # }}}
