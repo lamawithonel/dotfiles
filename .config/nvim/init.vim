@@ -64,7 +64,6 @@
     scriptencoding utf-8
     set nocompatible
     set number
-    set mouse=i
     syntax enable
     filetype plugin on
     filetype indent on
