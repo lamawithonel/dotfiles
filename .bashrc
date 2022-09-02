@@ -393,6 +393,12 @@ export PATH
 
 # }}}
 
+# {{{ Volta Node.js Manager
+
+command -v volta &> /dev/null && eval "$(volta completions bash)"
+
+# }}}
+
 # {{{ pyenv
 
 if command -v pyenv &> /dev/null; then
