@@ -110,6 +110,7 @@
         \'coc-rust-analyzer',
         \'coc-sh',
         \'coc-solargraph',
+        \'coc-swagger',
         \'coc-tsserver',
         \'coc-vimlsp',
         \'coc-yaml'
