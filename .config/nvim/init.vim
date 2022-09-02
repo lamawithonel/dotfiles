@@ -123,7 +123,7 @@
     let g:syntastic_ruby_checkers     = ['mri', 'rubocop', 'reek', 'flog']
     let g:syntastic_sh_checkers       = ['sh', 'shellcheck', 'checkbashims', 'bashate']
     let g:syntastic_viml_checkers     = ['vimlint']
-    let g:syntastic_yaml_checkers     = ['yamlxs']
+    let g:syntastic_yaml_checkers     = ['yamllint']
 
     let g:syntastic_sh_bashate_args   = '--ignore E002,E003'
     let g:syntastic_sh_shellcheck_args = '-x'
