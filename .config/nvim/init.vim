@@ -40,6 +40,8 @@
         Plug 'ynkdir/vim-vimlparser'
         Plug 'tangledhelix/vim-kickstart'
         Plug 'vim-scripts/dhcpd.vim'
+        Plug 'pedrohdz/vim-yaml-folds'
+        Plug 'satabin/hocon-vim'
 
         Plug 'hashivim/vim-consul'
         Plug 'hashivim/vim-packer'
