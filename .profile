@@ -7,14 +7,6 @@
 # will read the first one it encounters and ignore the rest.
 # See the INVOCATION section of the bash(1) man page for more information.
 
-# {{{ Traps & Cleanup
-trap cleanup EXIT
-
-_cleanup() {
-	unset -f _get_fmode _cleanup
-}
-# }}}
-
 # {{{ Local Functions
 _get_fmode() {
 	_uname_s="$(uname -s)"
@@ -55,6 +47,7 @@ elif [ ! "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ]; then
 	chmod 0700 "$XDG_RUNTIME_DIR"
 fi
 
+unset -f _get_fmode
 export XDG_CONFIG_HOME XDG_DATA_HOME XDG_CACHE_HOME XDG_RUNTIME_DIR
 # }}}
 
