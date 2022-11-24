@@ -409,7 +409,7 @@ command -v deno &> /dev/null && eval "$(deno completions bash)"
 # {{{ pyenv
 
 if command -v pyenv &> /dev/null; then
-	eval "$(pyenv init - | grep -F -ve 'pyenv init' -ve 'PATH')" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
+	eval "$(pyenv init -)" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
 fi
 
 # }}}
