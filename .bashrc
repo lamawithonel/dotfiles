@@ -363,6 +363,7 @@ _ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/volta/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/deno/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/pyenv/bin"
@@ -396,6 +397,12 @@ export PATH
 # {{{ Volta Node.js Manager
 
 command -v volta &> /dev/null && eval "$(volta completions bash)"
+
+# }}}
+
+# {{{ Deno
+
+command -v deno &> /dev/null && eval "$(deno completions bash)"
 
 # }}}
 
