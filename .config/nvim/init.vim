@@ -76,6 +76,7 @@
     set history=256
     set viminfo='256,\"1024
     set ruler
+    set mouse=
 
 
     " Column highlighting and test pattern
