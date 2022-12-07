@@ -49,6 +49,18 @@ _git_clone() {
 	fi
 }
 
+_git_verify() {
+	if [ $# -eq 1 ]; then
+		_info "Verifying HEAD commit from ${1}"
+		git --git-dir="${1}/.git" verify-commit HEAD
+	elif [ $# -eq 2 ]; then
+		_info "Verifying ref ${2} from ${1}"
+		git --git-dir="${1}/.git" verify-commit "${2}" || git --git-dir="${1}/.git" verify-tag "${2}"
+	else
+		return 1
+	fi
+}
+
 _get_fmode() {
 	_uname_s="$(uname -s)"
 
