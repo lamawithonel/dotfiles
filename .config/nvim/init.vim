@@ -36,13 +36,13 @@
         Plug 'sheerun/vim-polyglot'
 
         Plug 'kergoth/vim-bitbake'
+        Plug 'pedrohdz/vim-yaml-folds'
         Plug 'rhysd/vim-github-support'
+        Plug 'satabin/hocon-vim'
         Plug 'syngan/vim-vimlint'
-        Plug 'ynkdir/vim-vimlparser'
         Plug 'tangledhelix/vim-kickstart'
         Plug 'vim-scripts/dhcpd.vim'
-        Plug 'pedrohdz/vim-yaml-folds'
-        Plug 'satabin/hocon-vim'
+        Plug 'ynkdir/vim-vimlparser'
 
         Plug 'hashivim/vim-consul'
         Plug 'hashivim/vim-packer'
