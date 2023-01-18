@@ -113,6 +113,7 @@
         \'coc-sh',
         \'coc-solargraph',
         \'coc-swagger',
+        \'coc-toml',
         \'coc-tsserver',
         \'coc-vimlsp',
         \'coc-yaml'
