@@ -36,6 +36,7 @@
         Plug 'sheerun/vim-polyglot'
 
         Plug 'kergoth/vim-bitbake'
+        Plug 'mracos/mermaid.vim'
         Plug 'pedrohdz/vim-yaml-folds'
         Plug 'rhysd/vim-github-support'
         Plug 'satabin/hocon-vim'
