@@ -92,7 +92,8 @@ fi
 if [ -z "$KONSOLE_PROFILE_NAME" ]; then
 	BASE16_SHELL_PATH="${XDG_DATA_HOME}/base16/base16-shell"
 	if [ -s "${BASE16_SHELL_PATH}/profile_helper.sh" ]; then
-		eval "$("${BASE16_SHELL_PATH}/profile_helper.sh")"
+		# shellcheck source=.local/share/base16/base16-shell/profile_helper.sh
+		source "${BASE16_SHELL_PATH}/profile_helper.sh"
 	fi
 fi
 
