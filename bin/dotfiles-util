@@ -13,9 +13,9 @@ readonly SELF_NAME="$(basename "$0")"
 readonly LOG_FILE="/tmp/${SELF_NAME}.log"
 
 readonly _rvm_binscripts_url='https://raw.githubusercontent.com/rvm/rvm/stable/binscripts'
-readonly _iterm2_src='https://github.com/gnachman/iterm2-website.git'
+readonly _iterm2_integrations_src='https://github.com/gnachman/iTerm2-shell-integration.git'
 readonly _iterm2_dir="${XDG_DATA_HOME}/iterm2"
-readonly _iterm2_integrations_dir="${_iterm2_dir}/iterm2-website"
+readonly _iterm2_integrations_dir="${_iterm2_dir}/iTerm2-shell-integration"
 
 _cleanup() {
 	rm -f "${XDG_CACHE_DIR}/rvm-installer"
@@ -111,7 +111,7 @@ _rvm_install() {
 
 _iterm2_integrations_install() {
 	[ -d "$_iterm2_dir" ] || mkdir "$_iterm2_dir"
-	[ -d "$_iterm2_integrations_dir" ] || git clone "$_iterm2_src" "$_iterm2_integrations_dir"
+	[ -d "$_iterm2_integrations_dir" ] || git clone "$_iterm2_integrations_src" "$_iterm2_integrations_dir"
 }
 
 _init() {
