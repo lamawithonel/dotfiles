@@ -95,6 +95,7 @@
     au FileType sh     setl sw=4 sts=4 noet
     au FileType ruby   setl sw=2 sts=2 et
     au FileType vim    setl sw=4 sts=4 et
+    au FileType yaml   setl foldlevel=8
 
     " CoC settings
     " ------------
