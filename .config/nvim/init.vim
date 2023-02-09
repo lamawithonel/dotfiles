@@ -22,14 +22,11 @@
         " ---------------------------
         Plug 'editorconfig/editorconfig-vim'
         Plug 'godlygeek/tabular'
+        Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install' }
         Plug 'neoclide/coc.nvim', {'branch': 'release'}
         Plug 'scrooloose/syntastic'
         Plug 'terryma/vim-multiple-cursors'
         Plug 'wfleming/vim-codeclimate'
-
-        if has('nvim')
-            Plug 'euclio/vim-markdown-composer'
-        endif
 
         " Filetype Plugins
         " ----------------
