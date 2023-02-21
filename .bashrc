@@ -343,9 +343,9 @@ _iterm2_integration_dir="${XDG_DATA_HOME}/iterm2/iTerm2-shell-integration"
 _iterm2_integration_script="${_iterm2_integration_dir}/shell_integration/bash"
 _iterm2_check="${_iterm2_integration_dir}/utilities/it2check"
 
-if [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
+if [[ "$OSTYPE" =~ 'darwin' ]] && [[ -x "$_iterm2_check" ]] && "$_iterm2_check"; then
 	# shellcheck source=.local/share/iterm2/iTerm2-shell-integration/shell_integration/bash
-	[ -f "$_iterm2_integration_script" ] && source "$_iterm2_integration_script"
+	[[ -f "$_iterm2_integration_script" ]] && source "$_iterm2_integration_script"
 fi
 
 # }}}
@@ -356,7 +356,7 @@ fi
 # gives a clean look at what order they'll appear in the final $PATH variable.
 # Items added earlier will appear later in the variable (lower precedence).
 
-if [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
+if [[ "$OSTYPE" =~ 'darwin' ]] && [[] -x "$_iterm2_check" ]] && "$_iterm2_check"; then
 	_ensure_path_contains "${_iterm2_integration_dir}/utilities"
 fi
 
