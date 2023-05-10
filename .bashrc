@@ -396,15 +396,15 @@ export PATH
 
 # }}}
 
-# {{{ Volta Node.js Manager
-
-command -v volta &> /dev/null && eval "$(volta completions bash)"
-
-# }}}
-
 # {{{ Deno
 
 command -v deno &> /dev/null && eval "$(deno completions bash)"
+
+# }}}
+
+# {{{ fnm Node.js Manager
+
+command -v fnm &> /dev/null && eval "$(fnm env --use-on-cd --shell bash)"
 
 # }}}
 
@@ -432,7 +432,6 @@ if command -v rustup &>/dev/null; then
 fi
 
 # }}}
-
 
 # {{{ RVM
 
