@@ -356,7 +356,7 @@ fi
 # gives a clean look at what order they'll appear in the final $PATH variable.
 # Items added earlier will appear later in the variable (lower precedence).
 
-if [[ "$OSTYPE" =~ 'darwin' ]] && [[] -x "$_iterm2_check" ]] && "$_iterm2_check"; then
+if [[ "$OSTYPE" =~ 'darwin' ]] && [[ -x "$_iterm2_check" ]] && "$_iterm2_check"; then
 	_ensure_path_contains "${_iterm2_integration_dir}/utilities"
 fi
 
