@@ -20,6 +20,19 @@ _get_fmode() {
 			;;
 	esac
 }
+
+_running_macOS() {
+	_uname_s="$(uname -s)"
+
+	case "$_uname_s" in
+		'Darwin')
+			return 0
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
 # }}}
 
 # {{{ Set a secure `umask(2)`
@@ -32,12 +45,33 @@ fi
 # }}}
 
 # {{{ Setup XDG Directories
-XDG_CACHE_HOME="${XDG_CACHE_HOME:-${HOME}/.cache}"
-XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
-XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
-XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/runtime-$(id -un)}"
 
-for _dir in "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME"; do
+if _running_macOS; then
+	XDG_CACHE_HOME="${XDG_CACHE_HOME:-$(getconf DARWIN_USER_CACHE_DIR)}"
+	XDG_CACHE_HOME="${XDG_CACHE_HOME%/}"
+	XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(getconf DARWIN_USER_TEMP_DIR)}"
+	XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR%/}"
+	XDG_STATE_HOME="${XDG_STATE_HOME:-${HOME}/.local/state}"
+
+	# TODO: Setup yadm repo to allow alternate XDG DATA and CONFIG dirs
+	#XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/Library/Preferences}"
+	#XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/Library/ApplicationSupport}"
+	XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
+	XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
+
+	# Some tools don't like spaces, so create a symlink
+	if [ ! -e "${HOME}/Library/ApplicationSupport" ]; then
+		ln -s "${HOME}/Library/Application Support" "${HOME}/Library/ApplicationSupport"
+	fi
+else
+	XDG_CACHE_HOME="${XDG_CACHE_HOME:-${HOME}/.cache}"
+	XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
+	XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
+	XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d -t "runtime-$(id -ur)")}"
+	XDG_STATE_HOME="${XDG_STATE_HOME:-${HOME}/.local/state}"
+fi
+
+for _dir in "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME"; do
 	[ -d "$_dir" ] || mkdir -p "$_dir"
 done
 
@@ -47,8 +81,8 @@ elif [ ! "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ]; then
 	chmod 0700 "$XDG_RUNTIME_DIR"
 fi
 
-unset -f _get_fmode
-export XDG_CONFIG_HOME XDG_DATA_HOME XDG_CACHE_HOME XDG_RUNTIME_DIR
+unset -f _get_fmode _running_macOS
+export XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_RUNTIME_DIR XDG_STATE_HOME
 # }}}
 
 # {{{ Language environment directories
