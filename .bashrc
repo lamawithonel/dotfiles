@@ -339,7 +339,7 @@ fi
 
 # {{{ iTerm2
 
-_iterm2_integration_dir="${XDG_DATA_HOME}/iterm2/iTerm2-shell-integration"
+_iterm2_integration_dir="${XDG_DATA_HOME}/iTerm2/iTerm2-shell-integration"
 _iterm2_integration_script="${_iterm2_integration_dir}/shell_integration/bash"
 _iterm2_check="${_iterm2_integration_dir}/utilities/it2check"
 

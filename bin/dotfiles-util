@@ -14,7 +14,7 @@ readonly LOG_FILE="/tmp/${SELF_NAME}.log"
 
 readonly _rvm_binscripts_url='https://raw.githubusercontent.com/rvm/rvm/stable/binscripts'
 readonly _iterm2_integrations_src='https://github.com/gnachman/iTerm2-shell-integration.git'
-readonly _iterm2_dir="${XDG_DATA_HOME}/iterm2"
+readonly _iterm2_dir="${XDG_DATA_HOME}/iTerm2"
 readonly _iterm2_integrations_dir="${_iterm2_dir}/iTerm2-shell-integration"
 
 _cleanup() {
@@ -74,6 +74,19 @@ _get_fmode() {
 	esac
 }
 
+_running_macOS() {
+	_uname_s="$(uname -s)"
+
+	case "$_uname_s" in
+		'Darwin')
+			return 0
+			;;
+		*)
+			return 1
+			;;
+	esac
+}
+
 _prep() {
 	hash bash 2>/dev/null || _err "Cannot find Bash. Make sure it is installed and in \$PATH"
 	hash curl 2>/dev/null || _err "Cannot find cURL. Make sure it is installed and in \$PATH"
@@ -126,7 +139,10 @@ _init() {
 
 	_pyenv_install
 	_rvm_install || _warn 'Failed to install rvm'
-	_iterm2_integrations_install || _warn 'Failed to install iTerm2 integrations'
+
+	if _running_macOS; then
+		_iterm2_integrations_install || _warn 'Failed to install iTerm2 integrations'
+	fi
 }
 
 _update() {
