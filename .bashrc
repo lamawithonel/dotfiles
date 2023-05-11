@@ -411,7 +411,9 @@ command -v fnm &> /dev/null && eval "$(fnm env --use-on-cd --shell bash)"
 # {{{ pyenv
 
 if command -v pyenv &> /dev/null; then
-	eval "$(pyenv init -)" && eval "$(pyenv virtualenv-init - | grep -v 'PATH')"
+	if eval "$(pyenv init - --no-push-path bash)"; then
+		eval "$(pyenv virtualenv-init - bash| grep -vF 'export PATH')"
+	fi
 fi
 
 # }}}
