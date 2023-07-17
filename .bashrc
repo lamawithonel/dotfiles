@@ -363,7 +363,6 @@ fi
 _ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/volta/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/deno/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/dotnet/tools" # NOTE: See https://github.com/dotnet/sdk/issues/10390
 _ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
