@@ -404,7 +404,10 @@ command -v deno &> /dev/null && eval "$(deno completions bash)"
 
 # {{{ fnm Node.js Manager
 
-command -v fnm &> /dev/null && eval "$(fnm env --use-on-cd --shell bash)"
+if command -v fnm &> /dev/null; then
+	eval "$(fnm env --use-on-cd --shell bash)"
+	eval "$(fnm completions --shell bash)"
+fi
 
 # }}}
 
