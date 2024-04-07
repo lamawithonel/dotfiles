@@ -21,6 +21,26 @@ _get_fmode() {
 	esac
 }
 
+_get_fowner() {
+	_uname_s="$(uname -s)"
+
+	case "$_uname_s" in
+		'Darwin'|"*BSD")
+			stat -f '%u' "$1"
+			;;
+		*)
+			stat -c '%u' "$1"
+			;;
+	esac
+}
+
+rngstring() {
+	_length="${1:-16}"
+	_charset="${2:-A-Za-z0-9@%+\\/\'\!\#\$\^\?:.\(\)\{\}\[\]\~_.-}"
+
+	< /dev/urandom tr -cd "$_charset" | fold -w "$_length" | head -n 1
+}
+
 _running_macOS() {
 	_uname_s="$(uname -s)"
 
@@ -67,8 +87,14 @@ else
 	XDG_CACHE_HOME="${XDG_CACHE_HOME:-${HOME}/.cache}"
 	XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
 	XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
-	XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(mktemp -d -t "runtime-$(id -ur)")}"
+	XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-/tmp/runtime-$(id -ru)}"
 	XDG_STATE_HOME="${XDG_STATE_HOME:-${HOME}/.local/state}"
+fi
+
+# If the XDG_RUNTIME_DIR is not owned by the current user, create a new one
+# with a random suffix.
+if [ "$(_get_fowner "$XDG_RUNTIME_DIR")" != "$(id -ru)" ]; then
+	XDG_RUNTIME_DIR="/tmp/runtime-$(id -ru)-$(rngstring 8 'a-z0-9')"
 fi
 
 for _dir in "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HOME"; do
@@ -77,9 +103,8 @@ done
 
 if [ ! -d "$XDG_RUNTIME_DIR" ]; then
 	mkdir -m 0700 "$XDG_RUNTIME_DIR" 2>/dev/null
-elif [ ! "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ]; then
-	chmod 0700 "$XDG_RUNTIME_DIR"
 fi
+[ "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ] || chmod 0700 "$XDG_RUNTIME_DIR"
 
 unset -f _get_fmode _running_macOS
 export XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_RUNTIME_DIR XDG_STATE_HOME
@@ -88,7 +113,7 @@ export XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_RUNTIME_DIR XDG_STATE_HO
 # {{{ Language environment directories
 
 # These need to be set at install-time. They are set here to ensure they
-# are set for all shells, in case the default is not Bash.
+# are set for all shells (in case the default is not Bash).
 
 CARGO_HOME="${XDG_DATA_HOME}/cargo"
 DENO_INSTALL="${XDG_DATA_HOME}/deno"
