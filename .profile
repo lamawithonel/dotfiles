@@ -137,6 +137,18 @@ export \
 
 # }}}
 
+# {{{ ~/.profile.d loading
+
+if [ -d "${HOME}/.profile.d" ]; then
+	for _file in "${HOME}/.profile.d"/*.sh; do
+		# shellcheck disable=1090
+		[ -r "$_file" ] && . "$_file"
+	done
+	unset _file
+fi
+
+# }}}
+
 #shellcheck disable=1090
 [ -e ~/.profile.local ] && . ~/.profile.local
 
