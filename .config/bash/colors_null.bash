@@ -15,6 +15,7 @@ typeset -A BASE16
 
 # ANSI color reset control sequence
 ANSI[RESET]=''
+ANSI[BOLD]=''
 
 # ANSI colors
 ANSI[BLACK]=''
@@ -38,10 +39,10 @@ ANSI[BRCYAN]=''
 ANSI[BRWHITE]=''
 
 # Aliases for the ambiguously named colors
-ANSI[ORANGE]=$ANSI[RED]
-ANSI[LGRAY]=$ANSI[WHITE]
-ANSI[DGREY]=$ANSI[BRBLACK]
-ANSI[VIOLET]=$ANSI[BRBLUE]
+ANSI[ORANGE]="${ANSI[RED]}"
+ANSI[LGRAY]="${ANSI[WHITE]}"
+ANSI[DGREY]="${ANSI[BRBLACK]}"
+ANSI[VIOLET]="${ANSI[BRBLUE]}"
 
 # Base16 Colors
 BASE16[BASE00]=''

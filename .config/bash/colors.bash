@@ -15,6 +15,7 @@ typeset -A BASE16
 
 # ANSI color reset control sequence
 ANSI[RESET]=$(echo -ne '\033[0m')
+ANSI[BOLD]=$(echo -ne '\033[1m')
 
 # ANSI colors
 ANSI[BLACK]=$(echo -ne '\033[30m')
@@ -38,10 +39,10 @@ ANSI[BRCYAN]=$(echo -ne '\033[1;36m')
 ANSI[BRWHITE]=$(echo -ne '\033[1;37m')
 
 # Aliases for the ambiguously named colors
-ANSI[ORANGE]=$ANSI[RED]
-ANSI[LGRAY]=$ANSI[WHITE]
-ANSI[DGREY]=$ANSI[BRBLACK]
-ANSI[VIOLET]=$ANSI[BRBLUE]
+ANSI[ORANGE]="${ANSI[RED]}"
+ANSI[LGRAY]="${ANSI[WHITE]}"
+ANSI[DGREY]="${ANSI[BRBLACK]}"
+ANSI[VIOLET]="${ANSI[BRBLUE]}"
 
 # Base16 Colors
 BASE16[BASE00]=$(echo -ne '\033[30m')
