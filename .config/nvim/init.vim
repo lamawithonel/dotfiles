@@ -20,6 +20,7 @@
 
         " Misc. Functionality Plugins
         " ---------------------------
+        Plug 'github/copilot.vim'
         Plug 'editorconfig/editorconfig-vim'
         Plug 'godlygeek/tabular'
         Plug 'iamcco/markdown-preview.nvim', { 'do': 'cd app && yarn install' }
@@ -169,6 +170,13 @@
        colorscheme base16-default-dark
     endif
 
+    " CoC autocompletion menu colors
+    " ------------------------------
+    hi Pmenu ctermbg=0 guibg=bg
+    hi PmenuSel ctermbg=4 guibg=bg
+    hi PmenuSbar ctermbg=0 guibg=bg
+    hi PmenuThumb ctermbg=4 guibg=bg
+
     " Trailing space warnings
     " -----------------------
     hi TrailingBlanks ctermbg=red guibg=#dc322f
@@ -176,15 +184,13 @@
 
     " Key Bindings
     " ------------
+
+    " Spell-check
     map <F7> :set spell! spelllang=en_us spellfile=~/.vim/spellfile.add<cr>
 
-    " {{{ CoC autocompletion
-    function! s:check_back_space() abort
-        let col = col('.') - 1
-        return !col || getline('.')[col - 1]  =~? '\s'
-    endfunction
-    " }}}
-
+    " CoC autocompletion
+    inoremap <silent><expr> <S-Tab> pumvisible() ? "\<C-p>" : "\<S-Tab>"
+    inoremap <expr> <C-j> pumvisible() ? "\<C-n>" : "\<C-j>"
 
 " }}} end options
 
