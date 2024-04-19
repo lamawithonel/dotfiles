@@ -1,27 +1,81 @@
 #!/usr/bin/env bash
 
+# Style Guide:
+# - Wrap comments at the first word extended beyond 72 characters, and do
+#   not exceed 80 characters.  Wrap before 72 characters if the last word
+#   would extend beyond 80 characters.  Exceptions: URLs, long paths, and
+#   code examples.
+# - Prefer POSIX syntax over Bash-specific syntax, except in the following
+#   cases:
+#     a. Where Bash features are faster to execute, e.g., `[[ "abc123" =~ c1 ]]
+#        instead of `echo abc123 | grep -q c1`.
+#     b. Where Bash features are significantly more readable, e.g.,  `<<-`
+#        heredocs with indented content and `source` insead of `.`.
+# - Use Bash features that add safety, e.g., `set -o pipefail`, `local`,
+#  `readonly`, `typeset`, etc.
+# - Quote strings with 'hard quotes' unless variable expansion is needed.
+# - Enclose all variables in curly braces when they are part of a larger
+#   string, e.g., "this ${string}", but not when they are a standalone
+#   "$variable".
+# - Prefix all internal functions with an underscore, e.g., `_function_name`.
+# - Use XDG Base Directory Specification wherever possible.
+#
+
+_fail() {
+	echo "ERROR: ${*}" >&2
+	return 1
+}
+
 # This file is only for Bash.  Exit if the shell is NOT Bash.
-[[ -n "$BASH_VERSION" ]] || exit 1
+[ -n "$BASH_VERSION" ] || _fail "File incompatible with the current shell: ${0}"
 
-# These should be set in /etc/profile or ~/.profile, but just in case...
-XDG_CACHE_HOME=${XDG_CACHE_HOME:-${HOME}/.cache}
-XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-${HOME}/.config}
-XDG_DATA_HOME=${XDG_DATA_HOME:-${HOME}/.local/share}
-export XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME
+if [[ "$-" =~ i ]] && [[ ! ${BASH_SOURCE[*]} =~ ([[:blank:]]|/)\.bash_profile([[:blank:]]|$) ]]; then
+	# shellcheck source=.bash_profile
+	[ -f "${HOME}/.bash_profile" ] && source "${HOME}/.bash_profile"
+fi
 
-# Setup XDG directories
-[[ -n "$BASH_CONFIG_HOME" ]] || export BASH_CONFIG_HOME="${XDG_CONFIG_HOME}/bash"
-[[ -n "$BASH_DATA_HOME"   ]] || export BASH_DATA_HOME="${XDG_DATA_HOME}/bash"
-[[ -d "$BASH_CONFIG_HOME" ]] || mkdir -pZ "$BASH_CONFIG_HOME" >&/dev/null || mkdir -p "$BASH_CONFIG_HOME"
-[[ -d "$BASH_DATA_HOME"   ]] || mkdir -pZ "$BASH_DATA_HOME" >&/dev/null   || mkdir -p "$BASH_DATA_HOME"
+# Everything after this point is intended for interactive shells only.
+# Exit if the shell is not interactive.
+[[ "$-" =~ i ]] || return
 
-# It's common to source this file from other places.  If this happens for
-# a non-interactive shell, it's a good idea to skip anything related to
-# interactivity.  Namely, everything afer this.
-case "${-}" in
-	*i*) ;;
-	*) return ;;
-esac
+# {{{ Shared Functions
+
+# _ensure_path_contains() -- An improved version of Red Hat's pathmunge()
+#
+# Adds a fully-qualified directory to the PATH variable.
+#
+# By default the directory is added at the begining of the PATH variable,
+# e.g., "${1}:/bin".  However, if the second argument is set to "after" it
+# will append it to the end of PATH, e.g., "/bin:${1}".  If the directory
+# path does not exist or is not a directory, it will remove the element.
+#
+# $1 = /fully/qualified/PATH/element
+# $2 = "before" | "after" | "" (optional)
+#
+_ensure_path_contains() {
+	local _dir="$1"
+	local _position="${2:-before}"
+
+	# Must be a fully-qualifed path
+	[[ "$_dir" =~ ^/[[:print:]]+$ ]] || return 1
+
+	if [ -d "$_dir" ]; then
+		if ! [[ "$PATH" =~ (^|:)${_dir}(:|$) ]]; then
+			if [ "$_position" = 'after' ]; then
+				PATH="${PATH}:${_dir}"
+			else
+				PATH="${_dir}:${PATH}"
+			fi
+		fi
+	else
+		PATH="$(echo "$PATH" | sed "s:\(^|\:\)${_dir}::g")"
+	fi
+
+	export PATH
+}
+
+export _ensure_path_contains
+# }}}
 
 # {{{ Miscellaneous shell options
 
@@ -41,7 +95,7 @@ shopt -s globstar
 shopt -s histappend
 
 # Store history in the XDG-standard location
-HISTFILE="${BASH_DATA_HOME}/history"
+HISTFILE="${BASH_CACHE_HOME}/history"
 
 # Ignore lines starting with a [:space:] and lines which are duplicates of
 # the previous command.  Also, erase older duplicates.
@@ -58,9 +112,9 @@ export HISTFILE HISTCONTROL HISTSIZE HISTFILESIZE
 
 # {{{ Third-Party Extensions
 
-[[ -d "${BASH_DATA_HOME}/ext" ]] || mkdir "${BASH_DATA_HOME}/ext"
+[ -d "${BASH_DATA_HOME}/ext" ] || mkdir "${BASH_DATA_HOME}/ext"
 
-if [[ ! -d ${BASH_DATA_HOME}/ext/bash-preexec ]]; then
+if [ ! -d "${BASH_DATA_HOME}/ext/bash-preexec" ]; then
 	git clone https://github.com/rcaloras/bash-preexec.git "${BASH_DATA_HOME}/ext/bash-preexec"
 fi
 
@@ -102,7 +156,7 @@ TERMINAL_COLORS="$(tput colors 2>/dev/null || echo -1)"
 
 # If the terminal supports at least 8 colors, source the color theme and
 # setup dircolors(1)
-if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+if [ "$TERMINAL_COLORS" -ge '8' ]; then
 	# shellcheck source=.config/bash/colors.bash
 	[ -f "${BASH_CONFIG_HOME}/colors.bash" ] && source "${BASH_CONFIG_HOME}/colors.bash"
 
@@ -127,86 +181,142 @@ else
 fi
 # }}} Color Support
 
+# {{{ $PATH Setup
+
+# Most of this could happen elsewhere in this script, but doing it all here
+# gives a clean look at what order they'll appear in the final $PATH variable.
+# Items added earlier will appear later in the variable (lower precedence).
+
+if [[ "$OSTYPE" =~ 'darwin' ]] && [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
+	_ensure_path_contains "${_iterm2_integration_dir}/utilities"
+fi
+
+_ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/deno/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/dotnet/tools" # NOTE: See https://github.com/dotnet/sdk/issues/10390
+_ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
+_ensure_path_contains "${XDG_DATA_HOME}/pyenv/bin"
+
+if command -v pyenv &> /dev/null; then
+	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/shims"
+	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/plugins/pyenv-virtualenv/shims"
+fi
+
+# Add private /bin directories to $PATH
+_ensure_path_contains ~/bin
+
+export PATH
+
+# }}} $PATH Setup
+
+# {{{ Setup gpg-agent(1)
+
+if command -v gpg-agent &> /dev/null; then
+	GPG_TTY=$(tty)
+
+	if [[ ! "$OSTYPE" =~ ^darwin ]]; then
+		SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+	fi
+
+	export GPG_TTY SSH_AUTH_SOCK
+
+	update_gpg_agent_startup_tty() {
+		gpg-connect-agent UpdateStartupTTY /bye &> /dev/null
+	}
+fi
+
+# }}} Setup gpg-agent(1)
+
 # {{{ Prompt Setup
 
-# Trim the working directory string in $PS1 to this many elements
-PROMPT_DIRTRIM=4
+# Setup bash-preexec and bash-postexec hooks.
+# These must be configured before the prompt.
+if [ -f "${BASH_DATA_HOME}/ext/bash-preexec/bash-preexec.sh" ]; then
+	#shellcheck source=.local/share/bash/ext/bash-preexec/bash-preexec.sh
+	source "${BASH_DATA_HOME}/ext/bash-preexec/bash-preexec.sh"
 
-git_is_available() {
-	command -v git &> /dev/null
-}
+	preexec_functions=(
+		update_gpg_agent_startup_tty
+	)
+fi
 
-dir_is_a_git_repo() {
-	git rev-parse --git-dir &>/dev/null
-}
+# Use Starship.rs to configure the prompt if it's available, otherwise use a
+# simple two-line prompt with base16 colors.
+if command -v starship &> /dev/null; then
+	eval "$(starship init bash)"
+	eval "$(starship completions bash)"
 
-##
-# _prompt_command()
-#
-# This function is executed each time the shell returns, dynamically generating
-# the prompt.  It takes no arguments, however it reads a few environment
-# variables.
-#
-_prompt_command() {
+else
+	git_is_available() {
+		command -v git &> /dev/null
+	}
 
-	# Start with a boxed timestamp.  Color based on exit status of the previous
-	# command.
-	# shellcheck disable=SC2086
-	if [[ "${PIPESTATUS[-1]}" -eq '0' ]]; then
-		# shellcheck disable=SC1117
-		PS1="\[${ANSI[GREEN]}\][\\t]\[${ANSI[RESET]}\] "
-	else
-		# shellcheck disable=SC1117
-		PS1="\[${ANSI[BRRED]}\][\\t]\[${ANSI[RESET]}\] "
-	fi
+	dir_is_a_git_repo() {
+		git rev-parse --git-dir &>/dev/null
+	}
 
-	# If connected via SSH, display IP address of the client.
-	# shellcheck disable=SC1117
-	[ -n "$SSH_CLIENT" ] && PS1+="\[${BASE16[BASE0A]}\](${SSH_CLIENT%% *})\[${ANSI[RESET]}\]"
+	_prompt_command() {
 
-	# Username, Host, and Working Directory
-	if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
-		# Gentoo-style, color-indicated root prompt
-		if [ $EUID -eq 0 ]; then
+		# Start with a boxed timestamp.  Color based on exit status of the previous
+		# command.
+		# shellcheck disable=SC2086
+		if [[ "${PIPESTATUS[-1]}" -eq '0' ]]; then
 			# shellcheck disable=SC1117
-			PS1+="\[${BASE16[BASE09]}\]\\h\[${BASE16[BASE0D]}\]:\[${BASE16[BASE05]}\]\\w\[${ANSI[RESET]}\] "
+			PS1="\[${ANSI[GREEN]}\][\\t]\[${ANSI[RESET]}\] "
 		else
 			# shellcheck disable=SC1117
-			PS1+="\[${BASE16[BASE0B]}\]\\u@\\h\[${BASE16[BASE05]}\]:\[${BASE16[BASE0A]}\]\\w\[${ANSI[RESET]}\] "
-		fi
-	else
-		PS1+="\\u@\\h:\\w"
-	fi
-
-	# Display Git status and working branch, if applicable.
-	# FIXME: Git's standard status format may change from version to version.
-	#        This should instead use `git status --porcelain`, which uses
-	#        a stable, versioned output format.
-	if git_is_available && dir_is_a_git_repo; then
-		local git_status git_color branch
-
-		git_status="$(git status -unormal 2>&1)"
-
-		if [[ "$git_status" =~ nothing\ to\ commit ]]; then
-			git_color=${ANSI[GREEN]}
-		elif [[ "$git_status" =~ nothing\ added\ to\ commit\ but\ untracked\ files\ present ]]; then
-			git_color=${ANSI[MAGENTA]}
-		else
-			git_color=${ANSI[RED]}
+			PS1="\[${ANSI[BRRED]}\][\\t]\[${ANSI[RESET]}\] "
 		fi
 
-		branch="$(git symbolic-ref -q --short HEAD || echo "($(git describe --all --contains HEAD))")"
-
+		# If connected via SSH, display IP address of the client.
 		# shellcheck disable=SC1117
-		PS1+="\[${git_color}\][${branch}]\[${ANSI[RESET]}\] "
-	fi
+		[ -n "$SSH_CLIENT" ] && PS1+="\[${BASE16[BASE0A]}\](${SSH_CLIENT%% *})\[${ANSI[RESET]}\]"
 
-	# Bash prompt character ('#' for root, '$' for everybody else)
-	PS1+='\$ '
-}
+		# Username, Host, and Working Directory
+		if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+			# Gentoo-style, color-indicated root prompt
+			if [ $EUID -eq 0 ]; then
+				# shellcheck disable=SC1117
+				PS1+="\[${BASE16[BASE09]}\]\\h\[${BASE16[BASE0D]}\]:\[${BASE16[BASE05]}\]\\w\[${ANSI[RESET]}\] "
+			else
+				# shellcheck disable=SC1117
+				PS1+="\[${BASE16[BASE0B]}\]\\u@\\h\[${BASE16[BASE05]}\]:\[${BASE16[BASE0A]}\]\\w\[${ANSI[RESET]}\] "
+			fi
+		else
+			PS1+="\\u@\\h:\\w"
+		fi
 
-# shellcheck disable=SC2086
-PROMPT_COMMAND=_prompt_command
+		# Display Git status and working branch, if applicable.
+		# FIXME: Git's standard status format may change from version to version.
+		#        This should instead use `git status --porcelain`, which uses
+		#        a stable, versioned output format.
+		if git_is_available && dir_is_a_git_repo; then
+			local git_status git_color branch
+			git_status="$(git status -unormal 2>&1)"
+
+			if [[ "$git_status" =~ nothing\ to\ commit ]]; then
+				git_color=${ANSI[GREEN]}
+			elif [[ "$git_status" =~ nothing\ added\ to\ commit\ but\ untracked\ files\ present ]]; then
+				git_color=${ANSI[MAGENTA]}
+			else
+				git_color=${ANSI[RED]}
+			fi
+
+			branch="$(git symbolic-ref -q --short HEAD || echo "($(git describe --all --contains HEAD))")"
+
+			# shellcheck disable=SC1117
+			PS1+="\[${git_color}\][${branch}]\[${ANSI[RESET]}\] "
+		fi
+
+		# Bash prompt character ('#' for root, '$' for everybody else)
+		PS1+='\$ '
+	}
+	PROMPT_COMMAND=_prompt_command
+	PROMPT_DIRTRIM=4
+fi
 
 # }}} Prompt Setup
 
@@ -229,7 +339,7 @@ alias tee='tee -a'
 # Use $COLUMNS as the sdiff width
 [ -n "$COLUMNS" ] && alias sdiff='sdiff -w $COLUMNS'
 
-if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+if [ "$TERMINAL_COLORS" -ge '8' ]; then
 	# Enable color support in grep(1) and ls(1), and add a few short-hands
 	case "$OSTYPE" in
 		*-gnu)
@@ -266,53 +376,37 @@ else
 	alias l='ls -CF'
 fi
 
-# An improved version of Red Hat's pathmunge() function
-#
-# Takes a fully-qualified directory path and adds it to the PATH variable.
-# By default it will add it to the begining of the PATH variable.  If the
-# second argument is set to "after" it will append it to the end of PATH
-# instead.  If the directory path does not exist or is not a directory, it
-# will remove the element from PATH.
-_ensure_path_contains() {
-	# Must be a fully-qualifed path
-	echo "$1" | grep -qE '^/[[:print:]]+$' || return 1
+hadolint() {
+	local _dockerfile
+	local _file
+	local _hadolint_yaml=''
 
-	if [ -d "$1" ]; then
-		if ! echo "$PATH" | grep -qE "(^|:)${1}($|:)"; then
-			if [ "$2" = 'after' ]; then
-				PATH="${PATH}:${1}"
-			else
-				PATH="${1}:${PATH}"
+	if [ -e "$1" ]; then
+		_dockerfile="$1"
+		shift
+
+		for _file in							\
+			"${PWD}/.hadolint.yaml"				\
+			"${XDG_CONFIG_HOME}/hadolint.yaml"	\
+			"${HOME}/.config/hadolint.yaml"		\
+			"${HOME}/.hadolint/hadolint.yaml"	\
+			"${HOME}/hadolint/config.yaml"		\
+			"${HOME}/.hadolint.yaml"
+		do
+			if [ -f "$_file" ]; then
+				_hadolint_yaml="--volume=$_file:/.hadolint.yaml:ro"
+				break
 			fi
-		fi
-	else
-		PATH="$(echo "$PATH" | sed "s:\(^|\:\)${1}::g")"
-	fi
+		done
 
-	export PATH
+		docker run --rm -i ghcr.io/hadolint/hadolint:latest-alpine /bin/hadolint "$@" - < "$_dockerfile"
+	else
+		printf 'Usage:\n\thadolint <path-to-Dockerfile> [hadolint-args...]\n'
+		return 1
+	fi
 }
 
-export _ensure_path_contains
-
 # }}} Functions & Aliases
-
-# {{{ Setup gpg-agent(1)
-
-if command -v gpg-agent &> /dev/null; then
-	GPG_TTY=$(tty)
-
-	if [[ ! "$OSTYPE" =~ ^darwin ]]; then
-		SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
-	fi
-
-	export GPG_TTY SSH_AUTH_SOCK
-
-	update_gpg_agent_startup_tty() {
-		gpg-connect-agent UpdateStartupTTY /bye &> /dev/null
-	}
-fi
-
-# }}} Setup gpg-agent(1)
 
 # {{{ Misc. Environment Variables
 
@@ -343,55 +437,24 @@ _iterm2_integration_dir="${XDG_DATA_HOME}/iTerm2/iTerm2-shell-integration"
 _iterm2_integration_script="${_iterm2_integration_dir}/shell_integration/bash"
 _iterm2_check="${_iterm2_integration_dir}/utilities/it2check"
 
-if [[ "$OSTYPE" =~ 'darwin' ]] && [[ -x "$_iterm2_check" ]] && "$_iterm2_check"; then
+if [[ "$OSTYPE" =~ 'darwin' ]] && [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
 	# shellcheck source=.local/share/iterm2/iTerm2-shell-integration/shell_integration/bash
-	[[ -f "$_iterm2_integration_script" ]] && source "$_iterm2_integration_script"
+	[ -f "$_iterm2_integration_script" ] && source "$_iterm2_integration_script"
 fi
 
 # }}}
 
-# {{{ $PATH Setup
-
-# Most of this could happen elsewhere in this script, but doing it all here
-# gives a clean look at what order they'll appear in the final $PATH variable.
-# Items added earlier will appear later in the variable (lower precedence).
-
-if [[ "$OSTYPE" =~ 'darwin' ]] && [[ -x "$_iterm2_check" ]] && "$_iterm2_check"; then
-	_ensure_path_contains "${_iterm2_integration_dir}/utilities"
-fi
-
-_ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/deno/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/dotnet/tools" # NOTE: See https://github.com/dotnet/sdk/issues/10390
-_ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/pyenv/bin"
-
-if command -v pyenv &> /dev/null; then
-	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/shims"
-	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/plugins/pyenv-virtualenv/shims"
-fi
-
-# Add private /bin directories to $PATH
-_ensure_path_contains ~/bin
-
-export PATH
-
-# }}} $PATH Setup
-
 # {{{ Perlbrew
 
-#shellcheck disable=1090
-[[ -d "${XDG_DATA_HOME}/perlbrew" ]] && source "${XDG_DATA_HOME}/perlbrew/etc/bashrc"
+# shellcheck source=.local/share/perlbrew/etc/bashrc
+[ -d "${XDG_DATA_HOME}/perlbrew" ] && source "${XDG_DATA_HOME}/perlbrew/etc/bashrc"
 
 # }}}
 
 # {{{ SDKman
 
-#shellcheck disable=1090
-[[ -s "${XDG_DATA_HOME}/bin/sdkman-init.sh" ]] && source "${XDG_DATA_HOME}/bin/sdkman-init.sh"
+# shellcheck source=.local/share/sdkman/bin/sdkman-init.sh
+[ -s "${XDG_DATA_HOME}/bin/sdkman-init.sh" ] && source "${XDG_DATA_HOME}/bin/sdkman-init.sh"
 
 # }}}
 
@@ -404,6 +467,7 @@ command -v deno &> /dev/null && eval "$(deno completions bash)"
 # {{{ fnm Node.js Manager
 
 if command -v fnm &> /dev/null; then
+	PATH="$(echo "$PATH" | sed -E 's,(^|:)/[^:]+/fnm_multishells/[0-9_]+/bin(:|$),,g')"
 	eval "$(fnm env --use-on-cd --shell bash)"
 	eval "$(fnm completions --shell bash)"
 fi
@@ -440,32 +504,22 @@ fi
 # {{{ RVM
 
 # Load RVM into a shell session *as a function*
-#shellcheck disable=1090
-[[ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ]] && source "${XDG_DATA_HOME}/rvm/scripts/rvm"
+# shellcheck source=.local/share/rvm/scripts/rvm
+[ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ] && source "${XDG_DATA_HOME}/rvm/scripts/rvm"
+
+# If this is set Starship will always show the Ruby version
+unset RUBY_VERSION
 
 # }}} RVM
-
-# {{{ bash-preexec
-
-if [[ -f "${BASH_DATA_HOME}/ext/bash-preexec/bash-preexec.sh" ]]; then
-	#shellcheck source=.local/share/bash/ext/bash-preexec/bash-preexec.sh
-	source "${BASH_DATA_HOME}/ext/bash-preexec/bash-preexec.sh"
-
-	preexec_functions=(
-		update_gpg_agent_startup_tty
-	)
-fi
-
-# }}}
 
 # {{{ $PATH print
 
 # Print $PATH for manual verification
-if [[ "$TERMINAL_COLORS" -ge '8' ]]; then
+if [ "$TERMINAL_COLORS" -ge '8' ]; then
 	# shellcheck disable=SC2001
 	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE06]}\\1${BASE16[BASE0C]}\\2/g" <<<"$PATH")"
 else
-	echo "PATH=\"${PATH}\""
+	echo "PATH=\"${PATH}\"${ANSI[RESET]}"
 fi
 
 # }}} $PATH print
