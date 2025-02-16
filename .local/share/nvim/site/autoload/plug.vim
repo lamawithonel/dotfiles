@@ -1,1 +1,0 @@
-../../../../../.config/nvim/plugged/vim-plug/plug.vim
