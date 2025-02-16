@@ -6,7 +6,7 @@ opts.ruler  = true
 opts.number = true
 opts.colorcolumn = '72,80,100,120,140'
 
--- Column highlighting test pattern
+-- colorcolumn test pattern
 --       10........20        30........40        50........60          72......80        90........100       110.......120       130...... 140
 --       |         |         |         |         |         |           |       |         |         |         |         |         |         |
 
@@ -27,16 +27,9 @@ opts.shada = "!,%,h,'1000,s50"
 opts.history = 1000
 opts.mouse = 'a'
 
-opts.tabstop    = 4
-opts.shiftwidth = 4
-opts.expandtab  = true
-
--- Per file type indentation
-vim.filetype.javascript = { sw = 2, sts = 2, et = true }
-vim.filetype.typescript = { sw = 2, sts = 2, et = true }
-vim.filetype.python     = { sw = 4, sts = 4, et = true }
-vim.filetype.sh         = { sw = 4, sts = 4, et = false }
-vim.filetype.ruby       = { sw = 2, sts = 2, et = true }
-vim.filetype.vim        = { sw = 4, sts = 4, et = true }
+opts.tabstop     = 4
+opts.softtabstop = 4
+opts.shiftwidth  = 4
+opts.expandtab   = true
 
 require('config.lazy')
