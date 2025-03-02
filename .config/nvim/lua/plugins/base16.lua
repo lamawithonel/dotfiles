@@ -21,8 +21,8 @@ return {
                 vim.g.base16colorspace = 8
             end
 
-            if vim.fn.filereadable(vim.fn.expand("~/.vimrc_background")) then
-                vim.cmd('source ~/.vimrc_background')
+            if (vim.env.BASE61_THEME) and ((not vim.g.colors_name) or (vim.g.colors_name ~= 'base16-' .. vim.env.BASE16_THEME)) then
+                vim.cmd('colorscheme base16-' .. vim.env.BASE16_THEME)
             else
                 vim.cmd('colorscheme base16-solarized-dark')
             end
