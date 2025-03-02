@@ -27,9 +27,4 @@ opts.shada = "!,%,h,'1000,s50"
 opts.history = 1000
 opts.mouse = 'a'
 
-opts.tabstop     = 4
-opts.softtabstop = 4
-opts.shiftwidth  = 4
-opts.expandtab   = true
-
 require('config.lazy')
