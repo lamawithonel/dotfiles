@@ -1,15 +1,15 @@
 return {
   {
-    'github/copilot.vim',
-    event = 'InsertEnter',
+    "github/copilot.vim",
+    event = "InsertEnter",
   },
   {
-    'CopilotC-Nvim/CopilotChat.nvim',
+    "CopilotC-Nvim/CopilotChat.nvim",
     dependencies = {
-      { 'github/copilot.vim' },
-      { 'nvim-lua/plenary.nvim', branch = 'master' },
+      { "github/copilot.vim" },
+      { "nvim-lua/plenary.nvim", branch = "master" },
     },
-    build = 'make tiktoken',
+    build = "make tiktoken",
     opts = {
       -- See Configuration section for options
     },
