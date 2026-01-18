@@ -89,36 +89,115 @@ $shell\
 $directory\
 $character\
 """
-
 # Unsupported in Bash
-#right_format = '$time$memory_usage'
+# right_format = '$time$memory_usage'
+# palette = "base24-solarized-dark-higher-contrast"
+palette = "ansi"
 
-palette = "solarized-dark"
-[palettes.solarized-dark]
-bright-black = '#586e75'
-black = '#073642'
-bright-green = '#586e75'
-bright-yellow = '#657b83'
-bright-blue = '#839496'
-bright-cyan = '#93a1a1'
-white = '#eee8d5'
-bright-white = '#fdf6e3'
-yellow = '#b58900'
-bright-red = '#cb4b16'
-red = '#dc322f'
-magenta = '#d33682'
-bright-magenta = '#6c71c4'
-blue = '#268bd2'
-cyan = '#2aa198'
-green = '#859900'
+[palettes.ansi]
+black = "0"
+red = "1"
+green = "2"
+yellow = "3"
+blue = "4"
+purple = "5"
+cyan = "6"
+white = "7"
+bright-black = "8"
+bright-red = "9"
+bright-green = "10"
+bright-yellow = "11"
+bright-blue = "12"
+bright-purple = "13"
+bright-cyan = "14"
+bright-white = "15"
+base09 = "16"
+base0F = "17"
+base01 = "18"
+base02 = "19"
+base04 = "20"
+base06 = "21"
 
-########################################################################
+[palettes.base16-material-darker]
+black = "#212121"          # base00 (ANSI 0)
+red = "#F07178"            # base08 (ANSI 1)
+green = "#C3E88D"          # base0B (ANSI 2)
+yellow = "#FFCB6B"         # base0A (ANSI 3)
+blue = "#82AAFF"           # base0D (ANSI 4)
+purple = "#C792EA"         # base0E (ANSI 5)
+cyan = "#89DDFF"           # base0C (ANSI 6)
+white = "#EEFFFF"          # base05 (ANSI 7)
+bright-black = "#4A4A4A"   # base03 (ANSI 8)
+bright-red = "#F07178"     # base08 (ANSI 9)
+bright-green = "#C3E88D"   # base0B (ANSI 10)
+bright-yellow = "#FFCB6B"  # base0A (ANSI 11)
+bright-blue = "#82AAFF"    # base0D (ANSI 12)
+bright-purple = "#C792EA"  # base0E (ANSI 13)
+bright-cyan = "#89DDFF"    # base0C (ANSI 14)
+bright-white = "#FFFFFF"   # base07 (ANSI 15)
+
+[palettes.base16-monokai]
+black = "#272822"          # base00 (ANSI 0)
+red = "#f92672"            # base08 (ANSI 1)
+green = "#a6e22e"          # base0B (ANSI 2)
+yellow = "#f4bf75"         # base0A (ANSI 3)
+blue = "#66d9ef"           # base0D (ANSI 4)
+purple = "#ae81ff"         # base0E (ANSI 5)
+cyan = "#a1efe4"           # base0C (ANSI 6)
+white = "#f8f8f2"          # base05 (ANSI 7)
+bright-black = "#75715e"   # base03 (ANSI 8)
+bright-red = "#f92672"     # base08 (ANSI 9)
+bright-green = "#a6e22e"   # base0B (ANSI 10)
+bright-yellow = "#f4bf75"  # base0A (ANSI 11)
+bright-blue = "#66d9ef"    # base0D (ANSI 12)
+bright-purple = "#ae81ff"  # base0E (ANSI 13)
+bright-cyan = "#a1efe4"    # base0C (ANSI 14)
+bright-white = "#f9f8f5"   # base07 (ANSI 15)
+
+[palettes.base24-monokai-vivid]
+black = "#121212"          # base00 (ANSI 0)
+red = "#fa2834"            # base08 (ANSI 1)
+green = "#97e123"          # base0B (ANSI 2)
+yellow = "#fef20a"         # base0A (ANSI 3)
+blue = "#0442fe"           # base0D (ANSI 4)
+purple = "#f800f8"         # base0E (ANSI 5)
+cyan = "#01b6ed"           # base0C (ANSI 6)
+white = "#dfdfdf"          # base05 (ANSI 7)
+bright-black = "#525252"   # base03 (ANSI 8)
+bright-red = "#f5669c"     # base12 (ANSI 9)
+bright-green = "#b0e05e"   # base14 (ANSI 10)
+bright-yellow = "#fef26c"  # base13 (ANSI 11)
+bright-blue = "#0442fe"    # base16 (ANSI 12)
+bright-purple = "#f200f5"  # base17 (ANSI 13)
+bright-cyan = "#50cdfe"    # base15 (ANSI 14)
+bright-white = "#ffffff"   # base07 (ANSI 15)
+
+[palettes.base24-solarized-dark-higher-contrast]
+black = "#001e26"          # base00 (ANSI 0)
+red = "#d01b24"            # base08 (ANSI 1)
+green = "#6bbe6c"          # base0B (ANSI 2)
+yellow = "#178dc7"         # base0A (ANSI 3)
+blue = "#2075c7"           # base0D (ANSI 4)
+purple = "#c61b6e"         # base0E (ANSI 5)
+cyan = "#259185"           # base0C (ANSI 6)
+white = "#aec2ba"          # base05 (ANSI 7)
+bright-black = "#3a8298"   # base03 (ANSI 8)
+bright-red = "#f4153b"     # base12 (ANSI 9)
+bright-green = "#50ee84"   # base14 (ANSI 10)
+bright-yellow = "#b17e28"  # base13 (ANSI 11)
+bright-blue = "#178dc7"    # base16 (ANSI 12)
+bright-purple = "#e14d8e"  # base17 (ANSI 13)
+bright-cyan = "#00b29e"    # base15 (ANSI 14)
+bright-white = "#fcf4dc"   # base07 (ANSI 15)
+
+## ######################################################################
 # Cloud providers
 #
 
 [aws]
 format = "\n\\[[$symbol($profile)(\\($region\\))(\\[$duration\\])]($style)\\]"
 symbol = "  "
+style = "bold cyan"
 
 [gcloud]
 format = "\\[[$symbol$account(@$domain)(\\($region\\))]($style)\\]"
@@ -129,8 +208,7 @@ format = "\\[[$symbol$cloud(\\($project\\))]($style)\\]"
 [azure]
 format = "\\[[$symbol$cloud(\\($subscription\\))]($style)\\]"
 
-
-########################################################################
+## ######################################################################
 # Build tools
 #
 
@@ -140,8 +218,7 @@ symbol = " "
 [cmake]
 format = "\\[[$symbol($version)]($style)\\]"
 
-
-########################################################################
+## ######################################################################
 # Languages
 #
 
@@ -337,8 +414,7 @@ format = "\\[[$symbol($version)]($style)\\]"
 format = "\\[[$symbol($version)]($style)\\]"
 symbol = " "
 
-
-########################################################################
+## ######################################################################
 # Status indicators
 #
 [docker_context]
@@ -348,19 +424,20 @@ symbol = " "
 [cmd_duration]
 disabled = true
 format = "\\[[⏱ $duration]($style)\\]"
+style = "bold bright-black"
 
 [directory]
 read_only = " 󰌾"
 truncation_symbol = "…/"
-style = 'bold blue'
+style = "bold blue"
 
 [git_branch]
 format = "\\[[$symbol$branch]($style)\\]"
 symbol = " "
+style = "bold orange"
 
 [git_status]
 format = "([\\[$all_status$ahead_behind\\]]($style))"
-
 
 [memory_usage]
 format = "\\[$symbol[$ram( | $swap)]($style)\\]"
@@ -417,18 +494,19 @@ openSUSE = " "
 [sudo]
 disabled = false
 format = "\\[[as $symbol]($style)\\]"
-symbol = '🧙 '
+symbol = "🧙 "
 
 [time]
 disabled = false
 format = "\\[[$time]($style)\\]"
-style = 'yellow'
-time_format = '%T%z'
+# style = "yellow"
+style = "bold brown"
+time_format = "%T%z"
 
 [username]
 format = "\\[[$user]($style)\\]"
 
 [character]
-#format = ' $symbol '
+# format = ' $symbol '
 success_symbol = '[\$](bold green)'
 error_symbol = '[\$](bold red)'

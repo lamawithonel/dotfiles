@@ -1,0 +1,26 @@
+preferred-schemes = [
+  "base16-material-darker",
+  "base16-monokai",
+  "base24-monokai-vivid",
+  "base24-solarized-dark-higher-contrast",
+]
+
+[[items]]
+path = "https://github.com/tinted-theming/tinted-terminal.git"
+name = "tinted-terminal"
+themes-dir = "themes/alacritty"
+hook = "cp -f %f ~/.config/alacritty/colors.toml && touch ~/.config/alacritty/alacritty.toml"
+supported-systems = ["base16", "base24"]
+
+[[items]]
+name = "tinted-shell"
+path = "https://github.com/tinted-theming/tinted-shell.git"
+themes-dir = "scripts"
+hook = "source \"$TINTY_THEME_FILE_PATH\""
+supported-systems = ["base16", "base24"]
+
+[[items]]
+name = "tinted-vim"
+path = "https://github.com/tinted-theming/tinted-vim.git"
+themes-dir = "colors"
+supported-systems = ["base16", "base24"]

@@ -141,46 +141,6 @@ if ! shopt -oq posix && [ $EUID -ne 0 ]; then
 fi
 # }}} Bash Completion
 
-# {{{ Color
-
-if [ -z "$KONSOLE_PROFILE_NAME" ]; then
-	BASE16_SHELL_PATH="${XDG_DATA_HOME}/base16/base16-shell"
-	if [ -s "${BASE16_SHELL_PATH}/profile_helper.sh" ]; then
-		# shellcheck source=.local/share/base16/base16-shell/profile_helper.sh
-		source "${BASE16_SHELL_PATH}/profile_helper.sh"
-	fi
-fi
-
-# Use tput(1) to determine the number of supported colors.
-TERMINAL_COLORS="$(tput colors 2>/dev/null || echo -1)"
-
-# If the terminal supports at least 8 colors, source the color theme and
-# setup dircolors(1)
-if [ "$TERMINAL_COLORS" -ge '8' ]; then
-	# shellcheck source=.config/bash/colors.bash
-	[ -f "${BASH_CONFIG_HOME}/colors.bash" ] && source "${BASH_CONFIG_HOME}/colors.bash"
-
-	# dircolors(1)
-	case "$OSTYPE" in
-		*-gnu)
-			if command -v dircolors &> /dev/null; then
-				eval "$(dircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
-			fi
-			;;
-		bsd*|darwin*)
-			if command -v gdircolors &> /dev/null; then
-				eval "$(gdircolors "${XDG_CONFIG_HOME}/coreutils/dir_colors")"
-			fi
-			;;
-	esac
-else
-	if [ -f "${XDG_CONFIG_HOME}/bash/colors_null.bash" ]; then
-		# shellcheck source=.config/bash/colors_null.bash
-		source "${XDG_CONFIG_HOME}/bash/colors_null.bash"
-	fi
-fi
-# }}} Color Support
-
 # {{{ $PATH Setup
 
 # Most of this could happen elsewhere in this script, but doing it all here
@@ -211,6 +171,56 @@ _ensure_path_contains ~/bin
 export PATH
 
 # }}} $PATH Setup
+
+# {{{ Color
+
+if command -v tinty &> /dev/null; then
+	TINTED_SHELL_ENABLE_BASE16_VARS=1
+	TINTED_SHELL_ENABLE_BASE24_VARS=1
+	BASE16_SHELL_PATH="${XDG_DATA_HOME}/tinted-theming/tinty/repos/tinted-shell"
+
+	export \
+		BASE16_SHELL_PATH \
+		TINTED_SHELL_ENABLE_BASE16_VARS \
+		TINTED_SHELL_ENABLE_BASE24_VARS
+
+	eval "$(tinty generate-completion bash)"
+fi
+
+if [ -s "${BASE16_SHELL_PATH}/profile_helper.sh" ]; then
+	# shellcheck source=./.local/share/tinted-theming/tinty/repos/tinted-shell/profile_helper.sh
+	source "${BASE16_SHELL_PATH}/profile_helper.sh"
+fi
+
+# Use tput(1) to determine the number of supported colors.
+TERMINAL_COLORS="$(tput colors 2> /dev/null || echo -1)"
+
+# If the terminal supports at least 8 colors, source the color theme and
+# setup dircolors(1)
+if [ "$TERMINAL_COLORS" -ge '8' ]; then
+	# shellcheck source=.config/bash/colors.bash
+	[ -f "${BASH_CONFIG_HOME}/colors.bash" ] && source "${BASH_CONFIG_HOME}/colors.bash"
+
+	# dircolors(1)
+	case "$OSTYPE" in
+		*-gnu)
+			if command -v dircolors &> /dev/null; then
+				eval "$(dircolors <(dircolors -p | sed 's/ 01;/ /g'))"
+			fi
+			;;
+		bsd* | darwin*)
+			if command -v gdircolors &> /dev/null; then
+				eval "$(gdircolors <(dircolors -p | sed 's/ 01;/ /g'))"
+			fi
+			;;
+	esac
+else
+	if [ -f "${XDG_CONFIG_HOME}/bash/colors_null.bash" ]; then
+		# shellcheck source=.config/bash/colors_null.bash
+		source "${XDG_CONFIG_HOME}/bash/colors_null.bash"
+	fi
+fi
+# }}} Color Support
 
 # {{{ Setup gpg-agent(1)
 
@@ -255,7 +265,7 @@ else
 	}
 
 	dir_is_a_git_repo() {
-		git rev-parse --git-dir &>/dev/null
+		git rev-parse --git-dir &> /dev/null
 	}
 
 	_prompt_command() {
@@ -352,7 +362,7 @@ if [ "$TERMINAL_COLORS" -ge '8' ]; then
 			alias la='ls -alF --color=auto'
 			alias l='ls -CF --color=auto'
 			;;
-		bsd*|darwin*)
+		bsd* | darwin*)
 			if command -v ggrep &> /dev/null; then
 				alias grep='ggrep --color=auto'
 				alias fgrep='gfgrep --color=auto'
@@ -366,8 +376,7 @@ if [ "$TERMINAL_COLORS" -ge '8' ]; then
 				alias l='gls -CF --color=auto'
 			fi
 			;;
-		*)
-			;;
+		*) ;;
 	esac
 else
 	alias ls='ls -F'
@@ -385,14 +394,13 @@ hadolint() {
 		_dockerfile="$1"
 		shift
 
-		for _file in							\
-			"${PWD}/.hadolint.yaml"				\
-			"${XDG_CONFIG_HOME}/hadolint.yaml"	\
-			"${HOME}/.config/hadolint.yaml"		\
-			"${HOME}/.hadolint/hadolint.yaml"	\
-			"${HOME}/hadolint/config.yaml"		\
-			"${HOME}/.hadolint.yaml"
-		do
+		for _file in \
+			"${PWD}/.hadolint.yaml" \
+			"${XDG_CONFIG_HOME}/hadolint.yaml" \
+			"${HOME}/.config/hadolint.yaml" \
+			"${HOME}/.hadolint/hadolint.yaml" \
+			"${HOME}/hadolint/config.yaml" \
+			"${HOME}/.hadolint.yaml"; do
 			if [ -f "$_file" ]; then
 				_hadolint_yaml="--volume=$_file:/.hadolint.yaml:ro"
 				break
@@ -478,7 +486,7 @@ fi
 
 if command -v pyenv &> /dev/null; then
 	if eval "$(pyenv init - --no-push-path bash)"; then
-		eval "$(pyenv virtualenv-init - bash| grep -vF 'export PATH')"
+		eval "$(pyenv virtualenv-init - bash | grep -vF 'export PATH')"
 	fi
 fi
 
@@ -487,14 +495,14 @@ fi
 # {{{ pipenv
 
 if pipenv --version &> /dev/null; then
-	eval "$(pipenv --completion 2>/dev/null || _PIPENV_COMPLETE=bash_source pipenv)"
+	eval "$(pipenv --completion 2> /dev/null || _PIPENV_COMPLETE=bash_source pipenv)"
 fi
 
 # }}}
 
-# {{{ rustup
+# {{{ Rust
 
-if command -v rustup &>/dev/null; then
+if command -v rustup &> /dev/null; then
 	eval "$(rustup completions bash rustup)"
 	eval "$(rustup completions bash cargo)"
 fi
@@ -517,7 +525,7 @@ unset RUBY_VERSION
 # Print $PATH for manual verification
 if [ "$TERMINAL_COLORS" -ge '8' ]; then
 	# shellcheck disable=SC2001
-	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE06]}\\1${BASE16[BASE0C]}\\2/g" <<<"$PATH")"
+	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE06]}\\1${BASE16[BASE0C]}\\2/g" <<< "$PATH")"
 else
 	echo "PATH=\"${PATH}\"${ANSI[RESET]}"
 fi

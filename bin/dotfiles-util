@@ -1,7 +1,8 @@
 #!/bin/sh
 # vi:ts=4:sw=4:noet
 
-set -e
+set -o errexit
+set -o nounset
 
 trap _cleanup EXIT
 
@@ -9,7 +10,8 @@ readonly XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${HOME}/.config}"
 readonly XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
 readonly XDG_CACHE_HOME="${XDG_CACHE_HOME:-~/.cache}"
 
-readonly SELF_NAME="$(basename "$0")"
+SELF_NAME="$(basename "$0")"
+readonly SELF_NAME
 readonly LOG_FILE="/tmp/${SELF_NAME}.log"
 
 readonly _rvm_binscripts_url='https://raw.githubusercontent.com/rvm/rvm/stable/binscripts'
@@ -18,25 +20,25 @@ readonly _iterm2_dir="${XDG_DATA_HOME}/iTerm2"
 readonly _iterm2_integrations_dir="${_iterm2_dir}/iTerm2-shell-integration"
 
 _cleanup() {
-	rm -f "${XDG_CACHE_DIR}/rvm-installer"
-	rm -f "${XDG_CACHE_DIR}/rvm-installer.asc"
+	rm -f "${XDG_CACHE_HOME}/rvm-installer"
+	rm -f "${XDG_CACHE_HOME}/rvm-installer.asc"
 }
 
 _usage() {
 	cat <<- EOF
-	Usage: ${SELF_NAME} <command>
+		Usage: ${SELF_NAME} <command>
 
-	These are the available commands:
-	    init	Install all necessary software.
-	    update	Update all software installed via init.
+		These are the available commands:
+		    init   Install all necessary software.
+		    update Update all software installed via init.
 	EOF
 }
 
-_info() { echo "[INFO]    $*" >>       "$LOG_FILE" 2>&1 ; }
-_warn() { echo "[WARNING] $*" | tee -a "$LOG_FILE" >&2 ; }
-_err()  { echo "[ERROR]   $*" | tee -a "$LOG_FILE" >&2 && exit 1 ; }
+_info() { echo "[INFO]    $*" >> "$LOG_FILE"       2>&1;  }
+_warn() { echo "[WARNING] $*" | tee -a "$LOG_FILE" >&2;  }
+_err()  { echo "[ERROR]   $*" | tee -a "$LOG_FILE" >&2 && exit 1;  }
 
-_not_implemented() { _err 'NOT IMPLEMENTED' ; }
+_not_implemented() { _err 'NOT IMPLEMENTED';  }
 
 _git_clone() {
 	[ $# -eq 2 ] || exit 1
@@ -45,7 +47,7 @@ _git_clone() {
 		_info "${2} already exists"
 		return 0
 	else
-		git clone "$1" "$2" || _warn "\`git clone`` of ${1} failed"
+		git clone "$1" "$2" || _warn "\`git clone\` of ${1} failed"
 	fi
 }
 
@@ -65,9 +67,9 @@ _get_fmode() {
 	_uname_s="$(uname -s)"
 
 	case "$_uname_s" in
-		'Darwin'|"*BSD")
+		'Darwin' | "*BSD")
 			stat -f '%OLp' "$1"
-			  ;;
+			;;
 		*)
 			stat -c '%a' "$1"
 			;;
@@ -87,14 +89,22 @@ _running_macOS() {
 	esac
 }
 
+_in_search_path() {
+	command -v "$1" > /dev/null 2>&1
+}
+
 _prep() {
-	hash bash 2>/dev/null || _err "Cannot find Bash. Make sure it is installed and in \$PATH"
-	hash curl 2>/dev/null || _err "Cannot find cURL. Make sure it is installed and in \$PATH"
-	hash git 2>/dev/null  || _err "Cannot find Git. Make sure it is installed and in \$PATH"
-	hash gpg 2>/dev/null  || _err "Cannot find GnuPG. Make sure it is installed and in \$PATH"
+	_in_search_path bash || _err "Cannot find Bash. Make sure it is installed and in \$PATH"
+	_in_search_path curl || _err "Cannot find cURL. Make sure it is installed and in \$PATH"
+	_in_search_path git || _err "Cannot find Git. Make sure it is installed and in \$PATH"
+	_in_search_path gpg || _err "Cannot find GnuPG. Make sure it is installed and in \$PATH"
 
 	[ -d "$XDG_CACHE_HOME" ] || mkdir -p "$XDG_CACHE_HOME"
-	[ -d "$XDG_DATA_HOME"  ] || mkdir -p "$XDG_DATA_HOME"
+	[ -d "$XDG_DATA_HOME" ] || mkdir -p "$XDG_DATA_HOME"
+}
+
+_is_cargo_pkg() {
+	cargo install --list | grep -q "^${1}[[:blank:]]"
 }
 
 _pyenv_install() {
@@ -127,15 +137,20 @@ _iterm2_integrations_install() {
 	[ -d "$_iterm2_integrations_dir" ] || git clone "$_iterm2_integrations_src" "$_iterm2_integrations_dir"
 }
 
+_crates_install() {
+	[ "$1" = "-f" ] && _force='--force'
+
+	_crates='tinty alacritty zellij starship'
+
+	for _crate in $_crates; do
+		if ! _in_search_path "$_crate" || [ -n "${_force:=}" ]; then
+			_in_search_path cargo && cargo install "$_force" "$_crate"
+		fi
+	done
+}
+
 _init() {
 	_prep
-
-	# TODO: figure out how to store these for reuse in _update
-	_git_clone https://github.com/tinted-theming/base16-shell.git "${XDG_DATA_HOME}/base16/base16-shell"
-	_git_clone https://github.com/cskeeters/base16-konsole.git "${XDG_DATA_HOME}/base16/base16-konsole"
-	_git_clone https://github.com/tinted-theming/base16-xresources.git "${XDG_DATA_HOME}/base16/base16-xresources"
-	_git_clone https://github.com/junegunn/vim-plug.git "${XDG_CONFIG_HOME}/nvim/plugged/vim-plug"
-	_git_clone https://github.com/tfutils/tfenv.git "${XDG_DATA_HOME}/tfenv"
 
 	_pyenv_install
 	_rvm_install || _warn 'Failed to install rvm'
@@ -148,8 +163,11 @@ _init() {
 _update() {
 	_prep
 
-	hash rvm 2>/dev/null && rvm get stable
-	hash pyenv 2>/dev/null && pyenv update
+	_in_search_path rvm && rvm get stable
+	_in_search_path pyenv && pyenv update
+
+	_crates_install -f
+
 	[ -d "$_iterm2_integrations_dir" ] && git -C "$_iterm2_integrations_dir" pull origin master
 }
 

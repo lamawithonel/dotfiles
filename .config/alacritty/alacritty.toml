@@ -1,0 +1,8 @@
+[general]
+import = ["~/.config/alacritty/colors.toml"]
+
+[terminal]
+shell = { program = "/bin/bash", args = ["-l", "-c", "zellij"] }
+
+[font]
+size = 16
