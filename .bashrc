@@ -507,6 +507,8 @@ if command -v rustup &> /dev/null; then
 	eval "$(rustup completions bash cargo)"
 fi
 
+command -v probe-rs &> /dev/null && eval "$(probe-rs complete install -m)"
+
 # }}}
 
 # {{{ RVM

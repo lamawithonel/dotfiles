@@ -12,9 +12,9 @@ _get_fmode() {
 	_uname_s="$(uname -s)"
 
 	case "$_uname_s" in
-		'Darwin'|"*BSD")
+		'Darwin' | "*BSD")
 			stat -f '%OLp' "$1"
-			  ;;
+			;;
 		*)
 			stat -c '%a' "$1"
 			;;
@@ -25,7 +25,7 @@ _get_fowner() {
 	_uname_s="$(uname -s)"
 
 	case "$_uname_s" in
-		'Darwin'|"*BSD")
+		'Darwin' | "*BSD")
 			stat -f '%u' "$1"
 			;;
 		*)
@@ -37,6 +37,14 @@ _get_fowner() {
 rngstring() {
 	_length="${1:-16}"
 	_charset="${2:-A-Za-z0-9@%+\\/\'\!\#\$\^\?:.\(\)\{\}\[\]\~_.-}"
+
+	# if '--help' or '-h' are one of the arguments in $@, print usage
+	case "$*" in
+		*--help* | -h*)
+			echo "Usage: rngstring [length] [charset]"
+			return 0
+			;;
+	esac
 
 	< /dev/urandom tr -cd "$_charset" | fold -w "$_length" | head -n 1
 }
@@ -102,7 +110,7 @@ for _dir in "$XDG_CACHE_HOME" "$XDG_CONFIG_HOME" "$XDG_DATA_HOME" "$XDG_STATE_HO
 done
 
 if [ ! -d "$XDG_RUNTIME_DIR" ]; then
-	mkdir -m 0700 "$XDG_RUNTIME_DIR" 2>/dev/null
+	mkdir -m 0700 "$XDG_RUNTIME_DIR" 2> /dev/null
 fi
 [ "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ] || chmod 0700 "$XDG_RUNTIME_DIR"
 
