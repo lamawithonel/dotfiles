@@ -35,4 +35,18 @@ opts.shada = "!,%,h,'1000,s50"
 --
 
 opts.history = 1000
-opts.mouse = "a"
+opts.mouse = ""
+
+-- Disable case-insensitive searching
+opts.ignorecase = false
+
+-- Disable "smart" case (which would still ignore case if the search is all lowercase)
+opts.smartcase = false
+
+-- Disable concealing in markdown files
+vim.api.nvim_create_autocmd("FileType", {
+  pattern = { "markdown" },
+  callback = function()
+    vim.opt_local.conceallevel = 0
+  end,
+})
