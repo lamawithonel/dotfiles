@@ -559,14 +559,14 @@ unset _shopts
 
 # {{{ Local Additions
 
-if [ -d "${HOME}/.profile.local.d" ]; then
-	for _file in "${HOME}/.profile.local.d/"*; do
+if [ -d "${HOME}/.bashrc.local.d" ]; then
+	for _file in "${HOME}/.bashrc.local.d/"*; do
 		#shellcheck disable=1090
 		[ -r "$_file" ] && . "$_file"
 	done
 fi
 
-#shellcheck source=./.profile.local
-[ -e "${HOME}/.profile.local" ] && . "${HOME}/.profile.local"
+#shellcheck source=./.bashrc.local
+[ -e "${HOME}/.bashrc.local" ] && . "${HOME}/.bashrc.local"
 
 # }}}
