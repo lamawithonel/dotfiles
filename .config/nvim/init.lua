@@ -1,5 +1,8 @@
 require("config.lazy")
 
+-- Set Bash as the shell, pulled from the top of PATH
+vim.o.shell = vim.fn.exepath("bash")
+
 if vim.fn.executable("pyenv") == 1 then
   local pyenv_home = vim.fn.system("pyenv root"):gsub("\n", "")
   -- Find the latest python3 among all pyenv virtualenvs that start with "nvim-"

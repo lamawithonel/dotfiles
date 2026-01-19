@@ -9,5 +9,4 @@ return {
   "hashivim/vim-vaultproject",
 
   "gentoo/gentoo-syntax",
-  "https://anongit.gentoo.org/git/proj/eselect-syntax.git",
 }
