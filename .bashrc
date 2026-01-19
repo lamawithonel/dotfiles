@@ -260,17 +260,23 @@ if [ -f "${BASH_DATA_HOME}/ext/bash-preexec/bash-preexec.sh" ]; then
 	preexec_functions=(
 		update_gpg_agent_startup_tty
 	)
+
+	export preexec_functions
 fi
 
 # Use Starship.rs to configure the prompt if it's available, otherwise use a
 # simple two-line prompt with base16 colors.
 # FIXME: Ugly hack to disable sudo or fallback to the simple prompt
-if command -v starship &> /dev/null && [ "$STARSHIP_SUDO_DISABLE" = 'true' ] && toml set --help &> /dev/null; then
+if command -v starship &> /dev/null && [ "$STARSHIP_SUDO_DISABLE" = 'true' ] && command -v toml &> /dev/null; then
+	mkdir -p "${XDG_DATA_HOME}/starship"
+
 	# Copy `starship.toml` to our shadow location with local edits.
-	toml "${XDG_CONFIG_HOME}/starship.toml" set sudo.disabled true > "${XDG_DATA_HOME}/starship/config_shadow.toml"
+	toml set "${XDG_CONFIG_HOME}/starship.toml" sudo.disabled true > "${XDG_DATA_HOME}/starship/config_shadow.toml"
 	export STARSHIP_CONFIG="${XDG_DATA_HOME}/starship/config_shadow.toml"
+
 	eval "$(starship init bash)"
 	eval "$(starship completions bash)"
+
 elif command -v starship &> /dev/null && [ ! "$STARSHIP_SUDO_DISABLE" = 'true' ]; then
 	eval "$(starship init bash)"
 	eval "$(starship completions bash)"
