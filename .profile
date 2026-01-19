@@ -1,11 +1,20 @@
 #!/bin/sh
+# vi:ts=4:sw=4:noexpandtab
+# vim:foldmethod=marker
+#
 #-----------------------------------------------------------------------
 # ~/.profile
 #
 # This file is read by POSIX-compliant shells when invoked as login shells.
-# In the case of Bash, if either ~/.bash_profile or ~/.bash_login exist it
-# will read the first one it encounters and ignore the rest.
+# Bash will look for ~/.bash_profile, ~/.bash_login, or ~/.profile, in that
+# order.  The first one it finds it reads, then ignores the rest.
+#
 # See the INVOCATION section of the bash(1) man page for more information.
+
+# For debugging only.  Do not leave uncommented!
+#_shopts="$(set +o)"
+#set -o errexit
+#set -o nounset
 
 # {{{ Local Functions
 _get_fmode() {
@@ -34,21 +43,6 @@ _get_fowner() {
 	esac
 }
 
-rngstring() {
-	_length="${1:-16}"
-	_charset="${2:-A-Za-z0-9@%+\\/\'\!\#\$\^\?:.\(\)\{\}\[\]\~_.-}"
-
-	# if '--help' or '-h' are one of the arguments in $@, print usage
-	case "$*" in
-		*--help* | -h*)
-			echo "Usage: rngstring [length] [charset]"
-			return 0
-			;;
-	esac
-
-	< /dev/urandom tr -cd "$_charset" | fold -w "$_length" | head -n 1
-}
-
 _running_macOS() {
 	_uname_s="$(uname -s)"
 
@@ -60,6 +54,23 @@ _running_macOS() {
 			return 1
 			;;
 	esac
+}
+# }}}
+
+# {{{ Public functions (not unset)
+rngstring() {
+	_length="${1:-16}"
+	_charset="${2:-A-Za-z0-9@%+\\/\'\!\#\$\^\?:.\(\)\{\}\[\]\~_.-}"
+
+	# if '--help' or '-h' are one of the arguments in $@, print usage
+	case "$*" in
+		*--help* | -h*)
+			echo "Usage: rngstring [length] [tr-style-charset]"
+			return 0
+			;;
+	esac
+
+	< /dev/urandom tr -cd "$_charset" | fold -w "$_length" | head -n 1
 }
 # }}}
 
@@ -114,7 +125,7 @@ if [ ! -d "$XDG_RUNTIME_DIR" ]; then
 fi
 [ "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ] || chmod 0700 "$XDG_RUNTIME_DIR"
 
-unset -f _get_fmode _running_macOS
+unset -f _get_fmode _get_fowner _running_macOS
 export XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_RUNTIME_DIR XDG_STATE_HOME
 # }}}
 
@@ -162,8 +173,20 @@ fi
 
 # }}}
 
-#shellcheck disable=1090
-[ -e ~/.profile.local ] && . ~/.profile.local
+# Restore shell options in case we set `errexit`` or `nounset` for debugging
+eval "${_shopts:-}"
+unset _shopts
 
-# vim:foldmethod=marker
-# vi:ts=4:sw=4:noexpandtab
+# {{{ ~/.profile.local* loading
+
+if [ -d "${HOME}/.profile.local.d" ]; then
+	for _file in "${HOME}/.profile.local.d/"*; do
+		#shellcheck disable=1090
+		[ -r "$_file" ] && . "$_file"
+	done
+fi
+
+#shellcheck source=./.profile.local
+[ -e "${HOME}/.profile.local" ] && . "${HOME}/.profile.local"
+
+# }}}

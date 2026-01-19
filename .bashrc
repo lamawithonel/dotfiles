@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+# vi:ts=4:sw=4:noexpandtab
+# vim:foldmethod=marker
 
 # Style Guide:
 # - Wrap comments at the first word extended beyond 72 characters, and do
@@ -15,11 +17,18 @@
 #  `readonly`, `typeset`, etc.
 # - Quote strings with 'hard quotes' unless variable expansion is needed.
 # - Enclose all variables in curly braces when they are part of a larger
-#   string, e.g., "this ${string}", but not when they are a standalone
-#   "$variable".
+#   string, e.g., "this ${string}", but not when they are a standalone, e.g.,
+#   "$solitary_variable".
 # - Prefix all internal functions with an underscore, e.g., `_function_name`.
+# - Unset all functions and variables not needed after setup.
+# - Batch unsets as a micro-optimization-- startup speeed matters!
 # - Use XDG Base Directory Specification wherever possible.
 #
+
+# For debugging only.  Do not leave uncommented!
+#$_shopts="$(set +o)"
+#set -o errexit
+#set -o nounset
 
 _fail() {
 	echo "ERROR: ${*}" >&2
@@ -30,7 +39,7 @@ _fail() {
 [ -n "$BASH_VERSION" ] || _fail "File incompatible with the current shell: ${0}"
 
 if [[ "$-" =~ i ]] && [[ ! ${BASH_SOURCE[*]} =~ ([[:blank:]]|/)\.bash_profile([[:blank:]]|$) ]]; then
-	# shellcheck source=.bash_profile
+	# shellcheck source=./.bash_profile
 	[ -f "${HOME}/.bash_profile" ] && source "${HOME}/.bash_profile"
 fi
 
@@ -198,7 +207,7 @@ TERMINAL_COLORS="$(tput colors 2> /dev/null || echo -1)"
 # If the terminal supports at least 8 colors, source the color theme and
 # setup dircolors(1)
 if [ "$TERMINAL_COLORS" -ge '8' ]; then
-	# shellcheck source=.config/bash/colors.bash
+	# shellcheck source=./.config/bash/colors.bash
 	[ -f "${BASH_CONFIG_HOME}/colors.bash" ] && source "${BASH_CONFIG_HOME}/colors.bash"
 
 	# dircolors(1)
@@ -216,7 +225,7 @@ if [ "$TERMINAL_COLORS" -ge '8' ]; then
 	esac
 else
 	if [ -f "${XDG_CONFIG_HOME}/bash/colors_null.bash" ]; then
-		# shellcheck source=.config/bash/colors_null.bash
+		# shellcheck source=./.config/bash/colors_null.bash
 		source "${XDG_CONFIG_HOME}/bash/colors_null.bash"
 	fi
 fi
@@ -245,7 +254,7 @@ fi
 # Setup bash-preexec and bash-postexec hooks.
 # These must be configured before the prompt.
 if [ -f "${BASH_DATA_HOME}/ext/bash-preexec/bash-preexec.sh" ]; then
-	#shellcheck source=.local/share/bash/ext/bash-preexec/bash-preexec.sh
+	#shellcheck source=./.local/share/bash/ext/bash-preexec/bash-preexec.sh
 	source "${BASH_DATA_HOME}/ext/bash-preexec/bash-preexec.sh"
 
 	preexec_functions=(
@@ -430,15 +439,6 @@ HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
 export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
 # }}} Misc. Environment Variables
 
-# {{{ Local Additions
-
-# Source an un-tracked file for private and per-machine commands
-if [ -f ~/.bashrc.local ]; then
-	#shellcheck disable=1090
-	source ~/.bashrc.local
-fi
-# }}} Local Additions
-
 # {{{ iTerm2
 
 _iterm2_integration_dir="${XDG_DATA_HOME}/iTerm2/iTerm2-shell-integration"
@@ -446,7 +446,7 @@ _iterm2_integration_script="${_iterm2_integration_dir}/shell_integration/bash"
 _iterm2_check="${_iterm2_integration_dir}/utilities/it2check"
 
 if [[ "$OSTYPE" =~ 'darwin' ]] && [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
-	# shellcheck source=.local/share/iterm2/iTerm2-shell-integration/shell_integration/bash
+	# shellcheck source=./.local/share/iterm2/iTerm2-shell-integration/shell_integration/bash
 	[ -f "$_iterm2_integration_script" ] && source "$_iterm2_integration_script"
 fi
 
@@ -454,14 +454,14 @@ fi
 
 # {{{ Perlbrew
 
-# shellcheck source=.local/share/perlbrew/etc/bashrc
+# shellcheck source=./.local/share/perlbrew/etc/bashrc
 [ -d "${XDG_DATA_HOME}/perlbrew" ] && source "${XDG_DATA_HOME}/perlbrew/etc/bashrc"
 
 # }}}
 
 # {{{ SDKman
 
-# shellcheck source=.local/share/sdkman/bin/sdkman-init.sh
+# shellcheck source=./.local/share/sdkman/bin/sdkman-init.sh
 [ -s "${XDG_DATA_HOME}/bin/sdkman-init.sh" ] && source "${XDG_DATA_HOME}/bin/sdkman-init.sh"
 
 # }}}
@@ -514,7 +514,7 @@ command -v probe-rs &> /dev/null && eval "$(probe-rs complete install -m)"
 # {{{ RVM
 
 # Load RVM into a shell session *as a function*
-# shellcheck source=.local/share/rvm/scripts/rvm
+# shellcheck source=./.local/share/rvm/scripts/rvm
 [ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ] && source "${XDG_DATA_HOME}/rvm/scripts/rvm"
 
 # If this is set Starship will always show the Ruby version
@@ -541,5 +541,32 @@ unset -f _ensure_path_contains
 
 # }}}
 
-# vim:foldmethod=marker
-# vi:ts=4:sw=4:noexpandtab
+# {{{ ~/.bashrc.d/*
+
+if [ -d "${HOME}/.bashrc.d" ]; then
+	for _file in "${HOME}/.bashrc.d"/*.sh; do
+		# shellcheck disable=1090
+		[ -r "$_file" ] && . "$_file"
+	done
+	unset _file
+fi
+
+# }}}
+
+# Restore shell options in case we set `errexit` or `nounset` for debugging
+eval "${_shopts:-}"
+unset _shopts
+
+# {{{ Local Additions
+
+if [ -d "${HOME}/.profile.local.d" ]; then
+	for _file in "${HOME}/.profile.local.d/"*; do
+		#shellcheck disable=1090
+		[ -r "$_file" ] && . "$_file"
+	done
+fi
+
+#shellcheck source=./.profile.local
+[ -e "${HOME}/.profile.local" ] && . "${HOME}/.profile.local"
+
+# }}}
