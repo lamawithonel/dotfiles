@@ -175,7 +175,7 @@ if command -v pyenv &> /dev/null; then
 fi
 
 # Add private /bin directories to $PATH
-_ensure_path_contains ~/bin
+_ensure_path_contains "${HOME}/bin"
 
 export PATH
 
@@ -544,7 +544,7 @@ unset -f _ensure_path_contains
 # {{{ ~/.bashrc.d/*
 
 if [ -d "${HOME}/.bashrc.d" ]; then
-	for _file in "${HOME}/.bashrc.d"/*.sh; do
+	for _file in "${HOME}/.bashrc.d/"*".sh"; do
 		# shellcheck disable=1090
 		[ -r "$_file" ] && . "$_file"
 	done
@@ -560,7 +560,7 @@ unset _shopts
 # {{{ Local Additions
 
 if [ -d "${HOME}/.bashrc.local.d" ]; then
-	for _file in "${HOME}/.bashrc.local.d/"*; do
+	for _file in "${HOME}/.bashrc.local.d/"*".sh"; do
 		#shellcheck disable=1090
 		[ -r "$_file" ] && . "$_file"
 	done

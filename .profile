@@ -166,7 +166,7 @@ export \
 # {{{ ~/.profile.d loading
 
 if [ -d "${HOME}/.profile.d" ]; then
-	for _file in "${HOME}/.profile.d"/*.sh; do
+	for _file in "${HOME}/.profile.d/"*".sh"; do
 		# shellcheck disable=1090
 		[ -r "$_file" ] && . "$_file"
 	done
@@ -182,7 +182,7 @@ unset _shopts
 # {{{ ~/.profile.local* loading
 
 if [ -d "${HOME}/.profile.local.d" ]; then
-	for _file in "${HOME}/.profile.local.d/"*; do
+	for _file in "${HOME}/.profile.local.d/"*".sh"; do
 		#shellcheck disable=1090
 		[ -r "$_file" ] && . "$_file"
 	done

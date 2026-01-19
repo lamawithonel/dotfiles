@@ -13,7 +13,7 @@ if [ "$(ps -U "$(id -u)" -o lsession= | grep -v '^-' | sort -u | wc -l)" = '1' ]
 
 	if command -v gpg-agent > /dev/null; then
 		gpg-connect-agent 'SCD KillSCD' /bye > /dev/null
-		gpg-connect-agent 'KillAgent'   /bye > /dev/null
+		gpg-connect-agent 'KillAgent' /bye > /dev/null
 	elif command -v ssh-agent > /dev/null 2>&1; then
 		gpg-agent -k
 	fi

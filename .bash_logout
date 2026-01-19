@@ -4,6 +4,7 @@
 [ -n "$BASH_VERSION" ] || exit 1
 
 if [ -x "$XDG_CONFIG_HOME/plasma-workspace/shutdown/secrets-agents.sh" ]; then
+	#shellcheck source=./.config/plasma-workspace/shutdown/secrets-agents.sh
 	source "${XDG_CONFIG_HOME}/plasma-workspace/shutdown/secrets-agents.sh"
 fi
 

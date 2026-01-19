@@ -5,7 +5,7 @@
 #
 
 #shellcheck source=.profile
-[ -s ~/.profile ] && source ~/.profile
+[ -s "${HOME}/.profile" ] && source "${HOME}/.profile"
 
 # This file is only for Bash.  Exit if the shell is NOT Bash.
 [ -n "$BASH_VERSION" ] || return 1
@@ -27,7 +27,8 @@
 [ -d "${BASH_STATE_HOME:=${XDG_STATE_HOME}/bash}" ]   || mkdir -pZ "$BASH_STATE_HOME" >&/dev/null  || mkdir -p "$BASH_STATE_HOME"
 
 if [ -d "$BASH_CONFIG_HOME" ]; then
-	for _f in "$BASH_CONFIG_HOME"/profile.d/*.sh; do
+	for _f in "${BASH_CONFIG_HOME}/profile.d/"*".sh"; do
+		#shellcheck disable=1091
 		[ -r "$_f" ] && source "$_f"
 	done
 fi
@@ -37,7 +38,8 @@ fi
 
 # If this is an interactive shell and .bashrc is not already in the call stack, source it
 if [[ $- == *i* ]] && [[ ! ${BASH_SOURCE[*]} =~ ([[:blank:]]|/)\.bashrc([[:blank:]]|$) ]]; then
-	[ -f ~/.bashrc ] && source ~/.bashrc
+	#shellcheck source=./.bashrc
+	[ -f "${HOME}/.bashrc" ] && source "${HOME}/.bashrc"
 fi
 
 # vim:foldmethod=marker
