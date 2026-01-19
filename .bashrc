@@ -220,7 +220,7 @@ if [ "$TERMINAL_COLORS" -ge '8' ]; then
 			;;
 		bsd* | darwin*)
 			if command -v gdircolors &> /dev/null; then
-				eval "$(gdircolors <(dircolors -p | sed 's/ 01;/ /g'))"
+				eval "$(gdircolors <(gdircolors -p | sed 's/ 01;/ /g'))"
 			fi
 			;;
 	esac
@@ -526,7 +526,10 @@ if command -v rustup &> /dev/null; then
 	eval "$(rustup completions bash cargo)"
 fi
 
-command -v probe-rs &> /dev/null && eval "$(probe-rs complete install -m)"
+if command -v probe-rs &> /dev/null; then
+	# FIXME: Why doesn't `probe-rs` shell completion work my MacBook?
+	[[ ! "$OSTYPE" =~ 'darwin' ]] && eval "$(probe-rs complete install -m)"
+fi
 
 # }}}
 
