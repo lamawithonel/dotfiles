@@ -304,6 +304,7 @@ ssh_symbol = " "
 [java]
 format = "\\[[$symbol($version)]($style)\\]"
 symbol = " "
+style = "red"
 
 [julia]
 format = "\\[[$symbol($version)]($style)\\]"
