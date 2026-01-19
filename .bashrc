@@ -160,6 +160,7 @@ if [[ "$OSTYPE" =~ 'darwin' ]] && [ -x "$_iterm2_check" ] && "$_iterm2_check"; t
 	_ensure_path_contains "${_iterm2_integration_dir}/utilities"
 fi
 
+_ensure_path_contains '/opt/homebrew/bin'
 _ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
@@ -552,13 +553,6 @@ fi
 
 # }}} $PATH print
 
-# {{{ Cleanup
-
-unset -v _iterm2_check _iterm2_integration_script _iterm2_integration_dir
-unset -f _ensure_path_contains
-
-# }}}
-
 # {{{ ~/.bashrc.d/*
 
 if [ -d "${HOME}/.bashrc.d" ]; then
@@ -586,5 +580,12 @@ fi
 
 #shellcheck source=./.bashrc.local
 [ -e "${HOME}/.bashrc.local" ] && . "${HOME}/.bashrc.local"
+
+# }}}
+
+# {{{ Cleanup
+
+unset -v _iterm2_check _iterm2_integration_script _iterm2_integration_dir
+unset -f _ensure_path_contains
 
 # }}}
