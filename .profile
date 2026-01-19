@@ -70,7 +70,7 @@ rngstring() {
 			;;
 	esac
 
-	< /dev/urandom tr -cd "$_charset" | fold -w "$_length" | head -n 1
+	LANG=C LC_ALL=C tr -cd "$_charset" < /dev/urandom | fold -w "$_length" | head -n 1
 }
 # }}}
 
