@@ -149,6 +149,21 @@ if ! shopt -oq posix && [ $EUID -ne 0 ]; then
 	fi
 fi
 # }}} Bash Completion
+#
+# {{{ iTerm2 Integration
+
+if [[ "$OSTYPE" =~ 'darwin' ]]; then
+	_iterm2_integration_dir="${XDG_DATA_HOME}/iTerm2/iTerm2-shell-integration"
+	_iterm2_integration_script="${_iterm2_integration_dir}/shell_integration/bash"
+	_iterm2_check="${_iterm2_integration_dir}/utilities/it2check"
+
+	if [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
+		# shellcheck source=.local/share/iterm2/iTerm2-shell-integration/shell_integration/bash
+		[ -f "$_iterm2_integration_script" ] && source "$_iterm2_integration_script"
+	fi
+fi
+
+# }}} iTerm2
 
 # {{{ $PATH Setup
 
@@ -156,11 +171,18 @@ fi
 # gives a clean look at what order they'll appear in the final $PATH variable.
 # Items added earlier will appear later in the variable (lower precedence).
 
-if [[ "$OSTYPE" =~ 'darwin' ]] && [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
-	_ensure_path_contains "${_iterm2_integration_dir}/utilities"
+if [[ "$OSTYPE" =~ 'darwin' ]]; then
+	if [ -f /opt/homebrew/etc/paths ]; then
+		while IFS= read -r _line; do
+			_ensure_path_contains "${_line}"
+		done < /opt/homebrew/etc/paths
+	fi
+
+	if [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
+		_ensure_path_contains "${_iterm2_integration_dir}/utilities"
+	fi
 fi
 
-_ensure_path_contains '/opt/homebrew/bin'
 _ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
@@ -457,19 +479,6 @@ HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
 
 export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
 # }}} Misc. Environment Variables
-
-# {{{ iTerm2
-
-_iterm2_integration_dir="${XDG_DATA_HOME}/iTerm2/iTerm2-shell-integration"
-_iterm2_integration_script="${_iterm2_integration_dir}/shell_integration/bash"
-_iterm2_check="${_iterm2_integration_dir}/utilities/it2check"
-
-if [[ "$OSTYPE" =~ 'darwin' ]] && [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
-	# shellcheck source=./.local/share/iterm2/iTerm2-shell-integration/shell_integration/bash
-	[ -f "$_iterm2_integration_script" ] && source "$_iterm2_integration_script"
-fi
-
-# }}}
 
 # {{{ Perlbrew
 
