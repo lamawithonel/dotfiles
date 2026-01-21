@@ -34,6 +34,17 @@ if [ -d "$BASH_CONFIG_HOME" ]; then
 fi
 
 #-----------------------------------------------------------------------
+# Homebrew profile.d
+#
+
+if [[ "$OSTYPE" =~ 'darwin' ]] && [ -d /opt/homebrew/etc/profile.d ]; then
+	for _f in /opt/homebrew/etc/profile.d/*.sh; do
+		#shellcheck disable=1091
+		[ -r "$_f" ] && source "$_f"
+	done
+fi
+
+#-----------------------------------------------------------------------
 # ~/.bashrc for interactive shells
 
 # If this is an interactive shell and .bashrc is not already in the call stack, source it
