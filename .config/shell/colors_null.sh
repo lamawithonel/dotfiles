@@ -7,6 +7,8 @@
 #
 # Null color definitions for dumb terminals
 # This file creates the same color variables as colors.sh but with empty values
+#
+# Note: This file requires Bash 4.0+ or Zsh for associative arrays.
 
 # Detect if we're in Bash or Zsh and initialize associative arrays
 if [ -n "$BASH_VERSION" ]; then

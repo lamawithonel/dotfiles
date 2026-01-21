@@ -11,14 +11,13 @@
 # it defines variables for the Base16 color palette, which should be compatible
 # with base16-shell.
 #
+# Note: This file requires Bash 4.0+ or Zsh for associative arrays.
+# The $'...' quoting syntax is also a Bash/Zsh extension.
+#
 # See:
 #   * https://en.wikipedia.org/wiki/ANSI_escape_code
 #   * https://github.com/chriskempson/base16
 #   * https://github.com/chriskempson/base16-shell
-
-# Note: Both Bash and Zsh support associative arrays with 'typeset -A'
-# This file uses POSIX shell to ensure compatibility
-# Shells must handle associative arrays themselves
 
 # Detect if we're in Bash or Zsh and initialize associative arrays
 if [ -n "$BASH_VERSION" ]; then

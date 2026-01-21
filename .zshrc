@@ -99,6 +99,10 @@ fi
 
 # {{{ PATH Setup with Zsh's automatic deduplication
 
+# Source the shared PATH management function
+# shellcheck source=./.config/shell/path.sh
+[ -f "${XDG_CONFIG_HOME}/shell/path.sh" ] && source "${XDG_CONFIG_HOME}/shell/path.sh"
+
 # Zsh has built-in PATH deduplication
 typeset -U PATH path
 

@@ -193,7 +193,7 @@ fi
 
 # }}}
 
-# Restore shell options in case we set `errexit`` or `nounset` for debugging
+# Restore shell options in case we set `errexit` or `nounset` for debugging
 eval "${_shopts:-}"
 unset _shopts
 

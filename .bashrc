@@ -43,12 +43,14 @@ _fail() {
 [[ $- != *i* ]] && return
 
 # If .profile hasn't been sourced yet (e.g., non-login interactive shell),
-# source .bash_profile which will handle it
+# source .bash_profile which will handle it, then continue with interactive setup
 if [ -z "$__PROFILE_SOURCED" ]; then
 	# shellcheck source=./.bash_profile
 	[ -f "${HOME}/.bash_profile" ] && source "${HOME}/.bash_profile"
-	return
 fi
+
+# If profile still not sourced after attempting, something is wrong - exit
+[ -z "$__PROFILE_SOURCED" ] && return
 
 # {{{ Miscellaneous shell options
 
@@ -109,6 +111,10 @@ fi
 # }}} iTerm2
 
 # {{{ $PATH Setup
+
+# Source the shared PATH management function
+# shellcheck source=./.config/shell/path.sh
+[ -f "${XDG_CONFIG_HOME}/shell/path.sh" ] && source "${XDG_CONFIG_HOME}/shell/path.sh"
 
 # Most of this could happen elsewhere in this script, but doing it all here
 # gives a clean look at what order they'll appear in the final $PATH variable.
