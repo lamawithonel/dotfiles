@@ -62,22 +62,24 @@ fi
 # $2 = "before" | "after" | "" (optional)
 #
 _ensure_path_contains() {
-	local _dir="$1"
-	local _position="${2:-before}"
-
 	# Must be a fully-qualifed path
-	[[ "$_dir" =~ ^/[[:print:]]+$ ]] || return 1
+	[[ "$1" =~ ^/[[:print:]]+$ ]] || return 1
 
-	if [ -d "$_dir" ]; then
-		if ! [[ "$PATH" =~ (^|:)${_dir}(:|$) ]]; then
-			if [ "$_position" = 'after' ]; then
-				PATH="${PATH}:${_dir}"
+	if [ -d "$1" ]; then
+		if ! [[ "$PATH" =~ (^|:)${1}(:|$) ]]; then
+			if [ "$2" = 'after' ]; then
+				PATH="${PATH}:${1}"
 			else
-				PATH="${_dir}:${PATH}"
+				PATH="${1}:${PATH}"
 			fi
 		fi
 	else
-		PATH="$(echo "$PATH" | sed "s:\(^|\:\)${_dir}::g")"
+		if [[ "$PATH" =~ (^|:)${1}(:|$) ]]; then
+			PATH=":${PATH}:"
+			PATH="${PATH//:${1}/:}"
+			PATH="${PATH#:}"
+			PATH="${PATH%:}"
+		fi
 	fi
 
 	export PATH
@@ -163,9 +165,7 @@ if [[ "$OSTYPE" =~ 'darwin' ]]; then
 fi
 
 _ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/perlbrew/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/deno/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/dotnet/tools" # NOTE: See https://github.com/dotnet/sdk/issues/10390
 _ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
@@ -459,26 +459,6 @@ HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
 export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
 # }}} Misc. Environment Variables
 
-# {{{ Perlbrew
-
-# shellcheck source=./.local/share/perlbrew/etc/bashrc
-[ -d "${XDG_DATA_HOME}/perlbrew" ] && source "${XDG_DATA_HOME}/perlbrew/etc/bashrc"
-
-# }}}
-
-# {{{ SDKman
-
-# shellcheck source=./.local/share/sdkman/bin/sdkman-init.sh
-[ -s "${XDG_DATA_HOME}/bin/sdkman-init.sh" ] && source "${XDG_DATA_HOME}/bin/sdkman-init.sh"
-
-# }}}
-
-# {{{ Deno
-
-command -v deno &> /dev/null && eval "$(deno completions bash)"
-
-# }}}
-
 # {{{ fnm Node.js Manager
 
 if command -v fnm &> /dev/null; then
@@ -537,7 +517,7 @@ unset RUBY_VERSION
 # Print $PATH for manual verification
 if [ "$TERMINAL_COLORS" -ge '8' ]; then
 	# shellcheck disable=SC2001
-	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE06]}\\1${BASE16[BASE0C]}\\2/g" <<< "$PATH")"
+	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE05]}\\1${BASE16[BASE0B]}\\2/g" <<< "$PATH")${ANSI[RESET]}"
 else
 	echo "PATH=\"${PATH}\"${ANSI[RESET]}"
 fi
