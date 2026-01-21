@@ -33,7 +33,7 @@ fi
 export ZSH_CACHE_HOME ZSH_CONFIG_HOME ZSH_DATA_HOME ZSH_STATE_HOME
 
 if [ -d "$ZSH_CONFIG_HOME/profile.d" ]; then
-	# Use nullglob to avoid error when no files match
+	# Use nullglob (N) to avoid error when no files match
 	for _f in "${ZSH_CONFIG_HOME}/profile.d/"*.sh(N); do
 		#shellcheck disable=1091
 		[ -r "$_f" ] && . "$_f"
@@ -45,7 +45,7 @@ fi
 #
 
 if [[ "$OSTYPE" =~ 'darwin' ]] && [ -d /opt/homebrew/etc/profile.d ]; then
-	# Use nullglob to avoid error when no files match
+	# Use nullglob (N) to avoid error when no files match
 	for _f in /opt/homebrew/etc/profile.d/*.sh(N); do
 		#shellcheck disable=1091
 		[ -r "$_f" ] && . "$_f"
