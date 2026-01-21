@@ -156,7 +156,8 @@ if command -v tinty &> /dev/null; then
 		TINTED_SHELL_ENABLE_BASE16_VARS \
 		TINTED_SHELL_ENABLE_BASE24_VARS
 
-	eval "$(tinty generate-completion zsh)"
+	# Suppress errors if completion fails
+	eval "$(tinty generate-completion zsh 2>/dev/null)" 2>/dev/null || true
 fi
 
 if [ -s "${BASE16_SHELL_PATH}/profile_helper.sh" ]; then
@@ -330,8 +331,9 @@ hadolint() {
 
 if command -v fnm &> /dev/null; then
 	PATH="$(echo "$PATH" | sed -E 's,(^|:)/[^:]+/fnm_multishells/[0-9_]+/bin(:|$),,g')"
-	eval "$(fnm env --use-on-cd --shell zsh)"
-	eval "$(fnm completions --shell zsh)"
+	# Suppress errors if completion fails
+	eval "$(fnm env --use-on-cd --shell zsh 2>/dev/null)" 2>/dev/null || true
+	eval "$(fnm completions --shell zsh 2>/dev/null)" 2>/dev/null || true
 fi
 
 # }}}
@@ -339,8 +341,9 @@ fi
 # {{{ pyenv
 
 if command -v pyenv &> /dev/null; then
-	if eval "$(pyenv init - --no-push-path zsh)"; then
-		eval "$(pyenv virtualenv-init - zsh | grep -vF 'export PATH')"
+	# Suppress errors if init fails
+	if eval "$(pyenv init - --no-push-path zsh 2>/dev/null)" 2>/dev/null; then
+		eval "$(pyenv virtualenv-init - zsh 2>/dev/null | grep -vF 'export PATH')" 2>/dev/null || true
 	fi
 fi
 
@@ -349,7 +352,8 @@ fi
 # {{{ pipenv
 
 if pipenv --version &> /dev/null; then
-	eval "$(pipenv --completion 2> /dev/null || _PIPENV_COMPLETE=zsh_source pipenv)"
+	# Suppress errors if completion fails
+	eval "$(pipenv --completion 2> /dev/null || _PIPENV_COMPLETE=zsh_source pipenv 2>/dev/null)" 2>/dev/null || true
 fi
 
 # }}}
@@ -357,13 +361,14 @@ fi
 # {{{ Rust
 
 if command -v rustup &> /dev/null; then
-	eval "$(rustup completions zsh rustup)"
-	eval "$(rustup completions zsh cargo)"
+	# Suppress errors if completion fails
+	eval "$(rustup completions zsh rustup 2>/dev/null)" 2>/dev/null || true
+	eval "$(rustup completions zsh cargo 2>/dev/null)" 2>/dev/null || true
 fi
 
 if command -v probe-rs &> /dev/null; then
 	# FIXME: Why doesn't `probe-rs` shell completion work my MacBook?
-	[[ ! "$OSTYPE" =~ 'darwin' ]] && eval "$(probe-rs complete install -m)"
+	[[ ! "$OSTYPE" =~ 'darwin' ]] && eval "$(probe-rs complete install -m 2>/dev/null)" 2>/dev/null || true
 fi
 
 # }}}
@@ -371,8 +376,12 @@ fi
 # {{{ RVM
 
 # Load RVM into a shell session *as a function*
+# Note: RVM's bash completion doesn't work in Zsh, but the core functionality does
 # shellcheck source=./.local/share/rvm/scripts/rvm
-[ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ] && source "${XDG_DATA_HOME}/rvm/scripts/rvm"
+if [ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ]; then
+	# Temporarily disable errexit in case RVM script has issues
+	source "${XDG_DATA_HOME}/rvm/scripts/rvm" 2>/dev/null || true
+fi
 
 # If this is set Starship will always show the Ruby version
 unset RUBY_VERSION
@@ -394,7 +403,8 @@ fi
 # {{{ ~/.zshrc.d/*
 
 if [ -d "${HOME}/.zshrc.d" ]; then
-	for _file in "${HOME}/.zshrc.d/"*".sh"; do
+	# Use nullglob to avoid error when no files match
+	for _file in "${HOME}/.zshrc.d/"*.sh(N); do
 		# shellcheck disable=1090
 		[ -r "$_file" ] && . "$_file"
 	done
@@ -406,7 +416,8 @@ fi
 # {{{ Local Additions
 
 if [ -d "${HOME}/.zshrc.local.d" ]; then
-	for _file in "${HOME}/.zshrc.local.d/"*".sh"; do
+	# Use nullglob to avoid error when no files match
+	for _file in "${HOME}/.zshrc.local.d/"*.sh(N); do
 		#shellcheck disable=1090
 		[ -r "$_file" ] && . "$_file"
 	done
