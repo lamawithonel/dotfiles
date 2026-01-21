@@ -85,6 +85,12 @@ bindkey '^S' history-incremental-search-forward
 
 # {{{ Completion System
 
+# Add RVM completion directory to fpath if RVM is installed
+# This must be done before compinit
+if [ -d "${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" ]; then
+	fpath=("${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" $fpath)
+fi
+
 # Initialize the completion system
 autoload -Uz compinit
 
@@ -371,11 +377,11 @@ fi
 # {{{ RVM
 
 # Load RVM into a shell session *as a function*
-# Note: RVM's completion uses Bash-specific features, so we skip that part in Zsh
+# RVM has Zsh support and should be sourced after compinit
+# See: https://rvm.io/integration/zsh
 # shellcheck source=./.local/share/rvm/scripts/rvm
 if [ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ]; then
-	# Source RVM but filter out Bash-specific 'complete' commands
-	source "${XDG_DATA_HOME}/rvm/scripts/rvm" 2>&1 | grep -v "command not found: complete" >&2
+	source "${XDG_DATA_HOME}/rvm/scripts/rvm"
 fi
 
 # If this is set Starship will always show the Ruby version
