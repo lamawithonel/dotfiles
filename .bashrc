@@ -38,55 +38,17 @@ _fail() {
 # This file is only for Bash.  Exit if the shell is NOT Bash.
 [ -n "$BASH_VERSION" ] || _fail "File incompatible with the current shell: ${0}"
 
-if [[ "$-" =~ i ]] && [[ ! ${BASH_SOURCE[*]} =~ ([[:blank:]]|/)\.bash_profile([[:blank:]]|$) ]]; then
-	# shellcheck source=./.bash_profile
-	[ -f "${HOME}/.bash_profile" ] && source "${HOME}/.bash_profile"
-fi
-
 # Everything after this point is intended for interactive shells only.
 # Exit if the shell is not interactive.
-[[ "$-" =~ i ]] || return
+[[ $- != *i* ]] && return
 
-# {{{ Shared Functions
-
-# _ensure_path_contains() -- An improved version of Red Hat's pathmunge()
-#
-# Adds a fully-qualified directory to the PATH variable.
-#
-# By default the directory is added at the begining of the PATH variable,
-# e.g., "${1}:/bin".  However, if the second argument is set to "after" it
-# will append it to the end of PATH, e.g., "/bin:${1}".  If the directory
-# path does not exist or is not a directory, it will remove the element.
-#
-# $1 = /fully/qualified/PATH/element
-# $2 = "before" | "after" | "" (optional)
-#
-_ensure_path_contains() {
-	# Must be a fully-qualifed path
-	[[ "$1" =~ ^/[[:print:]]+$ ]] || return 1
-
-	if [ -d "$1" ]; then
-		if ! [[ "$PATH" =~ (^|:)${1}(:|$) ]]; then
-			if [ "$2" = 'after' ]; then
-				PATH="${PATH}:${1}"
-			else
-				PATH="${1}:${PATH}"
-			fi
-		fi
-	else
-		if [[ "$PATH" =~ (^|:)${1}(:|$) ]]; then
-			PATH=":${PATH}:"
-			PATH="${PATH//:${1}/:}"
-			PATH="${PATH#:}"
-			PATH="${PATH%:}"
-		fi
-	fi
-
-	export PATH
-}
-
-export _ensure_path_contains
-# }}}
+# If .profile hasn't been sourced yet (e.g., non-login interactive shell),
+# source .bash_profile which will handle it
+if [ -z "$__PROFILE_SOURCED" ]; then
+	# shellcheck source=./.bash_profile
+	[ -f "${HOME}/.bash_profile" ] && source "${HOME}/.bash_profile"
+	return
+fi
 
 # {{{ Miscellaneous shell options
 
@@ -209,8 +171,8 @@ TERMINAL_COLORS="$(tput colors 2> /dev/null || echo -1)"
 # If the terminal supports at least 8 colors, source the color theme and
 # setup dircolors(1)
 if [ "$TERMINAL_COLORS" -ge '8' ]; then
-	# shellcheck source=./.config/bash/colors.bash
-	[ -f "${BASH_CONFIG_HOME}/colors.bash" ] && source "${BASH_CONFIG_HOME}/colors.bash"
+	# shellcheck source=./.config/shell/colors.sh
+	[ -f "${XDG_CONFIG_HOME}/shell/colors.sh" ] && source "${XDG_CONFIG_HOME}/shell/colors.sh"
 
 	# dircolors(1)
 	case "$OSTYPE" in
@@ -226,9 +188,9 @@ if [ "$TERMINAL_COLORS" -ge '8' ]; then
 			;;
 	esac
 else
-	if [ -f "${XDG_CONFIG_HOME}/bash/colors_null.bash" ]; then
-		# shellcheck source=./.config/bash/colors_null.bash
-		source "${XDG_CONFIG_HOME}/bash/colors_null.bash"
+	if [ -f "${XDG_CONFIG_HOME}/shell/colors_null.sh" ]; then
+		# shellcheck source=./.config/shell/colors_null.sh
+		source "${XDG_CONFIG_HOME}/shell/colors_null.sh"
 	fi
 fi
 # }}} Color Support
@@ -236,14 +198,6 @@ fi
 # {{{ Setup gpg-agent(1)
 
 if command -v gpg-agent &> /dev/null; then
-	GPG_TTY=$(tty)
-
-	if [[ ! "$OSTYPE" =~ ^darwin ]]; then
-		SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
-	fi
-
-	export GPG_TTY SSH_AUTH_SOCK
-
 	update_gpg_agent_startup_tty() {
 		gpg-connect-agent UpdateStartupTTY /bye &> /dev/null
 	}
@@ -445,20 +399,6 @@ hadolint() {
 
 # }}} Functions & Aliases
 
-# {{{ Misc. Environment Variables
-
-# Define a few finite-length POSIX.1 EREs
-#
-# IPv4 addresses
-IPv4_ADDRESS='(([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})\.){3}([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})'
-# IPv4 CIDR subnet notation
-IPv4_SUBNET="${IPv4_ADDRESS}(\\/[[:digit:]]{1,2})?"
-# hostnames
-HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
-
-export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
-# }}} Misc. Environment Variables
-
 # {{{ fnm Node.js Manager
 
 if command -v fnm &> /dev/null; then
@@ -557,6 +497,5 @@ fi
 # {{{ Cleanup
 
 unset -v _iterm2_check _iterm2_integration_script _iterm2_integration_dir
-unset -f _ensure_path_contains
 
 # }}}
