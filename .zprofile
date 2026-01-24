@@ -15,22 +15,22 @@ if [ -z "$__PROFILE_SOURCED" ]; then
 fi
 
 #-----------------------------------------------------------------------
-# XDG directories for Zsh
+# XDG directories validation
 #
+# These should have been set up in .zshenv (for all Zsh contexts) and .profile
+# (for login shells). Just validate they exist.
 
-# These should have been setup in .profile, but just in case...
+# Verify base XDG directories are set (from .profile or .zshenv)
 [ -n "$XDG_CACHE_HOME" ]  || return 1
 [ -n "$XDG_CONFIG_HOME" ] || return 1
 [ -n "$XDG_DATA_HOME" ]   || return 1
 [ -n "$XDG_STATE_HOME" ]  || return 1
 
-# Zsh-specific XDG directories
-[ -d "${ZSH_CACHE_HOME:=${XDG_CACHE_HOME}/zsh}" ]   || mkdir -p "$ZSH_CACHE_HOME"
-[ -d "${ZSH_CONFIG_HOME:=${XDG_CONFIG_HOME}/zsh}" ] || mkdir -p "$ZSH_CONFIG_HOME"
-[ -d "${ZSH_DATA_HOME:=${XDG_DATA_HOME}/zsh}" ]     || mkdir -p "$ZSH_DATA_HOME"
-[ -d "${ZSH_STATE_HOME:=${XDG_STATE_HOME}/zsh}" ]   || mkdir -p "$ZSH_STATE_HOME"
-
-export ZSH_CACHE_HOME ZSH_CONFIG_HOME ZSH_DATA_HOME ZSH_STATE_HOME
+# Verify Zsh-specific XDG directories are set (from .zshenv)
+[ -n "$ZSH_CACHE_HOME" ]  || return 1
+[ -n "$ZSH_CONFIG_HOME" ] || return 1
+[ -n "$ZSH_DATA_HOME" ]   || return 1
+[ -n "$ZSH_STATE_HOME" ]  || return 1
 
 if [ -d "$ZSH_CONFIG_HOME/profile.d" ]; then
 	# Use nullglob (N) to avoid error when no files match
