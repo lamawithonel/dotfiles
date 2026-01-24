@@ -228,27 +228,10 @@ fi
 
 # Use Starship.rs to configure the prompt if it's available, otherwise use a
 # simple two-line prompt with base16 colors.
-# FIXME: Ugly hack to disable sudo or fallback to the simple prompt
-if command -v starship &> /dev/null && [ "$STARSHIP_SUDO_DISABLE" = 'true' ] && command -v toml &> /dev/null; then
-	mkdir -p "${XDG_DATA_HOME}/starship"
-
-	# Copy `starship.toml` to our shadow location with local edits.
-	toml set "${XDG_CONFIG_HOME}/starship.toml" sudo.disabled true > "${XDG_DATA_HOME}/starship/config_shadow.toml"
-	export STARSHIP_CONFIG="${XDG_DATA_HOME}/starship/config_shadow.toml"
-
-	eval "$(starship init bash)"
-	eval "$(starship completions bash)"
-
-elif command -v starship &> /dev/null && [ ! "$STARSHIP_SUDO_DISABLE" = 'true' ]; then
+if command -v starship &> /dev/null; then
 	eval "$(starship init bash)"
 	eval "$(starship completions bash)"
 else
-	if [ "$STARSHIP_SUDO_DISABLE" = 'true' ]; then
-		cat <<- EOF
-			WARN:   $STARSHIP_SUDO_DISABLE is set, but $(toml-cli) is not available.
-			        Disabling Starship!  Install $(toml-cli) from Cargo to enable Starship.
-		EOF
-	fi
 	git_is_available() {
 		command -v git &> /dev/null
 	}

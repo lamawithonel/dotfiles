@@ -1,0 +1,513 @@
+format = """
+$time\
+$username\
+$hostname\
+$localip\
+$shlvl\
+$singularity\
+$kubernetes\
+$vcsh\
+$fossil_branch\
+$fossil_metrics\
+$git_branch\
+$git_commit\
+$git_state\
+$git_metrics\
+$git_status\
+$hg_branch\
+$pijul_channel\
+$docker_context\
+$package\
+$bun\
+$c\
+$cmake\
+$cobol\
+$daml\
+$dart\
+$deno\
+$dotnet\
+$elixir\
+$elm\
+$erlang\
+$fennel\
+$golang\
+$gradle\
+$haskell\
+$haxe\
+$helm\
+$java\
+$julia\
+$kotlin\
+$lua\
+$nim\
+$nodejs\
+$ocaml\
+$opa\
+$perl\
+$php\
+$pulumi\
+$purescript\
+$python\
+$quarto\
+$raku\
+$rlang\
+$red\
+$ruby\
+$rust\
+$scala\
+$solidity\
+$swift\
+$terraform\
+$typst\
+$vlang\
+$vagrant\
+$zig\
+$buf\
+$guix_shell\
+$nix_shell\
+$conda\
+$meson\
+$spack\
+$memory_usage\
+$aws\
+$gcloud\
+$openstack\
+$azure\
+$direnv\
+$env_var\
+$crystal\
+$custom\
+$sudo\
+$cmd_duration\
+$line_break\
+$jobs\
+$battery\
+$status\
+$container\
+$os\
+$shell\
+$directory\
+$character\
+"""
+# Unsupported in Bash
+# right_format = '$time$memory_usage'
+# palette = "base24-solarized-dark-higher-contrast"
+palette = "ansi"
+
+[palettes.ansi]
+black = "0"
+red = "1"
+green = "2"
+yellow = "3"
+blue = "4"
+purple = "5"
+cyan = "6"
+white = "7"
+bright-black = "8"
+bright-red = "9"
+bright-green = "10"
+bright-yellow = "11"
+bright-blue = "12"
+bright-purple = "13"
+bright-cyan = "14"
+bright-white = "15"
+base09 = "16"
+base0F = "17"
+base01 = "18"
+base02 = "19"
+base04 = "20"
+base06 = "21"
+
+[palettes.base16-material-darker]
+black = "#212121"          # base00 (ANSI 0)
+red = "#F07178"            # base08 (ANSI 1)
+green = "#C3E88D"          # base0B (ANSI 2)
+yellow = "#FFCB6B"         # base0A (ANSI 3)
+blue = "#82AAFF"           # base0D (ANSI 4)
+purple = "#C792EA"         # base0E (ANSI 5)
+cyan = "#89DDFF"           # base0C (ANSI 6)
+white = "#EEFFFF"          # base05 (ANSI 7)
+bright-black = "#4A4A4A"   # base03 (ANSI 8)
+bright-red = "#F07178"     # base08 (ANSI 9)
+bright-green = "#C3E88D"   # base0B (ANSI 10)
+bright-yellow = "#FFCB6B"  # base0A (ANSI 11)
+bright-blue = "#82AAFF"    # base0D (ANSI 12)
+bright-purple = "#C792EA"  # base0E (ANSI 13)
+bright-cyan = "#89DDFF"    # base0C (ANSI 14)
+bright-white = "#FFFFFF"   # base07 (ANSI 15)
+
+[palettes.base16-monokai]
+black = "#272822"          # base00 (ANSI 0)
+red = "#f92672"            # base08 (ANSI 1)
+green = "#a6e22e"          # base0B (ANSI 2)
+yellow = "#f4bf75"         # base0A (ANSI 3)
+blue = "#66d9ef"           # base0D (ANSI 4)
+purple = "#ae81ff"         # base0E (ANSI 5)
+cyan = "#a1efe4"           # base0C (ANSI 6)
+white = "#f8f8f2"          # base05 (ANSI 7)
+bright-black = "#75715e"   # base03 (ANSI 8)
+bright-red = "#f92672"     # base08 (ANSI 9)
+bright-green = "#a6e22e"   # base0B (ANSI 10)
+bright-yellow = "#f4bf75"  # base0A (ANSI 11)
+bright-blue = "#66d9ef"    # base0D (ANSI 12)
+bright-purple = "#ae81ff"  # base0E (ANSI 13)
+bright-cyan = "#a1efe4"    # base0C (ANSI 14)
+bright-white = "#f9f8f5"   # base07 (ANSI 15)
+
+[palettes.base24-monokai-vivid]
+black = "#121212"          # base00 (ANSI 0)
+red = "#fa2834"            # base08 (ANSI 1)
+green = "#97e123"          # base0B (ANSI 2)
+yellow = "#fef20a"         # base0A (ANSI 3)
+blue = "#0442fe"           # base0D (ANSI 4)
+purple = "#f800f8"         # base0E (ANSI 5)
+cyan = "#01b6ed"           # base0C (ANSI 6)
+white = "#dfdfdf"          # base05 (ANSI 7)
+bright-black = "#525252"   # base03 (ANSI 8)
+bright-red = "#f5669c"     # base12 (ANSI 9)
+bright-green = "#b0e05e"   # base14 (ANSI 10)
+bright-yellow = "#fef26c"  # base13 (ANSI 11)
+bright-blue = "#0442fe"    # base16 (ANSI 12)
+bright-purple = "#f200f5"  # base17 (ANSI 13)
+bright-cyan = "#50cdfe"    # base15 (ANSI 14)
+bright-white = "#ffffff"   # base07 (ANSI 15)
+
+[palettes.base24-solarized-dark-higher-contrast]
+black = "#001e26"          # base00 (ANSI 0)
+red = "#d01b24"            # base08 (ANSI 1)
+green = "#6bbe6c"          # base0B (ANSI 2)
+yellow = "#178dc7"         # base0A (ANSI 3)
+blue = "#2075c7"           # base0D (ANSI 4)
+purple = "#c61b6e"         # base0E (ANSI 5)
+cyan = "#259185"           # base0C (ANSI 6)
+white = "#aec2ba"          # base05 (ANSI 7)
+bright-black = "#3a8298"   # base03 (ANSI 8)
+bright-red = "#f4153b"     # base12 (ANSI 9)
+bright-green = "#50ee84"   # base14 (ANSI 10)
+bright-yellow = "#b17e28"  # base13 (ANSI 11)
+bright-blue = "#178dc7"    # base16 (ANSI 12)
+bright-purple = "#e14d8e"  # base17 (ANSI 13)
+bright-cyan = "#00b29e"    # base15 (ANSI 14)
+bright-white = "#fcf4dc"   # base07 (ANSI 15)
+
+## ######################################################################
+# Cloud providers
+#
+
+[aws]
+format = "\n\\[[$symbol($profile)(\\($region\\))(\\[$duration\\])]($style)\\]"
+symbol = "  "
+style = "bold cyan"
+
+[gcloud]
+format = "\\[[$symbol$account(@$domain)(\\($region\\))]($style)\\]"
+
+[openstack]
+format = "\\[[$symbol$cloud(\\($project\\))]($style)\\]"
+
+[azure]
+format = "\\[[$symbol$cloud(\\($subscription\\))]($style)\\]"
+
+## ######################################################################
+# Build tools
+#
+
+[buf]
+symbol = " "
+
+[cmake]
+format = "\\[[$symbol($version)]($style)\\]"
+
+## ######################################################################
+# Languages
+#
+
+[bun]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[c]
+format = "\\[[$symbol($version(-$name))]($style)\\]"
+symbol = " "
+
+[cobol]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[conda]
+format = "\\[[$symbol$environment]($style)\\]"
+symbol = " "
+
+[crystal]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[daml]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[dart]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[deno]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[dotnet]
+format = "\\[[$symbol($version)(🎯 $tfm)]($style)\\]"
+
+[elixir]
+format = "\\[[$symbol($version \\(OTP $otp_version\\))]($style)\\]"
+symbol = " "
+
+[elm]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[erlang]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[fennel]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[fossil_branch]
+format = "\\[[$symbol$branch]($style)\\]"
+symbol = " "
+
+[golang]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[gradle]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[guix_shell]
+format = "\\[[$symbol]($style)\\]"
+symbol = " "
+
+[haskell]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[haxe]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[helm]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[hg_branch]
+format = "\\[[$symbol$branch]($style)\\]"
+symbol = " "
+
+[hostname]
+ssh_symbol = " "
+
+[java]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+style = "red"
+
+[julia]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[kotlin]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[kubernetes]
+format = "\\[[$symbol$context( \\($namespace\\))]($style)\\]"
+
+[lua]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[meson]
+format = "\\[[$symbol$project]($style)\\]"
+symbol = "󰔷 "
+
+[nim]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = "󰆥 "
+
+[nix_shell]
+format = "\\[[$symbol$state( \\($name\\))]($style)\\]"
+symbol = " "
+
+[nodejs]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[ocaml]
+format = "\\[[$symbol($version)(\\($switch_indicator$switch_name\\))]($style)\\]"
+symbol = " "
+
+[opa]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[package]
+format = "\\[[$symbol$version]($style)\\]"
+symbol = "󰏗 "
+
+[perl]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[php]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[pijul_channel]
+format = "\\[[$symbol$channel]($style)\\]"
+symbol = " "
+
+[pulumi]
+format = "\\[[$symbol$stack]($style)\\]"
+
+[purescript]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[python]
+format = "\\[[${symbol}${pyenv_prefix}(${version})(\\($virtualenv\\))]($style)\\]"
+symbol = " "
+pyenv_version_name = true
+
+[raku]
+format = "\\[[$symbol($version-$vm_version)]($style)\\]"
+
+[red]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[rlang]
+symbol = "󰟔 "
+
+[ruby]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[rust]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[scala]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[solidity]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[spack]
+format = "\\[[$symbol$environment]($style)\\]"
+
+[swift]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+[terraform]
+format = "\\[[$symbol$workspace]($style)\\]"
+
+[vagrant]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[vlang]
+format = "\\[[$symbol($version)]($style)\\]"
+
+[zig]
+format = "\\[[$symbol($version)]($style)\\]"
+symbol = " "
+
+## ######################################################################
+# Status indicators
+#
+[docker_context]
+format = "\\[[$symbol$context]($style)\\]"
+symbol = " "
+
+[cmd_duration]
+disabled = true
+format = "\\[[⏱ $duration]($style)\\]"
+style = "bold bright-black"
+
+[directory]
+read_only = " 󰌾"
+truncation_symbol = "…/"
+style = "bold blue"
+
+[git_branch]
+format = "\\[[$symbol$branch]($style)\\]"
+symbol = " "
+style = "bold orange"
+
+[git_status]
+format = "([\\[$all_status$ahead_behind\\]]($style))"
+
+[memory_usage]
+format = "\\[$symbol[$ram( | $swap)]($style)\\]"
+symbol = "󰍛 "
+
+[os]
+format = "\\[[$symbol]($style)\\]"
+
+[os.symbols]
+AlmaLinux = " "
+Alpaquita = " "
+Alpine = " "
+Amazon = " "
+Android = " "
+Arch = " "
+Artix = " "
+CentOS = " "
+Debian = " "
+DragonFly = " "
+Emscripten = " "
+EndeavourOS = " "
+Fedora = " "
+FreeBSD = " "
+Garuda = "󰛓 "
+Gentoo = " "
+HardenedBSD = "󰞌 "
+Illumos = "󰈸 "
+Kali = " "
+Linux = " "
+Mabox = " "
+Macos = " "
+Manjaro = " "
+Mariner = " "
+MidnightBSD = " "
+Mint = " "
+NetBSD = " "
+NixOS = " "
+OpenBSD = "󰈺 "
+OracleLinux = "󰌷 "
+Pop = " "
+Raspbian = " "
+RedHatEnterprise = " "
+Redhat = " "
+Redox = "󰀘 "
+RockyLinux = " "
+SUSE = " "
+Solus = "󰠳 "
+Ubuntu = " "
+Unknown = " "
+Void = " "
+Windows = "󰍲 "
+openSUSE = " "
+
+[sudo]
+disabled = true
+format = "\\[[as $symbol]($style)\\]"
+symbol = "🧙 "
+
+[time]
+disabled = false
+format = "\\[[$time]($style)\\]"
+# style = "yellow"
+style = "bold brown"
+time_format = "%T%z"
+
+[username]
+format = "\\[[$user]($style)\\]"
+
+[character]
+# format = ' $symbol '
+success_symbol = '[\$](bold green)'
+error_symbol = '[\$](bold red)'
