@@ -85,10 +85,17 @@ bindkey '^S' history-incremental-search-forward
 
 # {{{ Completion System
 
-# Add RVM completion directory to fpath if RVM is installed
-# This must be done before compinit
+# Add completion directories to fpath before compinit
+# This must be done before compinit initializes completions
+
+# Add RVM completion directory if RVM is installed
 if [ -d "${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" ]; then
 	fpath=("${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" $fpath)
+fi
+
+# Add custom completion cache directory for tool completions
+if [ -d "$ZSH_CACHE_HOME" ]; then
+	fpath=("$ZSH_CACHE_HOME" $fpath)
 fi
 
 # Initialize the completion system
@@ -162,7 +169,10 @@ if command -v tinty &> /dev/null; then
 		TINTED_SHELL_ENABLE_BASE16_VARS \
 		TINTED_SHELL_ENABLE_BASE24_VARS
 
-	eval "$(tinty generate-completion zsh)"
+	# Save tinty completion to fpath directory for autoloading
+	if [ -d "$ZSH_CACHE_HOME" ]; then
+		tinty generate-completion zsh > "${ZSH_CACHE_HOME}/_tinty" 2>/dev/null
+	fi
 fi
 
 if [ -s "${BASE16_SHELL_PATH}/profile_helper.sh" ]; then
@@ -211,12 +221,12 @@ if command -v starship &> /dev/null && [ "$STARSHIP_SUDO_DISABLE" = 'true' ] && 
 	toml set "${XDG_CONFIG_HOME}/starship.toml" sudo.disabled true > "${XDG_DATA_HOME}/starship/config_shadow.toml"
 	export STARSHIP_CONFIG="${XDG_DATA_HOME}/starship/config_shadow.toml"
 
+	# Starship init includes completion setup
 	eval "$(starship init zsh)"
-	eval "$(starship completions zsh)"
 
 elif command -v starship &> /dev/null && [ ! "$STARSHIP_SUDO_DISABLE" = 'true' ]; then
+	# Starship init includes completion setup
 	eval "$(starship init zsh)"
-	eval "$(starship completions zsh)"
 else
 	# Simple fallback prompt for Zsh
 	if [ "$STARSHIP_SUDO_DISABLE" = 'true' ]; then
@@ -336,8 +346,8 @@ hadolint() {
 
 if command -v fnm &> /dev/null; then
 	PATH="$(echo "$PATH" | sed -E 's,(^|:)/[^:]+/fnm_multishells/[0-9_]+/bin(:|$),,g')"
+	# fnm env sets up the environment and includes completion setup
 	eval "$(fnm env --use-on-cd --shell zsh)"
-	eval "$(fnm completions --shell zsh)"
 fi
 
 # }}}
@@ -345,9 +355,10 @@ fi
 # {{{ pyenv
 
 if command -v pyenv &> /dev/null; then
-	if eval "$(pyenv init - --no-push-path zsh)"; then
-		eval "$(pyenv virtualenv-init - zsh | grep -vF 'export PATH')"
-	fi
+	# pyenv init includes completion setup
+	eval "$(pyenv init - --no-push-path zsh)"
+	# pyenv virtualenv-init also includes its completion setup
+	eval "$(pyenv virtualenv-init - zsh | grep -vF 'export PATH')"
 fi
 
 # }}}
@@ -355,7 +366,12 @@ fi
 # {{{ pipenv
 
 if pipenv --version &> /dev/null; then
-	eval "$(pipenv --completion 2> /dev/null || _PIPENV_COMPLETE=zsh_source pipenv)"
+	# Save pipenv completion to fpath directory for autoloading
+	if [ -d "$ZSH_CACHE_HOME" ]; then
+		# pipenv --completion outputs the completion script
+		pipenv --completion 2>/dev/null > "${ZSH_CACHE_HOME}/_pipenv" 2>/dev/null || \
+		_PIPENV_COMPLETE=zsh_source pipenv > "${ZSH_CACHE_HOME}/_pipenv" 2>/dev/null
+	fi
 fi
 
 # }}}
@@ -363,13 +379,19 @@ fi
 # {{{ Rust
 
 if command -v rustup &> /dev/null; then
-	eval "$(rustup completions zsh rustup)"
-	eval "$(rustup completions zsh cargo)"
+	# Save rustup completions to fpath directory for autoloading
+	if [ -d "$ZSH_CACHE_HOME" ]; then
+		rustup completions zsh rustup > "${ZSH_CACHE_HOME}/_rustup" 2>/dev/null
+		rustup completions zsh cargo > "${ZSH_CACHE_HOME}/_cargo" 2>/dev/null
+	fi
 fi
 
 if command -v probe-rs &> /dev/null; then
 	# FIXME: Why doesn't `probe-rs` shell completion work my MacBook?
-	[[ ! "$OSTYPE" =~ 'darwin' ]] && eval "$(probe-rs complete install -m)"
+	# Save probe-rs completion to fpath directory for autoloading
+	if [[ ! "$OSTYPE" =~ 'darwin' ]] && [ -d "$ZSH_CACHE_HOME" ]; then
+		probe-rs complete install -m > "${ZSH_CACHE_HOME}/_probe-rs" 2>/dev/null
+	fi
 fi
 
 # }}}
