@@ -20,9 +20,9 @@
 # If .profile hasn't been sourced yet (e.g., non-login interactive shell),
 # source .zprofile which will handle it
 if [ -z "$__PROFILE_SOURCED" ]; then
-	[ -f "${HOME}/.zprofile" ] && source "${HOME}/.zprofile"
-	# If still not sourced, something is wrong
-	[ -z "$__PROFILE_SOURCED" ] && return
+[ -f "${HOME}/.zprofile" ] && source "${HOME}/.zprofile"
+# If still not sourced, something is wrong
+[ -z "$__PROFILE_SOURCED" ] && return
 fi
 
 # {{{ Zsh Options
@@ -54,16 +54,30 @@ setopt PUSHD_IGNORE_DUPS    # Don't duplicate dirs in stack
 
 # }}}
 
-# {{{ History Settings
+# {{{ Completion System
 
-# Store history in the XDG-standard location
-HISTFILE="${ZSH_CACHE_HOME}/history"
+# Add completion directories to fpath before compinit
+# This must be done before compinit initializes completions
 
-# Number of commands to keep in the scrollback history
-HISTSIZE=1000
+# Add RVM completion directory if RVM is installed
+if [ -d "${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" ]; then
+fpath=("${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" $fpath)
+fi
 
-# Maximum size of $HISTFILE
-SAVEHIST=2000
+# Add custom completion cache directory for tool completions
+if [ -d "$ZSH_CACHE_HOME" ]; then
+fpath=("$ZSH_CACHE_HOME" $fpath)
+fi
+
+# Initialize the completion system
+autoload -Uz compinit
+
+# Use XDG-standard location for completion cache
+if [ -d "$ZSH_CACHE_HOME" ]; then
+compinit -d "${ZSH_CACHE_HOME}/zcompdump"
+else
+compinit
+fi
 
 # }}}
 
@@ -83,357 +97,38 @@ bindkey '^S' history-incremental-search-forward
 
 # }}}
 
-# {{{ Completion System
+# {{{ Source shared RC files
 
-# Add completion directories to fpath before compinit
-# This must be done before compinit initializes completions
-
-# Add RVM completion directory if RVM is installed
-if [ -d "${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" ]; then
-	fpath=("${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" $fpath)
-fi
-
-# Add custom completion cache directory for tool completions
-if [ -d "$ZSH_CACHE_HOME" ]; then
-	fpath=("$ZSH_CACHE_HOME" $fpath)
-fi
-
-# Initialize the completion system
-autoload -Uz compinit
-
-# Use XDG-standard location for completion cache
-if [ -d "$ZSH_CACHE_HOME" ]; then
-	compinit -d "${ZSH_CACHE_HOME}/zcompdump"
-else
-	compinit
+# Source all shared configuration from rc.d directory
+if [ -d "${XDG_CONFIG_HOME}/shell/rc.d" ]; then
+for _rc_file in "${XDG_CONFIG_HOME}/shell/rc.d/"*.sh; do
+[ -r "$_rc_file" ] && . "$_rc_file"
+done
+unset _rc_file
 fi
 
 # }}}
 
-# {{{ PATH Setup with Zsh's automatic deduplication
+# {{{ Fallback Prompt (if Starship not available)
 
-# Source the shared PATH management function
-# shellcheck source=./.config/shell/path.sh
-[ -f "${XDG_CONFIG_HOME}/shell/path.sh" ] && source "${XDG_CONFIG_HOME}/shell/path.sh"
+# This is only used if Starship is not installed
+if ! command -v starship &> /dev/null; then
+# Simple two-line prompt
+autoload -Uz vcs_info
+precmd() { vcs_info }
+zstyle ':vcs_info:git:*' formats '%F{red}[%b]%f'
+zstyle ':vcs_info:*' enable git
 
-# Zsh has built-in PATH deduplication
-typeset -U PATH path
-
-# Most of this could happen elsewhere in this script, but doing it all here
-# gives a clean look at what order they'll appear in the final $PATH variable.
-# Items added earlier will appear later in the variable (lower precedence).
-
-if [[ "$OSTYPE" =~ 'darwin' ]]; then
-	if [ -f /opt/homebrew/etc/paths ]; then
-		while IFS= read -r _line; do
-			_ensure_path_contains "${_line}"
-		done < /opt/homebrew/etc/paths
-	fi
-
-	# iTerm2 integration (if available)
-	_iterm2_integration_dir="${XDG_DATA_HOME}/iTerm2/iTerm2-shell-integration"
-	_iterm2_check="${_iterm2_integration_dir}/utilities/it2check"
-	if [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
-		_ensure_path_contains "${_iterm2_integration_dir}/utilities"
-	fi
-fi
-
-_ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/dotnet/tools" # NOTE: See https://github.com/dotnet/sdk/issues/10390
-_ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/pyenv/bin"
-
-if command -v pyenv &> /dev/null; then
-	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/shims"
-	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/plugins/pyenv-virtualenv/shims"
-fi
-
-# Add private /bin directories to $PATH
-_ensure_path_contains "${HOME}/bin"
-
-export PATH
-
-# }}} $PATH Setup
-
-# {{{ Color
-
-if command -v tinty &> /dev/null; then
-	TINTED_SHELL_ENABLE_BASE16_VARS=1
-	TINTED_SHELL_ENABLE_BASE24_VARS=1
-	BASE16_SHELL_PATH="${XDG_DATA_HOME}/tinted-theming/tinty/repos/tinted-shell"
-
-	export \
-		BASE16_SHELL_PATH \
-		TINTED_SHELL_ENABLE_BASE16_VARS \
-		TINTED_SHELL_ENABLE_BASE24_VARS
-
-	# Save tinty completion to fpath directory for autoloading
-	if [ -d "$ZSH_CACHE_HOME" ]; then
-		tinty generate-completion zsh > "${ZSH_CACHE_HOME}/_tinty" 2>/dev/null
-	fi
-fi
-
-if [ -s "${BASE16_SHELL_PATH}/profile_helper.sh" ]; then
-	source "${BASE16_SHELL_PATH}/profile_helper.sh"
-fi
-
-# Use tput(1) to determine the number of supported colors.
-TERMINAL_COLORS="$(tput colors 2> /dev/null || echo -1)"
-
-# If the terminal supports at least 8 colors, source the color theme and
-# setup dircolors(1)
+setopt PROMPT_SUBST
 if [ "$TERMINAL_COLORS" -ge '8' ]; then
-	# shellcheck source=./.config/shell/colors.sh
-	[ -f "${XDG_CONFIG_HOME}/shell/colors.sh" ] && source "${XDG_CONFIG_HOME}/shell/colors.sh"
-
-	# dircolors(1)
-	case "$OSTYPE" in
-		*-gnu)
-			if command -v dircolors &> /dev/null; then
-				eval "$(dircolors <(dircolors -p | sed 's/ 01;/ /g'))"
-			fi
-			;;
-		bsd* | darwin*)
-			if command -v gdircolors &> /dev/null; then
-				eval "$(gdircolors <(gdircolors -p | sed 's/ 01;/ /g'))"
-			fi
-			;;
-	esac
+if [ $EUID -eq 0 ]; then
+PROMPT='%F{green}[%*]%f %F{yellow}%m%f%F{blue}:%f%F{white}%~%f ${vcs_info_msg_0_} %# '
 else
-	if [ -f "${XDG_CONFIG_HOME}/shell/colors_null.sh" ]; then
-		# shellcheck source=./.config/shell/colors_null.sh
-		source "${XDG_CONFIG_HOME}/shell/colors_null.sh"
-	fi
+PROMPT='%F{green}[%*]%f %F{green}%n@%m%f%F{white}:%f%F{yellow}%~%f ${vcs_info_msg_0_} %# '
 fi
-# }}} Color Support
-
-# {{{ Prompt Setup
-
-# Use Starship.rs to configure the prompt if it's available, otherwise use a
-# simple two-line prompt with base16 colors.
-if command -v starship &> /dev/null; then
-	eval "$(starship init zsh)"
 else
-	# Simple fallback prompt for Zsh
-	# Simple two-line prompt
-	autoload -Uz vcs_info
-	precmd() { vcs_info }
-	zstyle ':vcs_info:git:*' formats '%F{red}[%b]%f'
-	zstyle ':vcs_info:*' enable git
-
-	setopt PROMPT_SUBST
-	if [ "$TERMINAL_COLORS" -ge '8' ]; then
-		if [ $EUID -eq 0 ]; then
-			PROMPT='%F{green}[%*]%f %F{yellow}%m%f%F{blue}:%f%F{white}%~%f ${vcs_info_msg_0_} %# '
-		else
-			PROMPT='%F{green}[%*]%f %F{green}%n@%m%f%F{white}:%f%F{yellow}%~%f ${vcs_info_msg_0_} %# '
-		fi
-	else
-		PROMPT='[%*] %n@%m:%~ ${vcs_info_msg_0_} %# '
-	fi
+PROMPT='[%*] %n@%m:%~ %# '
 fi
-
-# }}} Prompt Setup
-
-# {{{ Functions & Aliases
-
-if command -v nvim &> /dev/null; then
-	alias vi='nvim'
-elif command -v vim &> /dev/null; then
-	alias vi='vim'
 fi
-
-# Make common file operations interactive for safety
-alias rm='rm -i'
-alias cp='cp -i'
-alias mv='mv -i'
-
-# Make tee append by default (for safety)
-alias tee='tee -a'
-
-# Use $COLUMNS as the sdiff width
-[ -n "$COLUMNS" ] && alias sdiff='sdiff -w $COLUMNS'
-
-if [ "$TERMINAL_COLORS" -ge '8' ]; then
-	# Enable color support in grep(1) and ls(1), and add a few short-hands
-	case "$OSTYPE" in
-		*-gnu)
-			alias grep='grep --color=auto'
-			alias fgrep='fgrep --color=auto'
-			alias egrep='egrep --color=auto'
-
-			alias ls='ls -F --color=auto'
-			alias ll='ls -lF --color=auto'
-			alias la='ls -alF --color=auto'
-			alias l='ls -CF --color=auto'
-			;;
-		bsd* | darwin*)
-			if command -v ggrep &> /dev/null; then
-				alias grep='ggrep --color=auto'
-				alias fgrep='gfgrep --color=auto'
-				alias egrep='gegrep --color=auto'
-			fi
-
-			if command -v gls &> /dev/null; then
-				alias ls='gls -F --color=auto'
-				alias ll='gls -lF --color=auto'
-				alias la='gls -alF --color=auto'
-				alias l='gls -CF --color=auto'
-			fi
-			;;
-		*) ;;
-	esac
-else
-	alias ls='ls -F'
-	alias ll='ls -alF'
-	alias la='ls -A'
-	alias l='ls -CF'
-fi
-
-hadolint() {
-	local _dockerfile
-	local _file
-	local _hadolint_yaml=''
-
-	if [ -e "$1" ]; then
-		_dockerfile="$1"
-		shift
-
-		for _file in \
-			"${PWD}/.hadolint.yaml" \
-			"${XDG_CONFIG_HOME}/hadolint.yaml" \
-			"${HOME}/.config/hadolint.yaml" \
-			"${HOME}/.hadolint/hadolint.yaml" \
-			"${HOME}/hadolint/config.yaml" \
-			"${HOME}/.hadolint.yaml"; do
-			if [ -f "$_file" ]; then
-				_hadolint_yaml="--volume=$_file:/.hadolint.yaml:ro"
-				break
-			fi
-		done
-
-		docker run --rm -i ghcr.io/hadolint/hadolint:latest-alpine /bin/hadolint "$@" - < "$_dockerfile"
-	else
-		printf 'Usage:\n\thadolint <path-to-Dockerfile> [hadolint-args...]\n'
-		return 1
-	fi
-}
-
-# }}} Functions & Aliases
-
-# {{{ fnm Node.js Manager
-
-if command -v fnm &> /dev/null; then
-	PATH="$(echo "$PATH" | sed -E 's,(^|:)/[^:]+/fnm_multishells/[0-9_]+/bin(:|$),,g')"
-	# fnm env sets up the environment and includes completion setup
-	eval "$(fnm env --use-on-cd --shell zsh)"
-fi
-
-# }}}
-
-# {{{ pyenv
-
-if command -v pyenv &> /dev/null; then
-	# pyenv init includes completion setup
-	eval "$(pyenv init - --no-push-path zsh)"
-	# pyenv virtualenv-init also includes its completion setup
-	eval "$(pyenv virtualenv-init - zsh | grep -vF 'export PATH')"
-fi
-
-# }}}
-
-# {{{ pipenv
-
-if pipenv --version &> /dev/null; then
-	# Save pipenv completion to fpath directory for autoloading
-	if [ -d "$ZSH_CACHE_HOME" ]; then
-		# pipenv --completion outputs the completion script
-		pipenv --completion 2>/dev/null > "${ZSH_CACHE_HOME}/_pipenv" 2>/dev/null || \
-		_PIPENV_COMPLETE=zsh_source pipenv > "${ZSH_CACHE_HOME}/_pipenv" 2>/dev/null
-	fi
-fi
-
-# }}}
-
-# {{{ Rust
-
-if command -v rustup &> /dev/null; then
-	# Save rustup completions to fpath directory for autoloading
-	if [ -d "$ZSH_CACHE_HOME" ]; then
-		rustup completions zsh rustup > "${ZSH_CACHE_HOME}/_rustup" 2>/dev/null
-		rustup completions zsh cargo > "${ZSH_CACHE_HOME}/_cargo" 2>/dev/null
-	fi
-fi
-
-if command -v probe-rs &> /dev/null; then
-	# FIXME: Why doesn't `probe-rs` shell completion work my MacBook?
-	# Save probe-rs completion to fpath directory for autoloading
-	if [[ ! "$OSTYPE" =~ 'darwin' ]] && [ -d "$ZSH_CACHE_HOME" ]; then
-		probe-rs complete install -m > "${ZSH_CACHE_HOME}/_probe-rs" 2>/dev/null
-	fi
-fi
-
-# }}}
-
-# {{{ RVM
-
-# Load RVM into a shell session *as a function*
-# RVM has Zsh support and should be sourced after compinit
-# See: https://rvm.io/integration/zsh
-# shellcheck source=./.local/share/rvm/scripts/rvm
-if [ -s "${XDG_DATA_HOME}/rvm/scripts/rvm" ]; then
-	source "${XDG_DATA_HOME}/rvm/scripts/rvm"
-fi
-
-# If this is set Starship will always show the Ruby version
-unset RUBY_VERSION
-
-# }}} RVM
-
-# {{{ $PATH print
-
-# Print $PATH for manual verification
-if [ "$TERMINAL_COLORS" -ge '8' ]; then
-	# shellcheck disable=SC2001
-	echo "${BASE16[BASE08]}PATH${BASE16[BASE05]}=$(sed "s/\\([^:]\\+\\)\\(:\\)\\?/${BASE16[BASE05]}\\1${BASE16[BASE0B]}\\2/g" <<< "$PATH")${ANSI[RESET]}"
-else
-	echo "PATH=\"${PATH}\"${ANSI[RESET]}"
-fi
-
-# }}} $PATH print
-
-# {{{ ~/.zshrc.d/*
-
-if [ -d "${HOME}/.zshrc.d" ]; then
-	# Use nullglob (N) to avoid error when no files match
-	for _file in "${HOME}/.zshrc.d/"*.sh(N); do
-		# shellcheck disable=1090
-		[ -r "$_file" ] && . "$_file"
-	done
-	unset _file
-fi
-
-# }}}
-
-# {{{ Local Additions
-
-if [ -d "${HOME}/.zshrc.local.d" ]; then
-	# Use nullglob (N) to avoid error when no files match
-	for _file in "${HOME}/.zshrc.local.d/"*.sh(N); do
-		#shellcheck disable=1090
-		[ -r "$_file" ] && . "$_file"
-	done
-fi
-
-#shellcheck source=./.zshrc.local
-[ -e "${HOME}/.zshrc.local" ] && . "${HOME}/.zshrc.local"
-
-# }}}
-
-# {{{ Cleanup
-
-unset -v _iterm2_check _iterm2_integration_dir
 
 # }}}
