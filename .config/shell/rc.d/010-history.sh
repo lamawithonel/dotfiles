@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# shellcheck shell=bash
 # vi:ts=4:sw=4:noexpandtab
 # vim:foldmethod=marker
 #
@@ -7,6 +8,7 @@
 #
 # History configuration for both Bash and Zsh
 # Category: 000-099 Core shell configuration
+# Note: Uses Bash syntax but is compatible with Zsh
 
 # Bash-specific history settings
 if [ -n "$BASH_VERSION" ]; then

@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# shellcheck shell=bash
 # vi:ts=4:sw=4:noexpandtab
 # vim:foldmethod=marker
 #
@@ -7,6 +8,7 @@
 #
 # Color and dircolors configuration for both Bash and Zsh
 # Category: 200-299 Visual configuration
+# Note: Uses Bash syntax but is compatible with Zsh
 
 # Source tinty/base16 color theme if available
 if command -v tinty >/dev/null 2>&1; then
@@ -43,11 +45,13 @@ if [ "$TERMINAL_COLORS" -ge '8' ]; then
 	case "$OSTYPE" in
 		*-gnu)
 			if command -v dircolors >/dev/null 2>&1; then
+				# Use process substitution for bash/zsh
 				eval "$(dircolors <(dircolors -p | sed 's/ 01;/ /g'))"
 			fi
 			;;
 		bsd* | darwin*)
 			if command -v gdircolors >/dev/null 2>&1; then
+				# Use process substitution for bash/zsh
 				eval "$(gdircolors <(gdircolors -p | sed 's/ 01;/ /g'))"
 			fi
 			;;

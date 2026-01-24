@@ -1,19 +1,89 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# shellcheck shell=bash
 # vi:ts=4:sw=4:noexpandtab
 # vim:foldmethod=marker
 #
 #----------------------------------------------------------------------
 # 100-path-setup.sh
 #
-# PATH configuration for both Bash and Zsh
+# PATH configuration and environment setup for both Bash and Zsh
 # Category: 100-199 PATH and environment setup
+# Note: Uses Bash syntax but is compatible with Zsh
 
-# Source the shared PATH management function
-# shellcheck source=./path.sh
-[ -f "${XDG_CONFIG_HOME}/shell/path.sh" ] && . "${XDG_CONFIG_HOME}/shell/path.sh"
+# Define a few finite-length POSIX.1 EREs
+#
+# IPv4 addresses
+IPv4_ADDRESS='(([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})\.){3}([01][[:digit:]]{2}|2[0-4][[:digit:]]|25[0-5]|[[:digit:]]{1,2})'
+# IPv4 CIDR subnet notation
+IPv4_SUBNET="${IPv4_ADDRESS}(\\/[[:digit:]]{1,2})?"
+# hostnames
+HOSTNAME_REGEX='[[:digit:]a-zA-Z-][[:digit:]a-zA-Z\.-]{1,63}\.[a-zA-Z]{2,6}\.?'
+
+export IPv4_ADDRESS IPv4_SUBNET HOSTNAME_REGEX
+
+# GPG_TTY setup (if gpg-agent is available)
+if command -v gpg-agent >/dev/null 2>&1; then
+	GPG_TTY=$(tty)
+	export GPG_TTY
+
+	# SSH_AUTH_SOCK setup (not on macOS which uses its own keychain)
+	case "$(uname -s)" in
+		Darwin)
+			# macOS uses its own SSH agent
+			;;
+		*)
+			# Use gpg-agent for SSH on other systems
+			if command -v gpgconf >/dev/null 2>&1; then
+				SSH_AUTH_SOCK="$(gpgconf --list-dirs agent-ssh-socket)"
+				export SSH_AUTH_SOCK
+			fi
+			;;
+	esac
+fi
+
+# _ensure_path_contains() -- An improved version of Red Hat's pathmunge()
+#
+# Adds a fully-qualified directory to the PATH variable.
+#
+# By default the directory is added at the beginning of the PATH variable,
+# e.g., "${1}:/bin".  However, if the second argument is set to "after" it
+# will append it to the end of PATH, e.g., "/bin:${1}".  If the directory
+# path does not exist or is not a directory, it will remove the element.
+#
+# $1 = /fully/qualified/PATH/element
+# $2 = "before" | "after" | "" (optional)
+#
+_ensure_path_contains() {
+	# Must be a fully-qualified path (POSIX-compatible regex check)
+	case "$1" in
+		/*)
+			# Valid absolute path
+			;;
+		*)
+			# Not an absolute path, return error
+			return 1
+			;;
+	esac
+
+	# Remove existing PATH element if present
+	PATH="${PATH//:$1:/:}"  # Remove from middle
+	PATH="${PATH/#$1:/}"     # Remove from beginning
+	PATH="${PATH/%:$1/}"     # Remove from end
+
+	# Exit if the path element does not exist OR is not a directory
+	[ ! -d "$1" ] && return 0
+
+	# Add the path element
+	if [ "$2" = 'after' ]; then
+		PATH="${PATH}:${1}"
+	else
+		PATH="${1}:${PATH}"
+	fi
+}
 
 # Zsh has built-in PATH deduplication
 if [ -n "$ZSH_VERSION" ]; then
+	# shellcheck disable=SC2034  # path is used by Zsh internally
 	typeset -U PATH path
 fi
 

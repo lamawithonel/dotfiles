@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# shellcheck shell=bash
 # vi:ts=4:sw=4:noexpandtab
 # vim:foldmethod=marker
 #
@@ -7,15 +8,11 @@
 #
 # Utility functions for both Bash and Zsh
 # Category: 300-399 Aliases and utility functions
+# Note: Uses Bash syntax but is compatible with Zsh
 
 hadolint() {
-	# Use local for Bash, but it's not POSIX
-	if [ -n "$BASH_VERSION" ]; then
-		local _dockerfile _file _hadolint_yaml=''
-	else
-		# Zsh also supports local
-		local _dockerfile _file _hadolint_yaml=''
-	fi
+	# Both Bash and Zsh support local
+	local _dockerfile _file _hadolint_yaml=''
 
 	if [ -e "$1" ]; then
 		_dockerfile="$1"
@@ -34,7 +31,7 @@ hadolint() {
 			fi
 		done
 
-		docker run --rm -i ${_hadolint_yaml} ghcr.io/hadolint/hadolint:latest-alpine /bin/hadolint "$@" - < "$_dockerfile"
+		docker run --rm -i "${_hadolint_yaml}" ghcr.io/hadolint/hadolint:latest-alpine /bin/hadolint "$@" - < "$_dockerfile"
 	else
 		printf 'Usage:\n\thadolint <path-to-Dockerfile> [hadolint-args...]\n'
 		return 1

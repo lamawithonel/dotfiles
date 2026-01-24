@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# shellcheck shell=bash
 # vi:ts=4:sw=4:noexpandtab
 # vim:foldmethod=marker
 #
@@ -7,6 +8,7 @@
 #
 # Ruby version manager initialization
 # Category: 400-499 Language/tool environment managers
+# Note: Uses Bash syntax but is compatible with Zsh
 
 # Load RVM into a shell session *as a function*
 # RVM has Zsh support and should be sourced after compinit

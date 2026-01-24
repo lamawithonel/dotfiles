@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# shellcheck shell=bash
 # vi:ts=4:sw=4:noexpandtab
 # vim:foldmethod=marker
 #
@@ -7,6 +8,7 @@
 #
 # Python environment manager initialization
 # Category: 400-499 Language/tool environment managers
+# Note: Uses Bash syntax but is compatible with Zsh
 
 if command -v pyenv >/dev/null 2>&1; then
 	# pyenv init includes completion setup

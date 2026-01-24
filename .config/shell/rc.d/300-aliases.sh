@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# shellcheck shell=bash
 # vi:ts=4:sw=4:noexpandtab
 # vim:foldmethod=marker
 #
@@ -7,6 +8,7 @@
 #
 # Common aliases for both Bash and Zsh
 # Category: 300-399 Aliases and utility functions
+# Note: Uses Bash syntax but is compatible with Zsh
 
 # Editor
 if command -v nvim >/dev/null 2>&1; then

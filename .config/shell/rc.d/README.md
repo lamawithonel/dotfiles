@@ -2,6 +2,10 @@
 
 This directory contains shared shell configuration snippets that are sourced by both Bash and Zsh.
 
+## File Format
+
+All files use `#!/usr/bin/env bash` shebang and `# shellcheck shell=bash` directive. While they use Bash syntax for performance and convenience, they are written to be compatible with both Bash and Zsh through conditional logic.
+
 ## Organization
 
 Files are numbered with three-digit prefixes to control load order. The taxonomy is:
@@ -19,7 +23,7 @@ Files are numbered with three-digit prefixes to control load order. The taxonomy
 ### Current Files
 
 - `010-history.sh` - History configuration for both Bash and Zsh
-- `100-path-setup.sh` - PATH manipulation using shared _ensure_path_contains function
+- `100-path-setup.sh` - Environment variables, GPG/SSH setup, and PATH management with _ensure_path_contains function
 - `200-colors.sh` - Color and dircolors setup, tinty/base16 initialization
 - `210-prompt.sh` - Starship prompt initialization
 - `300-aliases.sh` - Common aliases (vi, rm, cp, mv, ls, etc.)
@@ -33,9 +37,9 @@ Files are numbered with three-digit prefixes to control load order. The taxonomy
 
 ## Shell-Specific Handling
 
-Files in this directory should work with both Bash and Zsh. When shell-specific logic is needed, use:
+Files in this directory use Bash syntax but work with both Bash and Zsh. When shell-specific logic is needed, use:
 
-```sh
+```bash
 if [ -n "$BASH_VERSION" ]; then
     # Bash-specific code
 elif [ -n "$ZSH_VERSION" ]; then
@@ -43,14 +47,30 @@ elif [ -n "$ZSH_VERSION" ]; then
 fi
 ```
 
+## Shellcheck Compliance
+
+All files pass `shellcheck` without errors when checked with `--shell=bash`. The only warnings are:
+- SC1091 (info): "Not following" warnings for external files that may not exist
+- These are expected and suppressed with appropriate shellcheck directives
+
 ## Adding New Files
 
 1. Choose the appropriate category range (e.g., 400-499 for a new language manager)
 2. Pick a number within that range
 3. Name the file with format: `NNN-description.sh`
-4. Add a header comment explaining the purpose and category
-5. Ensure the file works with both Bash and Zsh (or handle differences explicitly)
+4. Use shebang: `#!/usr/bin/env bash` and directive: `# shellcheck shell=bash`
+5. Add a header comment explaining the purpose and category
+6. Ensure the file works with both Bash and Zsh (or handle differences explicitly)
+7. Test with `bash -n filename.sh` and `shellcheck filename.sh`
 
 ## Fallback Prompts
 
 The fallback prompts (when Starship is not available) remain in `.bashrc` and `.zshrc` because they are highly shell-specific and would require too much conditional logic to share effectively.
+
+## Consolidated Files
+
+The following standalone files were consolidated into rc.d files:
+- `.config/shell/path.sh` → Merged into `100-path-setup.sh`
+- `.config/shell/environment.sh` → Merged into `100-path-setup.sh`
+
+The files `.config/shell/colors.sh` and `.config/shell/colors_null.sh` remain standalone as they contain large data structures (associative arrays) that are sourced by `200-colors.sh`.

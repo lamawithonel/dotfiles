@@ -1,4 +1,5 @@
-#!/bin/sh
+#!/usr/bin/env bash
+# shellcheck shell=bash
 # vi:ts=4:sw=4:noexpandtab
 # vim:foldmethod=marker
 #
@@ -7,6 +8,7 @@
 #
 # Prompt configuration - Starship initialization
 # Category: 200-299 Visual configuration
+# Note: Uses Bash syntax but is compatible with Zsh
 #
 # Note: Fallback prompts are shell-specific and remain in .bashrc/.zshrc
 
