@@ -1,1 +1,8 @@
 .Xresources.local
+
+# Shell-specific cache and runtime files
+.local/share/bash/ext/
+.local/share/rustup/
+.local/share/starship/
+.local/share/zsh/
+.cache/
