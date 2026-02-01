@@ -4,8 +4,11 @@
 # Shell-agnostic stuff
 #
 
-#shellcheck source=.profile
-[ -s "${HOME}/.profile" ] && source "${HOME}/.profile"
+# Source .profile if it hasn't been sourced yet
+if [ -z "$__PROFILE_SOURCED" ]; then
+	#shellcheck source=.profile
+	[ -s "${HOME}/.profile" ] && source "${HOME}/.profile"
+fi
 
 # This file is only for Bash.  Exit if the shell is NOT Bash.
 [ -n "$BASH_VERSION" ] || return 1

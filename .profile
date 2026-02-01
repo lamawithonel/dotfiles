@@ -16,6 +16,12 @@
 #set -o errexit
 #set -o nounset
 
+# Guard variable to prevent duplicate sourcing of this file
+# This is critical for proper login vs interactive shell separation
+[ -n "$__PROFILE_SOURCED" ] && return
+__PROFILE_SOURCED=1
+export __PROFILE_SOURCED
+
 # {{{ Local Functions
 _get_fmode() {
 	_uname_s="$(uname -s)"
@@ -175,7 +181,19 @@ fi
 
 # }}}
 
-# Restore shell options in case we set `errexit`` or `nounset` for debugging
+# {{{ Shared shell configuration
+
+# Source shared PATH management functions
+# shellcheck source=.config/shell/path.sh
+[ -f "${XDG_CONFIG_HOME}/shell/path.sh" ] && . "${XDG_CONFIG_HOME}/shell/path.sh"
+
+# Source shared environment variables
+# shellcheck source=.config/shell/environment.sh
+[ -f "${XDG_CONFIG_HOME}/shell/environment.sh" ] && . "${XDG_CONFIG_HOME}/shell/environment.sh"
+
+# }}}
+
+# Restore shell options in case we set `errexit` or `nounset` for debugging
 eval "${_shopts:-}"
 unset _shopts
 
