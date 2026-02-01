@@ -8,8 +8,12 @@ preferred-schemes = [
 [[items]]
 path = "https://github.com/tinted-theming/tinted-terminal.git"
 name = "tinted-terminal"
-themes-dir = "themes/alacritty"
-hook = "cp -f %f ~/.config/alacritty/colors.toml && touch ~/.config/alacritty/alacritty.toml"
+themes-dir = "themes/ghostty"
+hook = '''
+  mkdir -p "${HOME}/.config/ghostty/themes" && \
+  cp -f "%f" "${HOME}/.config/ghostty/themes/tinted-theming" && \
+  pkill -SIGUSR2 -x ghostty
+'''
 supported-systems = ["base16", "base24"]
 
 [[items]]
