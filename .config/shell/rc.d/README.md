@@ -30,10 +30,8 @@ Files are numbered with three-digit prefixes to control load order. The taxonomy
 - `210-prompt.sh` - Starship prompt initialization
 - `300-aliases.sh` - Common aliases (vi, rm, cp, mv, ls, etc.)
 - `310-functions.sh` - Utility functions (hadolint, etc.)
-- `400-fnm.sh` - Fast Node Manager initialization
-- `410-pyenv.sh` - Python environment manager initialization
-- `440-rvm.sh` - Ruby version manager initialization
-- `500-completions.sh` - Tool completions (pipenv, rustup, probe-rs)
+- `400-mise.sh` - Mise polyglot runtime manager (includes Rust via rustup)
+- `500-completions.sh` - Tool completions (pipenv)
 - `600-path-print.sh` - Display final PATH with colored highlighting
 - `690-local.sh` - Source local additions (.rc.d, .rc.local files)
 

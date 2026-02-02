@@ -16,7 +16,7 @@ The configuration is structured to:
 
 **`.profile`** - POSIX-compatible environment setup (sourced by login shells)
 - Sets up XDG Base Directory variables
-- Defines language-specific environment variables (CARGO_HOME, PYENV_ROOT, etc.)
+- Defines language-specific environment variables (CARGO_HOME, etc.)
 - Sources shared configuration from `.config/shell/`
 - Uses `__PROFILE_SOURCED` guard variable to prevent duplicate sourcing
 
@@ -78,6 +78,29 @@ The configuration is structured to:
 
 **`.config/shell/colors_null.sh`** - Null colors for dumb terminals
 - Same structure as colors.sh but with empty values
+
+**`.config/shell/rc.d/`** - Shared shell configuration snippets
+- Sourced by both Bash and Zsh interactive shells
+- Files are numbered to control load order (see `.config/shell/rc.d/README.md`)
+- Key files include:
+  - `100-path-setup.sh` - PATH management and setup
+  - `200-colors.sh` - Color and dircolors setup
+  - `210-prompt.sh` - Starship prompt initialization
+  - `300-aliases.sh` - Common aliases
+  - `400-mise.sh` - Mise polyglot runtime manager (Python, Node.js, Rust, Go, etc.)
+  - `500-completions.sh` - Tool completions
+
+### Language and Tool Version Managers
+
+The configuration uses modern version managers:
+
+**Mise** (`400-mise.sh`) - Polyglot runtime manager that replaces individual version managers:
+- Manages: Python, Node.js, Rust, Go, Java, Scala, Ruby, Groovy, Zig, and more
+- Replaces: pyenv, fnm, rvm, tfenv
+- Rust support: Uses rustup under the hood, respects `RUSTUP_HOME` and `CARGO_HOME`
+- Rust features: Components, targets, and profiles configurable via mise.toml
+- Simplifies configuration and improves shell startup time
+- See: https://mise.jdx.dev/ and https://mise.jdx.dev/lang/rust.html
 
 ### Shell-Specific Configuration Directories
 
