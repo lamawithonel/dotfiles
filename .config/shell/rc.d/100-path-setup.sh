@@ -75,17 +75,9 @@ if [[ "$OSTYPE" =~ 'darwin' ]]; then
 	fi
 fi
 
-_ensure_path_contains "${XDG_DATA_HOME}/tfenv/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/dotnet/tools" # NOTE: See https://github.com/dotnet/sdk/issues/10390
-_ensure_path_contains "${XDG_DATA_HOME}/rvm/bin"
 _ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/pyenv/bin"
-
-if command -v pyenv >/dev/null 2>&1; then
-	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/shims"
-	_ensure_path_contains "${XDG_DATA_HOME}/pyenv/plugins/pyenv-virtualenv/shims"
-fi
 
 # Add private /bin directories to $PATH
 _ensure_path_contains "${HOME}/bin"
