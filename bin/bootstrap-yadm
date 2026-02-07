@@ -4,39 +4,72 @@
 set -e
 trap _cleanup EXIT
 
-readonly _yadm_url='https://github.com/TheLocehiliosan/yadm.git'
-readonly _yadm_dev_key_url='https://pgp.key-server.io/download/0xed61ee2125054fdfd80778ff14db4fc2465a4b12'
+readonly _yadm_url='https://github.com/yadm-dev/yadm.git'
+readonly _yadm_dev_key_url='https://keys.openpgp.org/vks/v1/by-fingerprint/A4567CA2DA1F5F527D7A29E1420A7C865EE3F85F'
 
 readonly XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
-readonly _yadm_home="${XDG_DATA_HOME}/yadm"
+readonly _yadm_project_dir="${XDG_DATA_HOME}/yadm/project"
 readonly _home_bin="${HOME}/bin"
 
 _cleanup() {
 	unset GIT_DIR
 }
 
-_fail() { echo -e "$*" && exit 1 ; }
+_fail() {
+	echo "$@"
+	exit 1
+}
 
 _fail_git_verify() {
-	rm -rf "${_yadm_home}"
-	echo <<- EOF
+	rm -rf "${_yadm_project_dir}"
+	cat <<- EOF
 		ERROR: Could not verify trust of the Git repository.  Removing contents.
 
-		  It is possible the developer forgot to sign the latest tag.  If
-		  that is the case, you may be able to work around this with an older
-		  version.  Just edit the \$_version variable in this script to specify
-		  the tag or other valid refspec to use.
+		  It is possible the developer forgot to sign the latest tag.  If that
+		  is the case, try again with the a signed tag or other signed git ref.
+
 	EOF
+	_usage
 	exit 1
 }
 
 _test_cmd() {
-	if ! hash "$1" 2>/dev/null; then
+	if ! hash "$1" 2> /dev/null; then
 		_fail "ERROR: Cannot find \`${1}\`. Please ensure \`${1}\` is installed then try again."
 	else
 		return 0
 	fi
 }
+
+_usage() {
+	cat <<- EOF
+		Usage: $0 [--ref <git-ref>] [-h|--help]
+
+		    --ref <git-ref>  Use the specified Git ref instead of the latest tag.
+		                     This can be a branch, tag, or other valid refspec.
+
+		    -h|--help        Show this help message and exit.
+	EOF
+}
+
+while [ "$#" -gt 0 ]; do
+	case "$1" in
+		--ref)
+			shift
+			_version="$1"
+			;;
+		-h | --help)
+			_usage
+			exit 0
+			;;
+		*)
+			echo "ERROR: Unrecognized argument: $1"
+			_usage
+			exit 1
+			;;
+	esac
+	shift
+done
 
 _test_cmd git
 _test_cmd gpg
@@ -46,11 +79,12 @@ gpg -q --fetch-keys "$_yadm_dev_key_url" || _fail 'ERROR: Could not install GPG 
 [ -d "$XDG_DATA_HOME"   ] || mkdir "$XDG_DATA_HOME"
 [ -d "$_home_bin"       ] || mkdir "$_home_bin"
 
-[ -d "$_yadm_home" ] || git clone "$_yadm_url" "$_yadm_home"
+[ -d "$_yadm_project_dir" ] || git clone "$_yadm_url" "$_yadm_project_dir"
 
-GIT_DIR="${_yadm_home}/.git"; export GIT_DIR
+GIT_DIR="${_yadm_project_dir}/.git"
+export GIT_DIR
 
-# TODO: Allow `_version` to be set on the command line, edit failure message.
-_version="$(git tag | tail -n1)"
-git --work-tree="$_yadm_home" checkout -q "$_version"
-git --work-tree="$_yadm_home" tag --verify || _fail_git_verify
+_version="${_version:-$(git describe --tags --abrev=0)}"
+git --work-tree="$_yadm_project_dir" checkout -q "$_version"
+git --work-tree="$_yadm_project_dir" tag --verify || _fail_git_verify
+ln -sf "${_yadm_project_dir}/yadm" "${_home_bin}/yadm"
