@@ -1,7 +1,155 @@
+# ======================================================================
+# SHELL CONFIGURATION
+# ======================================================================
 command = zsh
-macos-option-as-alt = true
 
+# ======================================================================
+# FONT CONFIGURATION
+# ======================================================================
 font-family = FiraMono Nerd Font
 font-size = 16.0
 
+# ======================================================================
+# THEME CONFIGURATION
+# ======================================================================
 theme = tinted-theming
+
+# ======================================================================
+# WINDOW CONFIGURATION
+# ======================================================================
+window-show-tab-bar = always
+
+# ======================================================================
+# GTK-SPECIFIC CONFIGURATION
+# ======================================================================
+gtk-tabs-location = bottom
+
+# ======================================================================
+# MACOS-SPECIFIC CONFIGURATION
+# ======================================================================
+macos-option-as-alt = true
+macos-titlebar-style = tabs
+
+# ======================================================================
+# COMPATIBILITY CONFIGURATION
+# ======================================================================
+copy-on-select = clipboard
+app-notifications = no-clipboard-copy,config-reload
+
+# ======================================================================
+# KEYBINDINGS - Hand Separation Design Philosophy
+# ======================================================================
+# Left hand  (ESDF, A, G) = NAVIGATION & MOVEMENT
+# Right hand (IJKL, T) = CREATION & ADJUSTMENT
+#
+# Modifiers:
+# - Alt (right thumb): NAVIGATION
+# - Alt+Shift: MOVE
+# - Ctrl (left thumb): CREATION
+# - Ctrl+Shift: ADJUSTMENT & CLOSURE
+# ======================================================================
+
+# Split Navigation - Alt + ESDF (left hand navigation)
+keybind = alt+e=goto_split:top
+keybind = alt+s=goto_split:left
+keybind = alt+d=goto_split:bottom
+keybind = alt+f=goto_split:right
+
+# Split Creation - Ctrl + IJKL (right hand creation)
+keybind = ctrl+i=new_split:up
+keybind = super+i=new_split:up
+keybind = ctrl+j=new_split:left
+keybind = super+j=new_split:left
+keybind = ctrl+k=new_split:down
+keybind = super+k=new_split:down
+keybind = ctrl+l=new_split:right
+keybind = super+l=new_split:right
+
+# Split Creation - Auto direction
+keybind = ctrl+shift+enter=new_split:auto
+keybind = super+shift+enter=new_split:auto
+
+# Split Resize - Ctrl+Shift + IJKL (right hand adjustment)
+keybind = ctrl+shift+i=resize_split:up,10
+keybind = super+shift+i=resize_split:up,10
+keybind = ctrl+shift+j=resize_split:left,10
+keybind = super+shift+j=resize_split:left,10
+keybind = ctrl+shift+k=resize_split:down,10
+keybind = super+shift+k=resize_split:down,10
+keybind = ctrl+shift+l=resize_split:right,10
+keybind = super+shift+l=resize_split:right,10
+
+# Split Management
+keybind = ctrl+shift+equal=equalize_splits
+keybind = super+shift+equal=equalize_splits
+keybind = ctrl+shift+backslash=toggle_split_zoom
+keybind = super+shift+backslash=toggle_split_zoom
+
+# Split Move/Swap (unimplemented in Ghostty)
+#keybind = alt+shift+e=move_split:top
+#keybind = alt+shift+s=move_split:left
+#keybind = alt+shift+d=move_split:bottom
+#keybind = alt+shift+f=move_split:right
+
+# Tab Navigation
+keybind = alt+a=previous_tab
+keybind = alt+g=next_tab
+keybind = shift+arrow_left=previous_tab
+keybind = shift+arrow_right=next_tab
+
+# Tab Management
+keybind = alt+shift+a=move_tab:-1
+keybind = alt+shift+g=move_tab:1
+keybind = ctrl+t=new_tab
+keybind = super+t=new_tab
+keybind = ctrl+shift+w=close_surface
+keybind = super+shift+w=close_surface
+keybind = ctrl+shift+q=quit
+keybind = super+shift+q=quit
+
+# Copy/Paste
+keybind = ctrl+shift+c=copy_to_clipboard
+keybind = super+shift+c=copy_to_clipboard
+keybind = ctrl+shift+v=paste_from_clipboard
+keybind = super+shift+v=paste_from_clipboard
+keybind = ctrl+shift+insert=paste_from_selection
+keybind = super+shift+insert=paste_from_selection
+
+# Scrollback Search (unimplemented in Ghostty)
+#keybind = ctrl+f=scrollback_search:forward
+#keybind = ctrl+g=scrollback_search:backward
+
+# Scrolling
+keybind = shift+page_up=scroll_page_up
+keybind = shift+page_down=scroll_page_down
+keybind = shift+up=scroll_page_lines:-1
+keybind = shift+down=scroll_page_lines:1
+keybind = shift+home=scroll_to_top
+keybind = shift+end=scroll_to_bottom
+
+# Prompt Jumping
+keybind = ctrl+shift+up=jump_to_prompt:-1
+keybind = super+shift+up=jump_to_prompt:-1
+keybind = ctrl+shift+down=jump_to_prompt:1
+keybind = super+shift+down=jump_to_prompt:1
+
+# Font Size
+keybind = ctrl+equal=increase_font_size:1
+keybind = super+equal=increase_font_size:1
+keybind = ctrl+minus=decrease_font_size:1
+keybind = super+minus=decrease_font_size:1
+keybind = ctrl+0=reset_font_size
+keybind = super+0=reset_font_size
+
+# Window Management
+keybind = ctrl+shift+n=new_window
+keybind = super+shift+n=new_window
+keybind = f11=toggle_fullscreen
+
+# UI Actions
+keybind = ctrl+shift+p=open_config
+keybind = super+shift+p=open_config
+keybind = ctrl+shift+comma=open_config
+keybind = super+shift+comma=open_config
+keybind = ctrl+shift+a=inspector:toggle
+keybind = super+shift+a=inspector:toggle
