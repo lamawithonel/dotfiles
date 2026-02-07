@@ -1,5 +1,8 @@
 require("config.lazy")
 
+-- Load Ghostty-compatible keybindings
+require("config.ghostty-compat")
+
 -- Set Bash as the shell, pulled from the top of PATH
 vim.o.shell = vim.fn.exepath("bash")
 
