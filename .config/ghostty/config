@@ -153,3 +153,9 @@ keybind = ctrl+shift+comma=open_config
 keybind = super+shift+comma=open_config
 keybind = ctrl+shift+a=inspector:toggle
 keybind = super+shift+a=inspector:toggle
+
+# macOS Compatibility
+keybind = super+c=text:\x03
+keybind = super+z=text:\x1a
+keybind = super+v=text:\x16
+keybind = super+r=text:\x12
