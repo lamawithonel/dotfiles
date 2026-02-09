@@ -89,9 +89,7 @@ $shell\
 $directory\
 $character\
 """
-# Unsupported in Bash
-# right_format = '$time$memory_usage'
-# palette = "base24-solarized-dark-higher-contrast"
+right_format = '$memory_usage'
 palette = "ansi"
 
 [palettes.ansi]
