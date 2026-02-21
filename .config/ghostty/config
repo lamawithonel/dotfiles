@@ -7,7 +7,7 @@ config-file = ?config.local
 # FONT CONFIGURATION
 # ======================================================================
 font-family = FiraMono Nerd Font
-font-size = 16.0
+font-size = 20.0
 
 # ======================================================================
 # THEME CONFIGURATION
@@ -70,14 +70,14 @@ keybind = ctrl+shift+enter=new_split:auto
 keybind = super+shift+enter=new_split:auto
 
 # Split Resize - Ctrl+Shift + IJKL (right hand adjustment)
-keybind = ctrl+shift+i=resize_split:up,10
-keybind = super+shift+i=resize_split:up,10
-keybind = ctrl+shift+j=resize_split:left,10
-keybind = super+shift+j=resize_split:left,10
-keybind = ctrl+shift+k=resize_split:down,10
-keybind = super+shift+k=resize_split:down,10
-keybind = ctrl+shift+l=resize_split:right,10
-keybind = super+shift+l=resize_split:right,10
+keybind = ctrl+shift+i=resize_split:up,25
+keybind = super+shift+i=resize_split:up,25
+keybind = ctrl+shift+j=resize_split:left,25
+keybind = super+shift+j=resize_split:left,25
+keybind = ctrl+shift+k=resize_split:down,25
+keybind = super+shift+k=resize_split:down,25
+keybind = ctrl+shift+l=resize_split:right,25
+keybind = super+shift+l=resize_split:right,25
 
 # Split Management
 keybind = ctrl+shift+equal=equalize_splits
