@@ -35,9 +35,9 @@ _ensure_path_contains() {
 	esac
 
 	# Remove existing PATH element if present
-	PATH="${PATH//:$1:/:}"  # Remove from middle
-	PATH="${PATH/#$1:/}"     # Remove from beginning
-	PATH="${PATH/%:$1/}"     # Remove from end
+	PATH="${PATH//:$1:/:}" # Remove from middle
+	PATH="${PATH/#$1:/}"   # Remove from beginning
+	PATH="${PATH/%:$1/}"   # Remove from end
 
 	# Exit if the path element does not exist OR is not a directory
 	[ ! -d "$1" ] && return 0
@@ -55,10 +55,6 @@ if [ -n "$ZSH_VERSION" ]; then
 	# shellcheck disable=SC2034  # path is used by Zsh internally
 	typeset -U PATH path
 fi
-
-# Most of this could happen elsewhere in this script, but doing it all here
-# gives a clean look at what order they'll appear in the final $PATH variable.
-# Items added earlier will appear later in the variable (lower precedence).
 
 if [[ "$OSTYPE" =~ 'darwin' ]]; then
 	if [ -f /opt/homebrew/etc/paths ]; then
@@ -80,6 +76,7 @@ _ensure_path_contains "${XDG_DATA_HOME}/dotnet/tools" # NOTE: See https://github
 _ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
 
 # Add private /bin directories to $PATH
+_ensure_path_contains "${XDG_BIN_HOME}"
 _ensure_path_contains "${HOME}/bin"
 
 export PATH

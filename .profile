@@ -92,6 +92,7 @@ fi
 # {{{ Setup XDG Directories
 
 if _running_macOS; then
+	XDG_BIN_HOME="${XDG_BIN_HOME:-${HOME}/.local/bin}"
 	XDG_CACHE_HOME="${XDG_CACHE_HOME:-$(getconf DARWIN_USER_CACHE_DIR)}"
 	XDG_CACHE_HOME="${XDG_CACHE_HOME%/}"
 	XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(getconf DARWIN_USER_TEMP_DIR)}"

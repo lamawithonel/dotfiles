@@ -21,16 +21,11 @@ fi
 # (for login shells). Just validate they exist.
 
 # Verify base XDG directories are set (from .profile or .zshenv)
+[ -n "$XDG_BIN_HOME" ]    || return 1
 [ -n "$XDG_CACHE_HOME" ]  || return 1
 [ -n "$XDG_CONFIG_HOME" ] || return 1
 [ -n "$XDG_DATA_HOME" ]   || return 1
 [ -n "$XDG_STATE_HOME" ]  || return 1
-
-# Verify Zsh-specific XDG directories are set (from .zshenv)
-[ -n "$ZSH_CACHE_HOME" ]  || return 1
-[ -n "$ZSH_CONFIG_HOME" ] || return 1
-[ -n "$ZSH_DATA_HOME" ]   || return 1
-[ -n "$ZSH_STATE_HOME" ]  || return 1
 
 if [ -d "$ZSH_CONFIG_HOME/profile.d" ]; then
 	# Use nullglob (N) to avoid error when no files match

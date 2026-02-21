@@ -18,6 +18,7 @@ fi
 #
 
 # These should have been setup in .profile, but just in case...
+[ -n "$XDG_BIN_HOME" ]    || return 1
 [ -n "$XDG_CACHE_HOME" ]  || return 1
 [ -n "$XDG_CONFIG_HOME" ] || return 1
 [ -n "$XDG_DATA_HOME" ]   || return 1
@@ -31,7 +32,7 @@ fi
 
 if [ -d "$BASH_CONFIG_HOME" ]; then
 	for _f in "${BASH_CONFIG_HOME}/profile.d/"*".sh"; do
-		#shellcheck disable=1091
+		#shellcheck disable=1090
 		[ -r "$_f" ] && source "$_f"
 	done
 fi
@@ -42,7 +43,7 @@ fi
 
 if [[ "$OSTYPE" =~ 'darwin' ]] && [ -d /opt/homebrew/etc/profile.d ]; then
 	for _f in /opt/homebrew/etc/profile.d/*.sh; do
-		#shellcheck disable=1091
+		#shellcheck disable=1090
 		[ -r "$_f" ] && source "$_f"
 	done
 fi
