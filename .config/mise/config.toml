@@ -2,6 +2,7 @@
 gpg_verify = true
 paranoid = true
 cargo.binstall = true
+env_shell_expand = true
 
 [tools]
 # Install Rust with rust-analyzer and its dependency rust-src for LSP support
