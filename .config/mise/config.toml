@@ -1,10 +1,13 @@
 [settings]
 gpg_verify = true
 paranoid = true
+cargo.binstall = true
 
 [tools]
 # Install Rust with rust-analyzer and its dependency rust-src for LSP support
 rust = { version = "latest", profile = "default", components = "rust-src,rust-analyzer" }
+"cargo:cargo-binstall" = "latest"
+"cargo:usage-cli" = "latest"
 "cargo:starship" = "latest"
 neovim = "latest"
 aws-cli = { version = "latest", symlink_bins = "true" }
