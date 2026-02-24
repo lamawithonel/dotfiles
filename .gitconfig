@@ -1,0 +1,50 @@
+[user]
+	name = Lucas Yamanishi
+	email = lucas.yamanishi@gmail.com
+
+[color]
+	ui = auto
+
+[protocol "git"]
+	allow = never
+
+[url "https://"]
+	insteadOf = git://
+
+[init]
+	defaultBranch = main
+
+[filter "lfs"]
+	clean = git-lfs clean -- %f
+	smudge = git-lfs smudge -- %f
+	process = git-lfs filter-process
+	required = true
+
+[pull]
+	ff = only
+
+[core]
+    pager = delta
+
+[interactive]
+    diffFilter = delta --color-only
+
+[delta]
+  side-by-side = true
+  keep-plus-minus-markers = true
+  navigate = true
+
+  file-decoration-style = brightblue bold ol
+  file-modified-label = >
+  file-removed-label = -
+  file-added-label = +
+
+  hunk-header-decoration-style = "brightblack dim box"
+  hunk-label = @@
+
+[merge]
+  conflictStyle = zdiff3
+
+[include]
+  path = ~/.local/share/tinted-theming/tinty/tinted-delta-configs-file.gitconfig
+  path = ~/.gitconfig.local

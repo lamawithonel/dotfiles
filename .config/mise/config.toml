@@ -3,12 +3,18 @@ gpg_verify = true
 cargo.binstall = true
 env_shell_expand = true
 
+[settings.url_replacements]
+"regex:^http://(.*)" = "https://$1"
+
 [tools]
 # Install Rust with rust-analyzer and its dependency rust-src for LSP support
 rust = { version = "latest", profile = "default", components = "rust-src,rust-analyzer" }
-"cargo:cargo-binstall" = "latest"
-"cargo:usage-cli" = "latest"
-"cargo:starship" = "latest"
-neovim = "latest"
-aws-cli = { version = "latest", symlink_bins = "true" }
+go = "latest"
 node = "lts"
+"cargo:cargo-binstall" = "latest"
+"cargo:git-delta" = "latest"
+"cargo:starship" = "latest"
+"cargo:usage-cli" = "latest"
+aws-cli = { version = "latest", symlink_bins = "true" }
+git-lfs = "latest"
+neovim = "latest"

@@ -28,3 +28,9 @@ name = "tinted-vim"
 path = "https://github.com/tinted-theming/tinted-vim.git"
 themes-dir = "colors"
 supported-systems = ["base16", "base24"]
+
+[[items]]
+path = "https://github.com/tinted-theming/tinted-delta"
+name = "tinted-delta"
+themes-dir = "configs"
+supported-systems = ["base16", "base24"]
