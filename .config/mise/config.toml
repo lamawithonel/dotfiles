@@ -20,5 +20,6 @@ bun = "latest"
 "cargo:starship" = "latest"
 "cargo:usage-cli" = "latest"
 aws-cli = { version = "latest", symlink_bins = "true" }
+doggo = "latest"
 git-lfs = "latest"
 neovim = "latest"
