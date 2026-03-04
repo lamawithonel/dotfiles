@@ -6,11 +6,15 @@ env_shell_expand = true
 [settings.url_replacements]
 "regex:^http://(.*)" = "https://$1"
 
+[settings.npm]
+package_manager = "bun"
+
 [tools]
 # Install Rust with rust-analyzer and its dependency rust-src for LSP support
 rust = { version = "latest", profile = "default", components = "rust-src,rust-analyzer" }
 go = "latest"
 node = "lts"
+bun = "latest"
 "cargo:cargo-binstall" = "latest"
 "cargo:git-delta" = "latest"
 "cargo:starship" = "latest"
