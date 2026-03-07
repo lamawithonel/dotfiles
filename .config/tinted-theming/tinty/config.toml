@@ -1,8 +1,11 @@
 preferred-schemes = [
-  "base16-material-darker",
-  "base16-monokai",
-  "base24-monokai-vivid",
   "base24-solarized-dark-higher-contrast",
+  "base24-gruvbox-dark",
+  "base16-gruvbox-material-dark-hard",
+  "base16-selenized-black",
+  "base16-material-darker",
+  "base24-material-dark",
+  "base24-monokai-vivid",
 ]
 
 [[items]]
