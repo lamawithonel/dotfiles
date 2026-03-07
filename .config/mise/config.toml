@@ -23,4 +23,5 @@ aws-cli = { version = "latest", symlink_bins = "true" }
 doggo = "latest"
 gh = "latest"
 git-lfs = "latest"
+gitversion = "latest"
 neovim = "latest"
