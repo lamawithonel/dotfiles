@@ -4,11 +4,7 @@
 # vim:foldmethod=marker
 #
 #----------------------------------------------------------------------
-# 110-gpg-ssh.sh
-#
 # GPG and SSH agent configuration
-# Category: 100-199 PATH and environment setup
-# Note: Uses Bash syntax but is compatible with Zsh
 
 # GPG_TTY setup (if gpg-agent is available)
 if command -v gpg-agent >/dev/null 2>&1; then

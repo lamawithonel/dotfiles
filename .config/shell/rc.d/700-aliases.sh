@@ -4,11 +4,7 @@
 # vim:foldmethod=marker
 #
 #----------------------------------------------------------------------
-# 300-aliases.sh
-#
 # Common aliases for both Bash and Zsh
-# Category: 300-399 Aliases and utility functions
-# Note: Uses Bash syntax but is compatible with Zsh
 
 # Editor
 if command -v nvim >/dev/null 2>&1; then

@@ -4,11 +4,7 @@
 # vim:foldmethod=marker
 #
 #----------------------------------------------------------------------
-# 200-colors.sh
-#
 # Color and dircolors configuration for both Bash and Zsh
-# Category: 200-299 Visual configuration
-# Note: Uses Bash syntax but is compatible with Zsh
 
 # Source tinty/base16 color theme if available
 if command -v tinty >/dev/null 2>&1; then

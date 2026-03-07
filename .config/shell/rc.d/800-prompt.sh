@@ -4,12 +4,7 @@
 # vim:foldmethod=marker
 #
 #----------------------------------------------------------------------
-# 210-prompt.sh
-#
 # Prompt configuration - Starship initialization
-# Category: 200-299 Visual configuration
-# Note: Uses Bash syntax but is compatible with Zsh
-#
 
 # Use Starship.rs to configure the prompt
 if command -v starship >/dev/null 2>&1; then

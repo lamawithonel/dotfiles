@@ -6,9 +6,7 @@
 #----------------------------------------------------------------------
 # 100-path-setup.sh
 #
-# PATH configuration for both Bash and Zsh
-# Category: 100-199 PATH and environment setup
-# Note: Uses Bash syntax but is compatible with Zsh
+# PATH configuration
 
 # _ensure_path_contains() -- An improved version of Red Hat's pathmunge()
 #
@@ -62,17 +60,9 @@ if [[ "$OSTYPE" =~ 'darwin' ]]; then
 			_ensure_path_contains "${_line}"
 		done < /opt/homebrew/etc/paths
 	fi
-
-	# iTerm2 integration (if available)
-	_iterm2_integration_dir="${XDG_DATA_HOME}/iTerm2/iTerm2-shell-integration"
-	_iterm2_check="${_iterm2_integration_dir}/utilities/it2check"
-	if [ -x "$_iterm2_check" ] && "$_iterm2_check"; then
-		_ensure_path_contains "${_iterm2_integration_dir}/utilities"
-	fi
 fi
 
-_ensure_path_contains "${XDG_DATA_HOME}/cabal/bin"
-_ensure_path_contains "${XDG_DATA_HOME}/dotnet/tools" # NOTE: See https://github.com/dotnet/sdk/issues/10390
+# Cargo to bootstrap mise
 _ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
 
 # Add private /bin directories to $PATH

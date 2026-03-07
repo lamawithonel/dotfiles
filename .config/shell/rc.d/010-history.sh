@@ -4,11 +4,12 @@
 # vim:foldmethod=marker
 #
 #----------------------------------------------------------------------
-# 010-history.sh
-#
 # History configuration for both Bash and Zsh
-# Category: 000-099 Core shell configuration
-# Note: Uses Bash syntax but is compatible with Zsh
+
+# Number of commands to keep in the scrollback history
+HISTSIZE=1000
+
+export HISTSIZE
 
 # Bash-specific history settings
 if [ -n "$BASH_VERSION" ]; then
@@ -22,13 +23,10 @@ if [ -n "$BASH_VERSION" ]; then
 	# the previous entry.
 	HISTCONTROL="ignorespace:ignoredups"
 
-	# Number of commands to keep in the scrollback history
-	HISTSIZE=1000
-
 	# Maximum size of $HISTFILE (in lines)
 	HISTFILESIZE=2000
 
-	export HISTFILE HISTCONTROL HISTSIZE HISTFILESIZE
+	export HISTFILE HISTCONTROL HISTFILESIZE
 fi
 
 # Zsh-specific history settings
@@ -36,11 +34,8 @@ if [ -n "$ZSH_VERSION" ]; then
 	# Store history in the XDG-standard location
 	HISTFILE="${ZSH_CACHE_HOME}/history"
 
-	# Number of commands to keep in the scrollback history
-	HISTSIZE=1000
-
 	# Maximum size of $HISTFILE
 	SAVEHIST=2000
 
-	export HISTFILE HISTSIZE SAVEHIST
+	export HISTFILE SAVEHIST
 fi

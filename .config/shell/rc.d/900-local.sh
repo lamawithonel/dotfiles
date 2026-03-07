@@ -4,11 +4,7 @@
 # vim:foldmethod=marker
 #
 #----------------------------------------------------------------------
-# 690-local.sh
-#
 # Source local additions and overrides
-# Category: 600-699 Final setup and local overrides
-# Note: Uses Bash syntax but is compatible with Zsh
 
 # Source shell-specific .rc.d directories
 if [ -n "$BASH_VERSION" ] && [ -d "${HOME}/.bashrc.d" ]; then
@@ -58,4 +54,3 @@ if [ -n "$ZSH_VERSION" ] && [ -d "${HOME}/.zshrc.local.d" ]; then
 		[ -r "$_file" ] && . "$_file"
 	done
 fi
-

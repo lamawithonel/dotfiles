@@ -59,11 +59,6 @@ setopt PUSHD_IGNORE_DUPS    # Don't duplicate dirs in stack
 # Add completion directories to fpath before compinit
 # This must be done before compinit initializes completions
 
-# Add RVM completion directory if RVM is installed
-if [ -d "${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" ]; then
-	fpath=("${XDG_DATA_HOME}/rvm/scripts/zsh/Completion" $fpath)
-fi
-
 # Add custom completion cache directory for tool completions
 if [ -d "$ZSH_CACHE_HOME" ]; then
 	fpath=("$ZSH_CACHE_HOME" $fpath)
