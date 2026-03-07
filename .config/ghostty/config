@@ -18,6 +18,7 @@ theme = tinted-theming
 # WINDOW CONFIGURATION
 # ======================================================================
 window-show-tab-bar = always
+maximize = true
 
 # ======================================================================
 # GTK-SPECIFIC CONFIGURATION
@@ -153,6 +154,11 @@ keybind = ctrl+shift+comma=open_config
 keybind = super+shift+comma=open_config
 keybind = ctrl+shift+a=inspector:toggle
 keybind = super+shift+a=inspector:toggle
+
+# TODO: Uncomment once global shortcuts are less annoying in KDE.
+# Quick Terminal
+#keybind = global:ctrl+backquote=toggle_quick_terminal
+#keybind = global:super+backquote=toggle_quick_terminal
 
 # macOS Compatibility
 keybind = super+c=text:\x03
