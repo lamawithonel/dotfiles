@@ -12,6 +12,18 @@ return {
           },
         },
       },
+      yamlls = {
+        settings = {
+          yaml = {
+            format = {
+              singleQuote = true,
+            },
+          },
+        },
+        schemas = {
+          ["https://raw.githubusercontent.com/siemens/kas/refs/heads/master/kas/schema-kas.json"] = "*.kas.yml",
+        },
+      },
     },
   },
 }
