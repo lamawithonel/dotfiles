@@ -3,6 +3,10 @@ return {
   priority = 1000,
   lazy = false,
   config = function()
-    require("tinted-colorscheme").setup()
+    require("tinted-nvim").setup({
+      selector = {
+        enabled = true,
+      },
+    })
   end,
 }

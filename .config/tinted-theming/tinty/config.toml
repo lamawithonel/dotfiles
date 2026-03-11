@@ -27,8 +27,8 @@ hook = "source \"$TINTY_THEME_FILE_PATH\""
 supported-systems = ["base16", "base24"]
 
 [[items]]
-name = "tinted-vim"
-path = "https://github.com/tinted-theming/tinted-vim.git"
+name = "tinted-nvim"
+path = "https://github.com/tinted-theming/tinted-nvim.git"
 themes-dir = "colors"
 supported-systems = ["base16", "base24"]
 
