@@ -29,6 +29,7 @@ bun = "latest"
 aws-cli = { version = "latest", symlink_bins = "true" }
 bat = "latest"
 bat-extras = "latest"
+bats = "latest"
 doggo = "latest"
 fnox = "latest"
 gh = "latest"
