@@ -18,6 +18,8 @@ theme = tinted-theming
 # WINDOW CONFIGURATION
 # ======================================================================
 window-show-tab-bar = always
+window-padding-x = 8
+window-padding-y = 8
 maximize = true
 
 # ======================================================================
