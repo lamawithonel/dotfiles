@@ -1,15 +1,17 @@
 [settings]
-gpg_verify = true
 cargo.binstall = true
 env_shell_expand = true
+github.use_git_credentials = true
+gpg_verify = true
+node.corepack = true
+node.npm_shim = false
+npm.package_manager = "bun"
 
 [settings.url_replacements]
 "regex:^http://(.*)" = "https://$1"
 
-[settings.npm]
-package_manager = "bun"
-
 [tools]
+dotnet = "latest"
 # Install Rust with rust-analyzer and its dependency rust-src for LSP support
 rust = { version = "latest", profile = "default", components = "rust-src,rust-analyzer" }
 go = "latest"
@@ -21,6 +23,7 @@ bun = "latest"
 "cargo:mqttv5-cli" = "latest"
 "cargo:starship" = "latest"
 "cargo:usage-cli" = "latest"
+"dotnet:git-credential-manager" = "latest"
 "github:HelixDB/helix-db" = "latest"
 "github:mr-karan/doggo" = { version = "latest", matching_regex = '^doggo-.*\.tar\..*$' }
 "npm:@fission-ai/openspec" = "latest"
@@ -30,11 +33,13 @@ bun = "latest"
 "pipx:apm-cli" = "latest"
 "pipx:github/spec-kit" = "latest"
 "pipx:graphifyy" = "latest"
+ast-grep = "latest"
 aws-cli = { version = "latest", symlink_bins = "true" }
 bat = "latest"
 bat-extras = "latest"
 bats = "latest"
 fnox = "latest"
+fzf = "latest"
 gh = "latest"
 git-lfs = "latest"
 gitversion = "latest"
@@ -45,5 +50,6 @@ markdownlint-cli2 = "latest"
 neovim = "latest"
 pkl = "latest"
 pitchfork = "latest"
+tree-sitter = "latest"
 uv = "latest"
 yq = "latest"
