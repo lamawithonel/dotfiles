@@ -1,7 +1,6 @@
 [settings]
 cargo.binstall = true
 env_shell_expand = true
-github.use_git_credentials = true
 gpg_verify = true
 node.corepack = true
 node.npm_shim = false
