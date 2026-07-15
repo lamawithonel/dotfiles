@@ -46,38 +46,22 @@ _fail() {
 # source .bash_profile which will handle it, then continue with interactive setup
 if [ -z "$__PROFILE_SOURCED" ]; then
 	# shellcheck source=./.bash_profile
+	# shellcheck disable=SC1091
 	[ -f "${HOME}/.bash_profile" ] && source "${HOME}/.bash_profile"
 fi
 
 # If profile still not sourced after attempting, something is wrong - exit
 [ -z "$__PROFILE_SOURCED" ] && return
 
-# {{{ Miscellaneous shell options
-
-# Check the window size after each command and, if necessary, update the
-# values of LINES and COLUMNS.
-shopt -s checkwinsize
-
-# If set, the pattern "**" used in a pathname expansion context will match
-# all files and zero or more directories and subdirectories.
-shopt -s globstar
-
-# }}}
-
 # {{{ Source shared RC files
 
 # Source all shared configuration from rc.d directory
 if [ -d "${XDG_CONFIG_HOME}/shell/rc.d" ]; then
 	for _rc_file in "${XDG_CONFIG_HOME}/shell/rc.d/"*.sh; do
+		# shellcheck disable=SC1090
 		[ -r "$_rc_file" ] && . "$_rc_file"
 	done
 	unset _rc_file
 fi
-
-# }}}
-
-# {{{ Cleanup
-
-unset -v _iterm2_check _iterm2_integration_script _iterm2_integration_dir
 
 # }}}

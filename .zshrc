@@ -25,57 +25,6 @@ if [ -z "$__PROFILE_SOURCED" ]; then
 	[ -z "$__PROFILE_SOURCED" ] && return
 fi
 
-# {{{ Zsh Options
-
-# Completion behavior - make Zsh feel like Bash
-setopt BASH_AUTO_LIST       # List completions on first tab
-setopt NO_AUTO_MENU         # Don't show menu on second tab
-setopt NO_MENU_COMPLETE     # Don't insert first match automatically
-setopt LIST_AMBIGUOUS       # Complete up to ambiguity point
-
-# History improvements
-setopt NO_BANG_HIST         # Disable ! history expansion
-setopt INTERACTIVE_COMMENTS # Allow # comments in interactive shell
-setopt EXTENDED_HISTORY     # Timestamps in history
-setopt HIST_IGNORE_ALL_DUPS # Deduplicate history
-setopt HIST_REDUCE_BLANKS   # Clean up whitespace in history
-setopt HIST_VERIFY          # Show expanded history before executing
-setopt APPEND_HISTORY       # Append to history file
-setopt INC_APPEND_HISTORY   # Append immediately, not on exit
-
-# Convenience features
-setopt AUTO_CD              # Type directory name to cd into it
-setopt AUTO_PUSHD           # cd pushes onto directory stack
-setopt PUSHD_IGNORE_DUPS    # Don't duplicate dirs in stack
-
-# Keep Zsh's better defaults
-# - Array indexing starts at 1 (don't set KSH_ARRAYS)
-# - Extended globs enabled by default
-
-# }}}
-
-# {{{ Completion System
-
-# Add completion directories to fpath before compinit
-# This must be done before compinit initializes completions
-
-# Add custom completion cache directory for tool completions
-if [ -d "$ZSH_CACHE_HOME" ]; then
-	fpath=("$ZSH_CACHE_HOME" $fpath)
-fi
-
-# Initialize the completion system
-autoload -Uz compinit
-
-# Use XDG-standard location for completion cache
-if [ -d "$ZSH_CACHE_HOME" ]; then
-	compinit -d "${ZSH_CACHE_HOME}/zcompdump"
-else
-	compinit
-fi
-
-# }}}
-
 # {{{ Key Bindings
 
 # Emacs mode (like Bash default)
@@ -96,7 +45,7 @@ bindkey '^S' history-incremental-search-forward
 
 # Source all shared configuration from rc.d directory
 if [ -d "${XDG_CONFIG_HOME}/shell/rc.d" ]; then
-	for _rc_file in "${XDG_CONFIG_HOME}/shell/rc.d/"*.sh; do
+	for _rc_file in "${XDG_CONFIG_HOME}/shell/rc.d/"*.sh(N); do
 		[ -r "$_rc_file" ] && . "$_rc_file"
 	done
 	unset _rc_file

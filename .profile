@@ -27,11 +27,11 @@ _get_fmode() {
 	_uname_s="$(uname -s)"
 
 	case "$_uname_s" in
-		'Darwin' | "*BSD")
-			stat -f '%OLp' "$1"
+		Darwin | *BSD)
+			stat -f '%OLp' "$1" 2> /dev/null
 			;;
 		*)
-			stat -c '%a' "$1"
+			stat -c '%a' "$1" 2> /dev/null
 			;;
 	esac
 }
@@ -40,11 +40,11 @@ _get_fowner() {
 	_uname_s="$(uname -s)"
 
 	case "$_uname_s" in
-		'Darwin' | "*BSD")
-			stat -f '%u' "$1"
+		Darwin | *BSD)
+			stat -f '%u' "$1" 2> /dev/null
 			;;
 		*)
-			stat -c '%u' "$1"
+			stat -c '%u' "$1" 2> /dev/null
 			;;
 	esac
 }
@@ -91,8 +91,10 @@ fi
 
 # {{{ Setup XDG Directories
 
+# XDG_BIN_HOME is universal across all platforms, not just macOS.
+XDG_BIN_HOME="${XDG_BIN_HOME:-${HOME}/.local/bin}"
+
 if _running_macOS; then
-	XDG_BIN_HOME="${XDG_BIN_HOME:-${HOME}/.local/bin}"
 	XDG_CACHE_HOME="${XDG_CACHE_HOME:-$(getconf DARWIN_USER_CACHE_DIR)}"
 	XDG_CACHE_HOME="${XDG_CACHE_HOME%/}"
 	XDG_RUNTIME_DIR="${XDG_RUNTIME_DIR:-$(getconf DARWIN_USER_TEMP_DIR)}"
@@ -117,6 +119,17 @@ else
 	XDG_STATE_HOME="${XDG_STATE_HOME:-${HOME}/.local/state}"
 fi
 
+# Ensure the default XDG_RUNTIME_DIR exists before checking its
+# ownership. On non-systemd baselines (BSD, OpenWRT, Illumos, and any
+# host where nothing pre-seeds $XDG_RUNTIME_DIR the way systemd-logind
+# does on modern Linux), the default /tmp/runtime-<uid> path is never
+# created ahead of time, so without this the ownership check below
+# always ran against a nonexistent path -- printing a spurious stat
+# error and always falling through to mint a fresh randomly-suffixed
+# directory on every single login.
+# shellcheck disable=SC2174
+[ -d "$XDG_RUNTIME_DIR" ] || mkdir -m 0700 -p "$XDG_RUNTIME_DIR" 2> /dev/null
+
 # If the XDG_RUNTIME_DIR is not owned by the current user, create a new one
 # with a random suffix.
 if [ "$(_get_fowner "$XDG_RUNTIME_DIR")" != "$(id -ru)" ]; then
@@ -133,7 +146,7 @@ fi
 [ "$(_get_fmode "$XDG_RUNTIME_DIR")" = '700' ] || chmod 0700 "$XDG_RUNTIME_DIR"
 
 unset -f _get_fmode _get_fowner _running_macOS
-export XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_RUNTIME_DIR XDG_STATE_HOME
+export XDG_BIN_HOME XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_RUNTIME_DIR XDG_STATE_HOME
 # }}}
 
 # {{{ Language environment directories
@@ -188,13 +201,19 @@ fi
 
 # {{{ Shared shell configuration
 
-# Source shared PATH management functions
+# Source the canonical PATH management function.
 # shellcheck source=.config/shell/path.sh
+# shellcheck disable=SC1091
 [ -f "${XDG_CONFIG_HOME}/shell/path.sh" ] && . "${XDG_CONFIG_HOME}/shell/path.sh"
 
-# Source shared environment variables
-# shellcheck source=.config/shell/environment.sh
-[ -f "${XDG_CONFIG_HOME}/shell/environment.sh" ] && . "${XDG_CONFIG_HOME}/shell/environment.sh"
+# Baseline PATH additions for both login and non-login interactive
+# shells: XDG bin, ~/bin, and Cargo bin. Platform-specific additions
+# (e.g. Homebrew) live in .config/shell/rc.d/20-path.sh.
+if command -v _ensure_path_contains > /dev/null 2>&1; then
+	_ensure_path_contains "${XDG_DATA_HOME}/cargo/bin"
+	_ensure_path_contains "${XDG_BIN_HOME}"
+	_ensure_path_contains "${HOME}/bin"
+fi
 
 # }}}
 
@@ -212,6 +231,7 @@ if [ -d "${HOME}/.profile.local.d" ]; then
 fi
 
 #shellcheck source=./.profile.local
+# shellcheck disable=SC1091
 [ -e "${HOME}/.profile.local" ] && . "${HOME}/.profile.local"
 
 # }}}

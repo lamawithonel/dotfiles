@@ -27,6 +27,14 @@ fi
 [ -n "$XDG_DATA_HOME" ]   || return 1
 [ -n "$XDG_STATE_HOME" ]  || return 1
 
+# Create Zsh-specific XDG directories now that we know this is an
+# actual login shell. .zshenv intentionally does not do this, since
+# it runs for every Zsh process, including non-interactive ones.
+for _dir in "$ZSH_CACHE_HOME" "$ZSH_CONFIG_HOME" "$ZSH_DATA_HOME" "$ZSH_STATE_HOME"; do
+	[ -n "$_dir" ] && [ ! -d "$_dir" ] && mkdir -p "$_dir"
+done
+unset _dir
+
 if [ -d "$ZSH_CONFIG_HOME/profile.d" ]; then
 	# Use nullglob (N) to avoid error when no files match
 	for _f in "${ZSH_CONFIG_HOME}/profile.d/"*.sh(N); do

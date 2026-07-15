@@ -5,6 +5,7 @@
 
 if [ -x "$XDG_CONFIG_HOME/plasma-workspace/shutdown/secrets-agents.sh" ]; then
 	#shellcheck source=./.config/plasma-workspace/shutdown/secrets-agents.sh
+	# shellcheck disable=SC1091
 	source "${XDG_CONFIG_HOME}/plasma-workspace/shutdown/secrets-agents.sh"
 fi
 

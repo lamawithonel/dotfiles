@@ -27,13 +27,13 @@
 
 # Zsh-specific XDG directories
 # Use parameter expansion with := to set and export in one step
+#
+# .zshenv is sourced by every Zsh process, including non-interactive
+# ones (scripts, command substitution, etc.). It must only export
+# minimal environment values here and must NOT create directories.
+# Directory creation happens during login/interactive initialization
+# only, where it is actually needed (see .zprofile / .zshrc).
 export ZSH_CACHE_HOME="${ZSH_CACHE_HOME:-${XDG_CACHE_HOME}/zsh}"
 export ZSH_CONFIG_HOME="${ZSH_CONFIG_HOME:-${XDG_CONFIG_HOME}/zsh}"
 export ZSH_DATA_HOME="${ZSH_DATA_HOME:-${XDG_DATA_HOME}/zsh}"
 export ZSH_STATE_HOME="${ZSH_STATE_HOME:-${XDG_STATE_HOME}/zsh}"
-
-# Create directories if they don't exist (safety)
-[ -d "$ZSH_CACHE_HOME" ]  || mkdir -p "$ZSH_CACHE_HOME"
-[ -d "$ZSH_CONFIG_HOME" ] || mkdir -p "$ZSH_CONFIG_HOME"
-[ -d "$ZSH_DATA_HOME" ]   || mkdir -p "$ZSH_DATA_HOME"
-[ -d "$ZSH_STATE_HOME" ]  || mkdir -p "$ZSH_STATE_HOME"

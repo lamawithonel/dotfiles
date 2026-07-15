@@ -18,23 +18,30 @@ if [ -n "$BASH_VERSION" ] && [ -d "${HOME}/.bashrc.d" ]; then
 fi
 
 if [ -n "$ZSH_VERSION" ] && [ -d "${HOME}/.zshrc.d" ]; then
-	# Zsh-specific: Use nullglob (N) to avoid error when no files match
-	# This must be in a subshell or eval to work
-	for _file in $(find "${HOME}/.zshrc.d" -maxdepth 1 -name "*.sh" -type f 2>/dev/null | sort); do
+	# NUL-delimited find|sort avoids both a Zsh-only glob qualifier
+	# (which Bash cannot even parse, since this file is sourced by
+	# both shells) and IFS word-splitting on filenames containing
+	# whitespace. Process substitution (not a plain pipe) keeps the
+	# loop body in the current shell, so a sourced file's variables/
+	# functions/aliases persist after the loop instead of vanishing
+	# with a piped subshell.
+	while IFS= read -r -d '' _file; do
 		# shellcheck disable=SC1090  # Dynamic source files
 		[ -r "$_file" ] && . "$_file"
-	done
+	done < <(find "${HOME}/.zshrc.d" -maxdepth 1 -name "*.sh" -type f -print0 2>/dev/null | sort -z)
 	unset _file
 fi
 
 # Source shell-specific .rc.local files
 if [ -n "$BASH_VERSION" ] && [ -e "${HOME}/.bashrc.local" ]; then
 	# shellcheck source=./.bashrc.local
+	# shellcheck disable=SC1091
 	. "${HOME}/.bashrc.local"
 fi
 
 if [ -n "$ZSH_VERSION" ] && [ -e "${HOME}/.zshrc.local" ]; then
 	# shellcheck source=./.zshrc.local
+	# shellcheck disable=SC1091
 	. "${HOME}/.zshrc.local"
 fi
 
@@ -48,9 +55,10 @@ if [ -n "$BASH_VERSION" ] && [ -d "${HOME}/.bashrc.local.d" ]; then
 fi
 
 if [ -n "$ZSH_VERSION" ] && [ -d "${HOME}/.zshrc.local.d" ]; then
-	# Use find to avoid Zsh-specific glob syntax
-	for _file in $(find "${HOME}/.zshrc.local.d" -maxdepth 1 -name "*.sh" -type f 2>/dev/null | sort); do
+	# See the .zshrc.d block above for why NUL-delimited find|sort via
+	# process substitution is used here.
+	while IFS= read -r -d '' _file; do
 		# shellcheck disable=SC1090  # Dynamic source files
 		[ -r "$_file" ] && . "$_file"
-	done
+	done < <(find "${HOME}/.zshrc.local.d" -maxdepth 1 -name "*.sh" -type f -print0 2>/dev/null | sort -z)
 fi

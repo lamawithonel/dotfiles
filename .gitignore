@@ -6,3 +6,4 @@
 *.local.json
 *.local.toml
 *.local.yaml
+.pi-subagents/

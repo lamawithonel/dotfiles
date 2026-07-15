@@ -7,6 +7,7 @@
 # Source .profile if it hasn't been sourced yet
 if [ -z "$__PROFILE_SOURCED" ]; then
 	#shellcheck source=.profile
+	# shellcheck disable=SC1091
 	[ -s "${HOME}/.profile" ] && source "${HOME}/.profile"
 fi
 
@@ -29,6 +30,14 @@ fi
 [ -d "${BASH_CONFIG_HOME:=${XDG_CONFIG_HOME}/bash}" ] || mkdir -pZ "$BASH_CONFIG_HOME" >&/dev/null || mkdir -p "$BASH_CONFIG_HOME"
 [ -d "${BASH_DATA_HOME:=${XDG_DATA_HOME}/bash}" ]     || mkdir -pZ "$BASH_DATA_HOME" >&/dev/null   || mkdir -p "$BASH_DATA_HOME"
 [ -d "${BASH_STATE_HOME:=${XDG_STATE_HOME}/bash}" ]   || mkdir -pZ "$BASH_STATE_HOME" >&/dev/null  || mkdir -p "$BASH_STATE_HOME"
+
+# Export these: a nested interactive Bash shell (e.g. one started
+# inside tmux, or via `bash` from within another shell) inherits the
+# exported __PROFILE_SOURCED guard, which correctly skips re-running
+# this setup, but without export here it would NOT inherit these
+# variables -- leaving e.g. HISTFILE="${BASH_CACHE_HOME}/history"
+# resolving to the unwritable "/history" in 10-shell-settings.sh.
+export BASH_CACHE_HOME BASH_CONFIG_HOME BASH_DATA_HOME BASH_STATE_HOME
 
 if [ -d "$BASH_CONFIG_HOME" ]; then
 	for _f in "${BASH_CONFIG_HOME}/profile.d/"*".sh"; do
@@ -54,6 +63,7 @@ fi
 # If this is an interactive shell and .bashrc is not already in the call stack, source it
 if [[ $- == *i* ]] && [[ ! ${BASH_SOURCE[*]} =~ ([[:blank:]]|/)\.bashrc([[:blank:]]|$) ]]; then
 	#shellcheck source=./.bashrc
+	# shellcheck disable=SC1091
 	[ -f "${HOME}/.bashrc" ] && source "${HOME}/.bashrc"
 fi
 
