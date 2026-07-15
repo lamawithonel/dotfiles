@@ -58,6 +58,11 @@ keybind = alt+s=goto_split:left
 keybind = alt+d=goto_split:bottom
 keybind = alt+f=goto_split:right
 
+# Split Cycling - Alt + W/R (left hand navigation)
+# Alt+W reassigns zsh emacs-mode copy-region-as-kill; accepted tradeoff.
+keybind = alt+w=goto_split:previous
+keybind = alt+r=goto_split:next
+
 # Split Creation - Ctrl + IJKL (right hand creation)
 keybind = ctrl+i=new_split:up
 keybind = super+i=new_split:up
