@@ -1,0 +1,987 @@
+#!/usr/bin/env bash
+# vi:ts=4:sw=4:noet
+#
+# bin/check-shell-config
+#
+# Verifies the shell startup files in this yadm-managed home directory:
+# syntax, isolated login/interactive probes, PATH invariants, aliases,
+# eager tool activation (mise, fnox, pitchfork), and the lazy per-tool
+# completion mechanism driven by .config/shell/completion-tools.conf.
+#
+# Everything this script sources is exercised inside a fixture HOME
+# with temporary XDG cache/config/data/state directories -- it never
+# sources any file into the real login shell and never writes under
+# the real $HOME or real XDG locations. All scratch state lives under
+# one mktemp directory that is removed on exit, so the run leaves no
+# generated files behind.
+#
+# One deliberate, narrow exception: mise resolves installed/configured
+# tools (fnox, pitchfork, starship, ...) through its own data/config/
+# state directories, not through generic PATH scanning. To smoke-test
+# the real eager activations in 30-tools.sh (rather than silently
+# skipping them because the fixture's XDG_DATA_HOME is empty), this script
+# points MISE_DATA_DIR/MISE_CONFIG_DIR/MISE_STATE_DIR at the real ones
+# (derived from this script's own, real $HOME) and symlinks the real
+# cargo bin directory into the fixture (mise itself is a cargo-
+# installed binary). This performs no writes under those real
+# directories for the `mise activate` + `<tool> --version` sequence
+# used here; everything else in the fixture (HOME, the shell XDG
+# cache/config/data/state dirs, history, aliases) is fully isolated
+# as usual. Each real directory is also ownership/mode-checked before
+# being wired in at all -- see _real_dir_is_safe below.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+SELF_NAME="$(basename "$0")"
+readonly SELF_NAME
+
+# The repo root is this script's grandparent directory (bin/..). This
+# lets the script run equally well from a yadm worktree (as during
+# development/review) or from a real $HOME after yadm has checked the
+# branch out there.
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+readonly REPO_ROOT
+
+# Eagerly-activated tools from 30-tools.sh (besides mise) and the
+# marker function each tool's activation script is known to define,
+# used by the eager-activation smoke tests below.
+EAGER_TOOLS=(fnox pitchfork)
+declare -A EAGER_MARKERS=(
+	[fnox]="_fnox_hook"
+	[pitchfork]="__pitchfork"
+)
+
+# A read-only snapshot of the *host* PATH, captured once. Fixture
+# shells are given this PATH so real installed tools (mise, starship,
+# fnox, pitchfork, bash-completion, dircolors, ...) can be found by
+# `command -v`, without inventing or widening what's actually
+# installed on this host.
+readonly HOST_PATH="$PATH"
+
+# Real (not fixture) locations, read from this script's own
+# environment -- used only for the narrow mise exception above.
+REAL_HOME="$HOME"
+REAL_XDG_DATA_HOME="${XDG_DATA_HOME:-${REAL_HOME}/.local/share}"
+REAL_XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${REAL_HOME}/.config}"
+REAL_XDG_STATE_HOME="${XDG_STATE_HOME:-${REAL_HOME}/.local/state}"
+readonly REAL_HOME REAL_XDG_DATA_HOME REAL_XDG_CONFIG_HOME REAL_XDG_STATE_HOME
+readonly REAL_MISE_DATA_DIR="${REAL_XDG_DATA_HOME}/mise"
+readonly REAL_MISE_CONFIG_DIR="${REAL_XDG_CONFIG_HOME}/mise"
+readonly REAL_MISE_STATE_DIR="${REAL_XDG_STATE_HOME}/mise"
+readonly REAL_CARGO_DIR="${REAL_XDG_DATA_HOME}/cargo"
+
+FAILURES=0
+SKIPPED=0
+CHECKS=0
+
+_pass() { CHECKS=$((CHECKS + 1)); printf 'PASS  %s\n' "$*"; }
+_fail() { CHECKS=$((CHECKS + 1)); FAILURES=$((FAILURES + 1)); printf 'FAIL  %s\n' "$*" >&2; }
+_skip() { SKIPPED=$((SKIPPED + 1)); printf 'SKIP  %s\n' "$*"; }
+_info() { printf 'INFO  %s\n' "$*"; }
+
+# _real_dir_is_safe <dir> -- see bin/lib/real-dir-safety.sh (shared
+# with bin/bench-shell-startup). Applied to every REAL_* directory
+# below before it is wired into the fixture env -- an
+# attacker-writable real directory must never be trusted just because
+# it happens to exist on this host.
+# shellcheck source=lib/real-dir-safety.sh
+# shellcheck disable=SC1091
+. "${REPO_ROOT}/bin/lib/real-dir-safety.sh"
+
+# Only wire a REAL_* directory into the fixture env (see the module
+# comment above) once it has passed the ownership/mode check. A
+# missing directory is not a security problem (there is nothing there
+# to wire in); an existing-but-unsafe one is skipped
+# with a clear message instead of being trusted.
+SAFE_REAL_MISE_DATA_DIR=""
+if _real_dir_is_safe "$REAL_MISE_DATA_DIR"; then
+	SAFE_REAL_MISE_DATA_DIR="$REAL_MISE_DATA_DIR"
+elif [ -d "$REAL_MISE_DATA_DIR" ]; then
+	_skip "real MISE_DATA_DIR (${REAL_MISE_DATA_DIR}) failed the ownership/mode check; not wiring it into the fixture"
+fi
+
+SAFE_REAL_MISE_CONFIG_DIR=""
+if _real_dir_is_safe "$REAL_MISE_CONFIG_DIR"; then
+	SAFE_REAL_MISE_CONFIG_DIR="$REAL_MISE_CONFIG_DIR"
+elif [ -d "$REAL_MISE_CONFIG_DIR" ]; then
+	_skip "real MISE_CONFIG_DIR (${REAL_MISE_CONFIG_DIR}) failed the ownership/mode check; not wiring it into the fixture"
+fi
+
+SAFE_REAL_MISE_STATE_DIR=""
+if _real_dir_is_safe "$REAL_MISE_STATE_DIR"; then
+	SAFE_REAL_MISE_STATE_DIR="$REAL_MISE_STATE_DIR"
+elif [ -d "$REAL_MISE_STATE_DIR" ]; then
+	_skip "real MISE_STATE_DIR (${REAL_MISE_STATE_DIR}) failed the ownership/mode check; not wiring it into the fixture"
+fi
+
+SAFE_REAL_CARGO_DIR=""
+if _real_dir_is_safe "$REAL_CARGO_DIR"; then
+	SAFE_REAL_CARGO_DIR="$REAL_CARGO_DIR"
+elif [ -d "$REAL_CARGO_DIR" ]; then
+	_skip "real CARGO_DIR (${REAL_CARGO_DIR}) failed the ownership/mode check; not wiring it into the fixture"
+fi
+readonly SAFE_REAL_MISE_DATA_DIR SAFE_REAL_MISE_CONFIG_DIR SAFE_REAL_MISE_STATE_DIR SAFE_REAL_CARGO_DIR
+
+WORKDIR=""
+# shellcheck disable=SC2329
+_cleanup() {
+	if [ -n "$WORKDIR" ] && [ -d "$WORKDIR" ]; then
+		rm -rf -- "$WORKDIR"
+	fi
+}
+trap _cleanup EXIT
+
+WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/check-shell-config.XXXXXX")"
+readonly WORKDIR
+
+# A neutral, empty working directory to `cd` into before running
+# fixture shell probes, so mise does not pick up this repo's own
+# mise.toml (or any other project config) by walking up from cwd.
+NEUTRAL_DIR="${WORKDIR}/neutral"
+mkdir -p "$NEUTRAL_DIR"
+readonly NEUTRAL_DIR
+
+# ----------------------------------------------------------------------
+# Fixture HOME: symlink the tracked entry points and shared config
+# straight from the repo so the probes exercise the exact files under
+# review, without copying (and risking drift) or writing into the
+# repo itself.
+# ----------------------------------------------------------------------
+
+FIXTURE_HOME="${WORKDIR}/home"
+mkdir -p "$FIXTURE_HOME"
+readonly FIXTURE_HOME
+
+for _entry in .profile .bash_profile .bashrc .zshenv .zprofile .zshrc .zshrc.d; do
+	if [ -e "${REPO_ROOT}/${_entry}" ]; then
+		ln -s "${REPO_ROOT}/${_entry}" "${FIXTURE_HOME}/${_entry}"
+	fi
+done
+unset _entry
+
+# Fixture XDG directories, all under WORKDIR -- never the real ones.
+FIXTURE_XDG_CACHE_HOME="${WORKDIR}/xdg/cache"
+FIXTURE_XDG_CONFIG_HOME="${WORKDIR}/xdg/config"
+FIXTURE_XDG_DATA_HOME="${WORKDIR}/xdg/data"
+FIXTURE_XDG_STATE_HOME="${WORKDIR}/xdg/state"
+FIXTURE_XDG_RUNTIME_DIR="${WORKDIR}/xdg/runtime"
+readonly FIXTURE_XDG_CACHE_HOME FIXTURE_XDG_CONFIG_HOME FIXTURE_XDG_DATA_HOME
+readonly FIXTURE_XDG_STATE_HOME FIXTURE_XDG_RUNTIME_DIR
+
+mkdir -p "$FIXTURE_XDG_CACHE_HOME" "$FIXTURE_XDG_DATA_HOME" "$FIXTURE_XDG_STATE_HOME"
+mkdir -p "$FIXTURE_XDG_CONFIG_HOME"
+# Pre-create the runtime dir, owned by us, so .profile's ownership
+# check passes on the first try instead of falling back to a
+# randomly-suffixed alternate path.
+# shellcheck disable=SC2174
+mkdir -m 0700 -p "$FIXTURE_XDG_RUNTIME_DIR"
+
+# Shared shell config, plus coreutils/dir_colors (used by
+# 40-terminal-colors.sh) -- symlinked so the probes see the exact
+# tracked content.
+ln -s "${REPO_ROOT}/.config/shell" "${FIXTURE_XDG_CONFIG_HOME}/shell"
+if [ -d "${REPO_ROOT}/.config/coreutils" ]; then
+	ln -s "${REPO_ROOT}/.config/coreutils" "${FIXTURE_XDG_CONFIG_HOME}/coreutils"
+fi
+
+# XDG_BIN_HOME and ~/bin: create them for real so the baseline PATH
+# additions in .profile have something to add (and so the "no
+# stale/nonexistent PATH entries" check has a real positive case, not
+# just an absence).
+FIXTURE_XDG_BIN_HOME="${FIXTURE_HOME}/.local/bin"
+mkdir -p "$FIXTURE_XDG_BIN_HOME" "${FIXTURE_HOME}/bin"
+readonly FIXTURE_XDG_BIN_HOME
+
+# mise itself is a cargo-installed binary; symlink the real cargo bin
+# dir in so .profile's baseline PATH addition for cargo/bin finds it
+# (see the module comment above re: the narrow mise exception and the
+# ownership/mode check applied to it above).
+if [ -n "$SAFE_REAL_CARGO_DIR" ]; then
+	ln -s "$SAFE_REAL_CARGO_DIR" "${FIXTURE_XDG_DATA_HOME}/cargo"
+fi
+
+# ----------------------------------------------------------------------
+# Fixture environment shared by both shells' probes. Commands are run
+# through `script -qec` to allocate a pty: without one, bash/zsh print
+# job-control diagnostics ("cannot set terminal process group", "no
+# job control in this shell") to stderr purely because of the lack of
+# a controlling terminal, which would otherwise look like unexpected
+# startup output from the dotfiles themselves.
+# ----------------------------------------------------------------------
+
+_fixture_env_prefix() {
+	_shell_path="$(PATH="$HOST_PATH" command -v "$1")"
+	printf 'env -i HOME=%q PATH=%q SHELL=%q TERM=%q LANG=%q XDG_BIN_HOME=%q XDG_CACHE_HOME=%q XDG_CONFIG_HOME=%q XDG_DATA_HOME=%q XDG_STATE_HOME=%q XDG_RUNTIME_DIR=%q MISE_DATA_DIR=%q MISE_CONFIG_DIR=%q MISE_STATE_DIR=%q' \
+		"$FIXTURE_HOME" "$HOST_PATH" "$_shell_path" "${TERM:-xterm-256color}" "${LANG:-C.UTF-8}" \
+		"$FIXTURE_XDG_BIN_HOME" "$FIXTURE_XDG_CACHE_HOME" "$FIXTURE_XDG_CONFIG_HOME" "$FIXTURE_XDG_DATA_HOME" "$FIXTURE_XDG_STATE_HOME" "$FIXTURE_XDG_RUNTIME_DIR" \
+		"$SAFE_REAL_MISE_DATA_DIR" "$SAFE_REAL_MISE_CONFIG_DIR" "$SAFE_REAL_MISE_STATE_DIR"
+}
+
+# _pty_run <shell> <shell-flags> <command-string>
+# Runs <command-string> as <shell> <shell-flags> <command-string>,
+# inside the fixture environment above, under a pty, from the neutral
+# working directory. Prints the combined stdout+stderr of the whole
+# chain (a pty merges the two streams, so they cannot be captured
+# separately here), with the pty's CRLF line endings normalized back
+# to LF. Returns the command's own exit status (via PIPESTATUS, since
+# the CRLF-stripping stage would otherwise clobber it).
+_pty_run() {
+	_prefix="$(_fixture_env_prefix "$1")"
+	( cd "$NEUTRAL_DIR" && script -qec "${_prefix} $1 $2 $(printf '%q' "$3")" /dev/null ) | tr -d '\r'
+	return "${PIPESTATUS[0]}"
+}
+
+# ----------------------------------------------------------------------
+# 1. Syntax checks
+# ----------------------------------------------------------------------
+
+_info "Syntax checks"
+
+# shellcheck disable=SC2043
+for _f in .profile; do
+	if bash -n "${REPO_ROOT}/${_f}" 2> "${WORKDIR}/synerr"; then
+		_pass "bash -n ${_f}"
+	else
+		_fail "bash -n ${_f}: $(cat "${WORKDIR}/synerr")"
+	fi
+done
+
+for _f in .bash_profile .bashrc; do
+	if bash -n "${REPO_ROOT}/${_f}" 2> "${WORKDIR}/synerr"; then
+		_pass "bash -n ${_f}"
+	else
+		_fail "bash -n ${_f}: $(cat "${WORKDIR}/synerr")"
+	fi
+done
+
+if command -v zsh > /dev/null 2>&1; then
+	for _f in .zshenv .zprofile .zshrc; do
+		if zsh -n "${REPO_ROOT}/${_f}" 2> "${WORKDIR}/synerr"; then
+			_pass "zsh -n ${_f}"
+		else
+			_fail "zsh -n ${_f}: $(cat "${WORKDIR}/synerr")"
+		fi
+	done
+else
+	_skip "zsh not installed: skipping .zshenv/.zprofile/.zshrc syntax checks"
+fi
+
+while IFS= read -r -d '' _f; do
+	if bash -n "$_f" 2> "${WORKDIR}/synerr"; then
+		_pass "bash -n ${_f#"${REPO_ROOT}"/}"
+	else
+		_fail "bash -n ${_f#"${REPO_ROOT}"/}: $(cat "${WORKDIR}/synerr")"
+	fi
+done < <(find "${REPO_ROOT}/.config/shell" -maxdepth 2 -name '*.sh' -type f -print0 | sort -z)
+
+if bash -n "$0" 2> "${WORKDIR}/synerr"; then
+	_pass "bash -n ${SELF_NAME} (self)"
+else
+	_fail "bash -n ${SELF_NAME} (self): $(cat "${WORKDIR}/synerr")"
+fi
+
+unset _f
+
+# ----------------------------------------------------------------------
+# 2. Isolated login-interactive probes
+# ----------------------------------------------------------------------
+
+_info "Isolated login-interactive probes"
+
+# 2a. Silent startup: a plain `-lic true` must produce no output at
+# all -- this is also the "no PATH= startup output" check.
+_check_silent_startup() {
+	_shell="$1"
+	if ! command -v "$_shell" > /dev/null 2>&1; then
+		_skip "${_shell}: not installed, skipping silent-startup check"
+		return
+	fi
+	_pty_run "$_shell" "-lic" "true" > "${WORKDIR}/${_shell}-silent.out" 2>&1
+	_rc=$?
+	if [ "$_rc" -ne 0 ]; then
+		_fail "${_shell} -lic true exited ${_rc}: $(cat "${WORKDIR}/${_shell}-silent.out")"
+		return
+	fi
+	if [ -s "${WORKDIR}/${_shell}-silent.out" ]; then
+		_fail "${_shell} -lic true produced unexpected startup output: $(cat "${WORKDIR}/${_shell}-silent.out")"
+	else
+		_pass "${_shell}: silent login-interactive startup (no output, incl. no stray PATH=)"
+	fi
+}
+
+_check_silent_startup bash
+_check_silent_startup zsh
+
+# 2b. Guard variable set exactly once across the whole login+interactive
+# chain (proves .bashrc/.bash_profile and .zshrc/.zprofile do not
+# double-source .profile).
+_check_single_profile_init() {
+	_shell="$1"
+	if ! command -v "$_shell" > /dev/null 2>&1; then
+		_skip "${_shell}: not installed, skipping single-init guard check"
+		return
+	fi
+	_pty_run "$_shell" "-x -lic" "true" > "${WORKDIR}/${_shell}-trace.log" 2>&1 || true
+	_hits="$(grep -c '__PROFILE_SOURCED=1' "${WORKDIR}/${_shell}-trace.log" || true)"
+	if [ "$_hits" = "1" ]; then
+		_pass "${_shell}: __PROFILE_SOURCED guard set exactly once (no duplicate sourcing of .profile)"
+	else
+		_fail "${_shell}: expected __PROFILE_SOURCED to be set exactly once, saw ${_hits} time(s)"
+	fi
+}
+
+_check_single_profile_init bash
+_check_single_profile_init zsh
+
+# 2c. Value probe: XDG vars, PATH invariants, aliases.
+# shellcheck disable=SC2016
+_probe_commands='
+echo "XDG_BIN_HOME=${XDG_BIN_HOME:-}"
+echo "XDG_CACHE_HOME=${XDG_CACHE_HOME:-}"
+echo "XDG_CONFIG_HOME=${XDG_CONFIG_HOME:-}"
+echo "XDG_DATA_HOME=${XDG_DATA_HOME:-}"
+echo "XDG_STATE_HOME=${XDG_STATE_HOME:-}"
+echo "PATH_VALUE=${PATH}"
+echo "---ALIASES---"
+alias
+'
+
+_check_probe() {
+	_shell="$1"
+	if ! command -v "$_shell" > /dev/null 2>&1; then
+		_skip "${_shell}: not installed, skipping value probe"
+		return
+	fi
+	_pty_run "$_shell" "-lic" "$_probe_commands" > "${WORKDIR}/${_shell}-probe.out" 2>&1 || true
+
+	_get() { grep "^${1}=" "${WORKDIR}/${_shell}-probe.out" | head -n1 | cut -d= -f2-; }
+
+	for _var in XDG_BIN_HOME XDG_CACHE_HOME XDG_CONFIG_HOME XDG_DATA_HOME XDG_STATE_HOME; do
+		_val="$(_get "$_var")"
+		if [ -n "$_val" ]; then
+			_pass "${_shell}: ${_var} is set (${_val})"
+		else
+			_fail "${_shell}: ${_var} is not set"
+		fi
+	done
+
+	_path_val="$(_get PATH_VALUE)"
+	if [ -z "$_path_val" ]; then
+		_fail "${_shell}: could not read PATH from probe"
+	else
+		# No duplicate PATH elements.
+		_dupes="$(printf '%s' "$_path_val" | tr ':' '\n' | sort | uniq -d)"
+		if [ -z "$_dupes" ]; then
+			_pass "${_shell}: no duplicate PATH elements"
+		else
+			_fail "${_shell}: duplicate PATH elements: $(printf '%s' "$_dupes" | tr '\n' ' ')"
+		fi
+
+		# No stale/nonexistent PATH entries. _ensure_path_contains is
+		# supposed to strip any element that is not a real directory.
+		_stale=""
+		while IFS= read -r _elem; do
+			[ -n "$_elem" ] || continue
+			[ -d "$_elem" ] || _stale="${_stale}${_elem} "
+		done < <(printf '%s' "$_path_val" | tr ':' '\n')
+		if [ -z "$_stale" ]; then
+			_pass "${_shell}: no stale/nonexistent PATH entries"
+		else
+			_fail "${_shell}: stale PATH entries: ${_stale}"
+		fi
+
+		case ":${_path_val}:" in
+			*":${FIXTURE_XDG_BIN_HOME}:"*)
+				_pass "${_shell}: XDG_BIN_HOME was added to PATH"
+				;;
+			*)
+				_fail "${_shell}: XDG_BIN_HOME was not added to PATH"
+				;;
+		esac
+	fi
+
+	# zsh's `alias` builtin prints "name='value'" (no leading "alias ");
+	# bash's prints "alias name='value'".
+	if [ "$_shell" = "bash" ]; then
+		_alias_prefix="alias "
+	else
+		_alias_prefix=""
+	fi
+
+	if grep -q "^${_alias_prefix}rm='rm -i'" "${WORKDIR}/${_shell}-probe.out"; then
+		_pass "${_shell}: 'rm -i' alias present"
+	else
+		_fail "${_shell}: 'rm -i' alias missing"
+	fi
+	if grep -q "^${_alias_prefix}cp='cp -i'" "${WORKDIR}/${_shell}-probe.out"; then
+		_pass "${_shell}: 'cp -i' alias present"
+	else
+		_fail "${_shell}: 'cp -i' alias missing"
+	fi
+	if grep -q "^${_alias_prefix}mv='mv -i'" "${WORKDIR}/${_shell}-probe.out"; then
+		_pass "${_shell}: 'mv -i' alias present"
+	else
+		_fail "${_shell}: 'mv -i' alias missing"
+	fi
+	if grep -q "^${_alias_prefix}tee=" "${WORKDIR}/${_shell}-probe.out"; then
+		_fail "${_shell}: unexpected 'tee' append alias is defined"
+	else
+		_pass "${_shell}: no 'tee' append alias defined"
+	fi
+}
+
+_check_probe bash
+_check_probe zsh
+
+# ----------------------------------------------------------------------
+# 2d. Zsh compinit cache-security assertions
+# ----------------------------------------------------------------------
+
+_info "Zsh compinit cache-security assertions"
+
+# (a) The zcompdump written by 70-completions.sh's first/cold build
+# must come out mode 0600. _check_silent_startup zsh above already
+# performed that cold build against $FIXTURE_XDG_CACHE_HOME/zsh, so
+# just verify the on-disk mode it left behind.
+_check_compinit_dump_mode() {
+	if ! command -v zsh > /dev/null 2>&1; then
+		_skip "zsh not installed: skipping compinit zcompdump mode check"
+		return
+	fi
+	_dump="${FIXTURE_XDG_CACHE_HOME}/zsh/zcompdump"
+	if [ ! -f "$_dump" ]; then
+		_fail "zsh: zcompdump was not created at ${_dump} by the checks above"
+		return
+	fi
+	case "$(uname -s)" in
+		Darwin | *BSD) _mode="$(stat -f '%OLp' "$_dump" 2> /dev/null)" ;;
+		*) _mode="$(stat -c '%a' "$_dump" 2> /dev/null)" ;;
+	esac
+	if [ "$_mode" = "600" ]; then
+		_pass "zsh: zcompdump is mode 0600 after a cold build (${_dump})"
+	else
+		_fail "zsh: zcompdump mode is ${_mode:-unknown}, expected 600 (${_dump})"
+	fi
+}
+_check_compinit_dump_mode
+
+# (b) A group-writable $ZSH_CACHE_HOME must force the compinit -D
+# fallback (never the fast -C cache path). Verified via the stderr
+# diagnostic 70-completions.sh emits on that exact fallback path.
+_check_compinit_unsafe_cache_dir_fallback() {
+	if ! command -v zsh > /dev/null 2>&1; then
+		_skip "zsh not installed: skipping unsafe-\$ZSH_CACHE_HOME fallback check"
+		return
+	fi
+	_root="${WORKDIR}/compinit-unsafe"
+	mkdir -p "${_root}/home" "${_root}/xdg/cache" "${_root}/xdg/config" "${_root}/xdg/data" "${_root}/xdg/state"
+	# shellcheck disable=SC2174
+	mkdir -m 0700 -p "${_root}/xdg/runtime"
+	for _entry in .profile .zshenv .zprofile .zshrc; do
+		[ -e "${REPO_ROOT}/${_entry}" ] && ln -s "${REPO_ROOT}/${_entry}" "${_root}/home/${_entry}"
+	done
+	ln -s "${REPO_ROOT}/.config/shell" "${_root}/xdg/config/shell"
+	# Pre-create the cache dir group-writable *before* the probe runs:
+	# .zprofile only creates $ZSH_CACHE_HOME if it does not already
+	# exist, so the unsafe mode set here survives into
+	# 70-completions.sh's own ownership/mode check.
+	mkdir -p "${_root}/xdg/cache/zsh"
+	chmod 0020 "${_root}/xdg/cache/zsh"
+
+	_shell_path="$(PATH="$HOST_PATH" command -v zsh)"
+	_prefix="$(printf 'env -i HOME=%q PATH=%q SHELL=%q TERM=%q LANG=%q XDG_BIN_HOME=%q XDG_CACHE_HOME=%q XDG_CONFIG_HOME=%q XDG_DATA_HOME=%q XDG_STATE_HOME=%q XDG_RUNTIME_DIR=%q' \
+		"${_root}/home" "$HOST_PATH" "$_shell_path" "${TERM:-xterm-256color}" "${LANG:-C.UTF-8}" \
+		"${_root}/home/.local/bin" "${_root}/xdg/cache" "${_root}/xdg/config" "${_root}/xdg/data" "${_root}/xdg/state" "${_root}/xdg/runtime")"
+	# shellcheck disable=SC2016
+	( cd "$NEUTRAL_DIR" && script -qec "${_prefix} zsh -lic $(printf '%q' 'print -r -- ZSHFPATHPROBE:${(j.:.)fpath}')" /dev/null ) | tr -d '\r' > "${WORKDIR}/compinit-unsafe.out" || true
+
+	if grep -q 'is not safely owned/permissioned' "${WORKDIR}/compinit-unsafe.out"; then
+		_pass "zsh: group-writable \$ZSH_CACHE_HOME forces the compinit -D fallback (unsafe cache dir was not trusted)"
+	else
+		_fail "zsh: group-writable \$ZSH_CACHE_HOME did not trigger the compinit -D fallback: $(cat "${WORKDIR}/compinit-unsafe.out")"
+	fi
+
+	# (b2) The unsafe cache dir must also actually be absent from $fpath --
+	# the stderr diagnostic above comes from an independent compinit -D
+	# code path and does not by itself prove the fpath-gating held.
+	_fpath_probe_line="$(grep '^ZSHFPATHPROBE:' "${WORKDIR}/compinit-unsafe.out" | tail -n 1)"
+	_unsafe_cache_dir="${_root}/xdg/cache/zsh"
+	if [ -z "$_fpath_probe_line" ]; then
+		_fail "zsh: fpath probe produced no output; cannot verify \$fpath excludes the unsafe cache dir: $(cat "${WORKDIR}/compinit-unsafe.out")"
+	elif printf '%s\n' "$_fpath_probe_line" | grep -qF "$_unsafe_cache_dir"; then
+		_fail "zsh: unsafe \$ZSH_CACHE_HOME (${_unsafe_cache_dir}) is still present in \$fpath: ${_fpath_probe_line}"
+	else
+		_pass "zsh: unsafe \$ZSH_CACHE_HOME (${_unsafe_cache_dir}) is excluded from \$fpath"
+	fi
+
+	rm -rf -- "$_root"
+}
+_check_compinit_unsafe_cache_dir_fallback
+
+# ----------------------------------------------------------------------
+# 3. fnox / pitchfork eager-activation smoke tests
+# ----------------------------------------------------------------------
+
+_info "Eager tool-activation smoke tests"
+
+_check_eager_activation() {
+	_shell="$1"
+	_tool="$2"
+	_marker="${EAGER_MARKERS[$_tool]}"
+	if ! command -v "$_shell" > /dev/null 2>&1; then
+		_skip "${_shell}/${_tool}: ${_shell} not installed"
+		return
+	fi
+	if ! PATH="$HOST_PATH" command -v "$_tool" > /dev/null 2>&1; then
+		_skip "${_tool}: not installed on this host, skipping eager-activation smoke test"
+		return
+	fi
+
+	if [ "$_shell" = "bash" ]; then
+		_script="
+declare -F ${_marker} > /dev/null 2>&1 && echo MARKER_PRESENT=yes || echo MARKER_PRESENT=no
+${_tool} --version
+echo CALL_STATUS=\$?
+"
+	else
+		_script="
+(( \$+functions[${_marker}] )) && echo MARKER_PRESENT=yes || echo MARKER_PRESENT=no
+${_tool} --version
+echo CALL_STATUS=\$?
+"
+	fi
+
+	_pty_run "$_shell" "-lic" "$_script" > "${WORKDIR}/${_shell}-${_tool}-probe.out" 2>&1 || true
+
+	_marker_present="$(grep '^MARKER_PRESENT=' "${WORKDIR}/${_shell}-${_tool}-probe.out" | cut -d= -f2)"
+	_call_status="$(grep '^CALL_STATUS=' "${WORKDIR}/${_shell}-${_tool}-probe.out" | cut -d= -f2)"
+
+	if [ "$_marker_present" = "yes" ]; then
+		_pass "${_shell}/${_tool}: activation hook (${_marker}) installed eagerly at startup, before any ${_tool} call"
+	else
+		_fail "${_shell}/${_tool}: activation hook (${_marker}) not present at startup: $(cat "${WORKDIR}/${_shell}-${_tool}-probe.out")"
+	fi
+
+	if [ "$_call_status" = "0" ]; then
+		_pass "${_shell}/${_tool}: '${_tool} --version' exited 0"
+	else
+		_fail "${_shell}/${_tool}: '${_tool} --version' exited ${_call_status:-unknown}"
+	fi
+
+	if grep -qi "$_tool" "${WORKDIR}/${_shell}-${_tool}-probe.out" 2> /dev/null; then
+		_pass "${_shell}/${_tool}: --version output looks sane"
+	else
+		_fail "${_shell}/${_tool}: --version output did not mention '${_tool}'"
+	fi
+}
+
+for _tool in "${EAGER_TOOLS[@]}"; do
+	_check_eager_activation bash "$_tool"
+	_check_eager_activation zsh "$_tool"
+done
+unset _tool
+
+# ----------------------------------------------------------------------
+# 3b. Lazy per-tool completion smoke tests
+#
+# Exercises the mechanism from 70-completions.sh + completion-tools.conf
+# end to end for a representative set of template shapes: gh
+# (subcommand generator), uv (subcommand generator, clap), hwatch
+# (flag-shaped generator), node (bash-only fixed template), just (Zsh
+# fpath-cache strategy), aws (complete -C special case), and fzf
+# (eager shell-integration special case).
+# ----------------------------------------------------------------------
+
+_info "Lazy per-tool completion smoke tests"
+
+# _have_tool <name>: is the tool present on the host PATH?
+_have_tool() { PATH="$HOST_PATH" command -v "$1" > /dev/null 2>&1; }
+
+# _expect_kv <outfile> <key> <want> <desc>
+_expect_kv() {
+	_ekv_got="$(grep "^${2}=" "$1" | head -n1 | cut -d= -f2)"
+	if [ "$_ekv_got" = "$3" ]; then
+		_pass "$4"
+	else
+		_fail "$4 (got '${2}=${_ekv_got:-<missing>}')"
+	fi
+}
+
+if command -v bash > /dev/null 2>&1; then
+	cat > "${WORKDIR}/comp-probe.bash" << 'PROBE'
+for _t in gh uv hwatch node; do
+	if command -v "$_t" > /dev/null 2>&1; then
+		if complete -p "$_t" 2> /dev/null | grep -q _lazy_completion_dispatch; then
+			echo "STUB_${_t}=yes"
+		else
+			echo "STUB_${_t}=no"
+		fi
+	fi
+done
+if command -v aws_completer > /dev/null 2>&1; then
+	complete -p aws 2> /dev/null | grep -q aws_completer && echo AWS_COMPLETER=yes || echo AWS_COMPLETER=no
+fi
+if command -v fzf > /dev/null 2>&1; then
+	declare -F _fzf_complete > /dev/null 2>&1 && echo FZF_LOADED=yes || echo FZF_LOADED=no
+fi
+if command -v gh > /dev/null 2>&1; then
+	COMP_WORDS=(gh "")
+	COMP_CWORD=1
+	COMP_LINE="gh "
+	COMP_POINT=3
+	_lazy_completion_dispatch gh "" gh
+	echo "DISPATCH_STATUS=$?"
+	complete -p gh 2> /dev/null | grep -q _lazy_completion_dispatch && echo GH_STUB_AFTER=yes || echo GH_STUB_AFTER=no
+	_ghfn="$(complete -p gh 2> /dev/null | sed -E 's/.*-F ([^ ]+).*/\1/')"
+	COMPREPLY=()
+	[ -n "$_ghfn" ] && "$_ghfn" gh "" gh 2> /dev/null
+	if [ "${#COMPREPLY[@]}" -gt 0 ]; then
+		echo GH_COMPREPLY=yes
+	else
+		echo GH_COMPREPLY=no
+	fi
+fi
+PROBE
+	_pty_run bash "-lic" ". ${WORKDIR}/comp-probe.bash" > "${WORKDIR}/bash-comp-probe.out" 2>&1 || true
+
+	for _t in gh uv hwatch node; do
+		if _have_tool "$_t"; then
+			_expect_kv "${WORKDIR}/bash-comp-probe.out" "STUB_${_t}" yes "bash/${_t}: lazy completion stub registered at startup"
+		else
+			_skip "bash/${_t}: not installed, skipping completion stub check"
+		fi
+	done
+	unset _t
+	if _have_tool aws_completer; then
+		_expect_kv "${WORKDIR}/bash-comp-probe.out" AWS_COMPLETER yes "bash/aws: aws_completer registered via complete -C"
+	else
+		_skip "bash/aws: aws_completer not installed"
+	fi
+	if _have_tool fzf; then
+		_expect_kv "${WORKDIR}/bash-comp-probe.out" FZF_LOADED yes "bash/fzf: shell integration loaded eagerly"
+	else
+		_skip "bash/fzf: not installed"
+	fi
+	if _have_tool gh; then
+		_expect_kv "${WORKDIR}/bash-comp-probe.out" DISPATCH_STATUS 124 "bash/gh: dispatcher returns 124 (readline retry protocol)"
+		_expect_kv "${WORKDIR}/bash-comp-probe.out" GH_STUB_AFTER no "bash/gh: real completer replaced the stub after first use"
+		_expect_kv "${WORKDIR}/bash-comp-probe.out" GH_COMPREPLY yes "bash/gh: real completer produced completions for 'gh <TAB>'"
+	else
+		_skip "bash/gh: not installed, skipping dispatcher trigger checks"
+	fi
+else
+	_skip "bash not installed: skipping bash completion smoke tests"
+fi
+
+if command -v zsh > /dev/null 2>&1; then
+	cat > "${WORKDIR}/comp-probe.zsh" << 'PROBE'
+for _t in gh hwatch; do
+	if command -v "$_t" > /dev/null 2>&1; then
+		if [ "${_comps[$_t]-}" = "_lazy_completion_dispatch" ]; then
+			echo "STUB_${_t}=yes"
+		else
+			echo "STUB_${_t}=no"
+		fi
+	fi
+done
+if command -v just > /dev/null 2>&1; then
+	[ -r "${ZSH_CACHE_HOME}/_just" ] && echo JUST_CACHE=yes || echo JUST_CACHE=no
+	[ "${_comps[just]-}" = "_just" ] && echo JUST_FPATH=yes || echo JUST_FPATH=no
+fi
+if command -v aws_completer > /dev/null 2>&1; then
+	[ -n "${_comps[aws]-}" ] && echo AWS_REGISTERED=yes || echo AWS_REGISTERED=no
+fi
+if command -v fzf > /dev/null 2>&1; then
+	(( $+functions[fzf-history-widget] )) && echo FZF_WIDGET=yes || echo FZF_WIDGET=no
+fi
+if command -v gh > /dev/null 2>&1; then
+	service=gh
+	_lazy_completion_dispatch > /dev/null 2>&1 || true
+	(( $+functions[_gh] )) && echo GH_REAL_FN=yes || echo GH_REAL_FN=no
+	[ "${_comps[gh]-}" = "_gh" ] && echo GH_REREGISTERED=yes || echo GH_REREGISTERED=no
+fi
+PROBE
+	_pty_run zsh "-lic" ". ${WORKDIR}/comp-probe.zsh" > "${WORKDIR}/zsh-comp-probe.out" 2>&1 || true
+
+	for _t in gh hwatch; do
+		if _have_tool "$_t"; then
+			_expect_kv "${WORKDIR}/zsh-comp-probe.out" "STUB_${_t}" yes "zsh/${_t}: lazy compdef stub registered at startup"
+		else
+			_skip "zsh/${_t}: not installed, skipping compdef stub check"
+		fi
+	done
+	unset _t
+	if _have_tool just; then
+		_expect_kv "${WORKDIR}/zsh-comp-probe.out" JUST_CACHE yes "zsh/just: fpath cache file generated under \$ZSH_CACHE_HOME"
+		_expect_kv "${WORKDIR}/zsh-comp-probe.out" JUST_FPATH yes "zsh/just: _just autoload registration discovered by compinit"
+	else
+		_skip "zsh/just: not installed, skipping fpath-cache checks"
+	fi
+	if _have_tool aws_completer; then
+		_expect_kv "${WORKDIR}/zsh-comp-probe.out" AWS_REGISTERED yes "zsh/aws: completion registered via bashcompinit bridge"
+	else
+		_skip "zsh/aws: aws_completer not installed"
+	fi
+	if _have_tool fzf; then
+		_expect_kv "${WORKDIR}/zsh-comp-probe.out" FZF_WIDGET yes "zsh/fzf: shell integration widgets loaded eagerly"
+	else
+		_skip "zsh/fzf: not installed"
+	fi
+	if _have_tool gh; then
+		_expect_kv "${WORKDIR}/zsh-comp-probe.out" GH_REAL_FN yes "zsh/gh: dispatcher eval defined the real _gh function"
+		_expect_kv "${WORKDIR}/zsh-comp-probe.out" GH_REREGISTERED yes "zsh/gh: real _gh re-registered via compdef after first use"
+	else
+		_skip "zsh/gh: not installed, skipping dispatcher trigger checks"
+	fi
+else
+	_skip "zsh not installed: skipping zsh completion smoke tests"
+fi
+
+# ----------------------------------------------------------------------
+# 3c. Data-driven completion-tools.conf template smoke test
+#
+# Section 3b above only exercises a small hardcoded set of tool names
+# (gh, uv, hwatch, node / gh, hwatch). That gives the advertised
+# "adding a tool is one line in the table" workflow no safety net for
+# the exact line being added: a bad template can pass every check
+# above and still silently fail at the first real Tab press. This
+# loops over every row of completion-tools.conf whose tool is actually
+# installed on the host (same command -v gate 70-completions.sh uses
+# at runtime) and, for each shell the row applies to, runs the row's
+# own template command (SHELL substituted per that shell) and asserts
+# it exits 0 with non-empty stdout. This is deliberately shallow: it
+# does not source the output into a shell or validate the completion
+# function it defines, only that the generator itself is not broken --
+# a minimal sanity check, not a second benchmark.
+# ----------------------------------------------------------------------
+
+_info "Data-driven completion-tools.conf template smoke test"
+
+_check_completion_table_templates() {
+	_cott_conf="${REPO_ROOT}/.config/shell/completion-tools.conf"
+	if [ ! -r "$_cott_conf" ]; then
+		_skip "completion-tools.conf: not found at ${_cott_conf}, skipping data-driven template smoke test"
+		return
+	fi
+	while IFS='|' read -r _ctt_name _ctt_template _ctt_shells _ctt_strategy; do
+		case "$_ctt_name" in '' | \#*) continue ;; esac
+		if ! PATH="$HOST_PATH" command -v "$_ctt_name" > /dev/null 2>&1; then
+			_skip "completion-tools.conf/${_ctt_name}: not installed, skipping template smoke test"
+			continue
+		fi
+		for _ctt_shell in bash zsh; do
+			case " ${_ctt_shells} " in *" ${_ctt_shell} "*) ;; *) continue ;; esac
+			if ! command -v "$_ctt_shell" > /dev/null 2>&1; then
+				_skip "completion-tools.conf/${_ctt_name}/${_ctt_shell}: ${_ctt_shell} not installed"
+				continue
+			fi
+			_ctt_cmd="${_ctt_template//SHELL/${_ctt_shell}}"
+			_ctt_out="$(env -i PATH="$HOST_PATH" HOME="$FIXTURE_HOME" "$_ctt_shell" -c "$_ctt_cmd" 2> "${WORKDIR}/ctt.err")"
+			_ctt_rc=$?
+			if [ "$_ctt_rc" -eq 0 ] && [ -n "$_ctt_out" ]; then
+				_pass "completion-tools.conf/${_ctt_name}/${_ctt_shell}: template produces non-empty output"
+			else
+				_fail "completion-tools.conf/${_ctt_name}/${_ctt_shell}: template produced no output or failed (rc=${_ctt_rc}): $(cat "${WORKDIR}/ctt.err")"
+			fi
+			# Verify each zsh row's zsh-strategy tag (see completion-tools.conf
+			# header). Wrong "compdef" fails silently at first Tab; wrong
+			# "fpath" writes non-autoload-safe content into the fpath cache.
+			if [ "$_ctt_shell" = "zsh" ] && [ "$_ctt_rc" -eq 0 ] && [ -n "$_ctt_out" ]; then
+				case "$_ctt_strategy" in
+				compdef)
+					_ctt_zscript="${WORKDIR}/ctt-eval.zsh"
+					printf '%s\n' "$_ctt_out" > "$_ctt_zscript"
+					printf '(( $+functions[_%s] )) && print CTT_FN=yes || print CTT_FN=no\n' "$_ctt_name" >> "$_ctt_zscript"
+					env -i PATH="$HOST_PATH" HOME="$FIXTURE_HOME" zsh "$_ctt_zscript" > "${WORKDIR}/ctt-eval.out" 2> "${WORKDIR}/ctt-eval.err" || true
+					_ctt_err="$(grep -vE 'command not found: compdef$' "${WORKDIR}/ctt-eval.err" || true)"
+					if grep -q '^CTT_FN=yes$' "${WORKDIR}/ctt-eval.out" && [ -z "$_ctt_err" ]; then
+						_pass "completion-tools.conf/${_ctt_name}/zsh: compdef strategy verified (_${_ctt_name} defined, no top-level completion errors)"
+					else
+						_fail "completion-tools.conf/${_ctt_name}/zsh: compdef strategy misclassified (_${_ctt_name} undefined or eval errored): ${_ctt_err}"
+					fi
+					;;
+				fpath)
+					case "$_ctt_out" in
+					'#compdef'*) _pass "completion-tools.conf/${_ctt_name}/zsh: fpath strategy verified (output starts with #compdef)" ;;
+					*) _fail "completion-tools.conf/${_ctt_name}/zsh: fpath strategy misclassified (output does not start with #compdef)" ;;
+					esac
+					;;
+				esac
+			fi
+		done
+	done < "$_cott_conf"
+	unset _ctt_name _ctt_template _ctt_shells _ctt_strategy _ctt_shell _ctt_cmd _ctt_out _ctt_rc _ctt_zscript _ctt_err _cott_conf
+}
+_check_completion_table_templates
+
+# ----------------------------------------------------------------------
+# 3d. pkl Zsh completion filter guard
+#
+# 70-completions.sh's pkl branch strips compinit/bashcompinit lines
+# from 'pkl shell-completion zsh' output with a grep -Ev filter
+# coupled to that output's exact shape -- the most fragile line in
+# the file. A pkl release that reformats those lines would silently
+# defeat the filter, letting pkl's bare compinit call rewrite the
+# zcompdump at the wrong path. This duplicates that filter pattern
+# (keep the two in sync) and checks:
+#
+#   (a) the filtered output contains no compinit invocation; and
+#   (b) after _lazy_complete_pkl runs in a scratch zsh, $_comps[pkl]
+#       is pkl's real completer, not still the stub.
+# ----------------------------------------------------------------------
+
+_info "pkl Zsh completion filter guard"
+
+_check_pkl_zsh_completion_filter() {
+	if ! _have_tool pkl; then
+		_skip "pkl: not installed, skipping Zsh completion filter guard"
+		return
+	fi
+
+	# Byte-for-byte identical to the grep -Ev filter in
+	# 70-completions.sh's pkl special case (Zsh branch).
+	_pkl_filter='^(autoload -Uz (compinit|bashcompinit)|compinit|bashcompinit)[[:space:]]*$'
+
+	# (a) The filtered output must contain no line invoking compinit.
+	_pkl_filtered="$(PATH="$HOST_PATH" pkl shell-completion zsh 2> /dev/null | grep -Ev "$_pkl_filter")"
+	if printf '%s\n' "$_pkl_filtered" | grep -Eq '(^|[^[:alnum:]_])compinit([^[:alnum:]_]|$)'; then
+		_fail "pkl: filtered 'pkl shell-completion zsh' output still invokes compinit -- pkl's output shape changed; update the filter in 70-completions.sh"
+	else
+		_pass "pkl: filtered 'pkl shell-completion zsh' output contains no compinit invocation"
+	fi
+
+	if ! command -v zsh > /dev/null 2>&1; then
+		_skip "zsh not installed: skipping pkl \$_comps[pkl] re-registration check"
+		unset _pkl_filter _pkl_filtered
+		return
+	fi
+
+	# (b) After the real pkl stub runs in a scratch zsh sourced from
+	# the actual dotfiles, $_comps[pkl] must no longer be the stub.
+	# shellcheck disable=SC2016
+	_pty_run zsh "-lic" '(( $+functions[_lazy_complete_pkl] )) && _lazy_complete_pkl > /dev/null 2>&1; echo "PKL_COMPS=${_comps[pkl]-<unset>}"' \
+		> "${WORKDIR}/pkl-comps.out" 2>&1 || true
+	_pkl_comps="$(grep '^PKL_COMPS=' "${WORKDIR}/pkl-comps.out" | tail -n1 | cut -d= -f2)"
+	if [ -n "$_pkl_comps" ] && [ "$_pkl_comps" != '<unset>' ] && [ "$_pkl_comps" != '_lazy_complete_pkl' ]; then
+		_pass "zsh/pkl: \$_comps[pkl] was replaced by pkl's own completer after first use (${_pkl_comps})"
+	else
+		_fail "zsh/pkl: \$_comps[pkl] is still the lazy stub or unset after first use: $(cat "${WORKDIR}/pkl-comps.out")"
+	fi
+
+	unset _pkl_filter _pkl_filtered _pkl_comps
+}
+_check_pkl_zsh_completion_filter
+
+# ----------------------------------------------------------------------
+# 4. dircolors
+# ----------------------------------------------------------------------
+
+_info "dircolors"
+
+if command -v dircolors > /dev/null 2>&1; then
+	if [ -r "${REPO_ROOT}/.config/coreutils/dir_colors" ]; then
+		if dircolors "${REPO_ROOT}/.config/coreutils/dir_colors" > "${WORKDIR}/dircolors.out" 2> "${WORKDIR}/dircolors.err"; then
+			if grep -q '^LS_COLORS=' "${WORKDIR}/dircolors.out"; then
+				_pass "GNU dircolors: tracked dir_colors config evaluates and sets LS_COLORS (Linux, GNU coreutils)"
+			else
+				_fail "GNU dircolors: ran but did not produce an LS_COLORS assignment"
+			fi
+		else
+			_fail "GNU dircolors: tracked dir_colors config failed to evaluate: $(cat "${WORKDIR}/dircolors.err")"
+		fi
+	else
+		_skip "no ${REPO_ROOT}/.config/coreutils/dir_colors to validate"
+	fi
+else
+	_skip "dircolors not installed"
+fi
+
+_info "40-terminal-colors.sh's macOS/BSD branch (gdircolors) is syntax-checked only above; this host is Linux, so it cannot be exercised live here."
+_info "The /opt/homebrew PATH branch in 20-path.sh and the Homebrew profile.d branches in .zprofile/.bash_profile are likewise syntax-checked only above; this host is Linux (no /opt/homebrew), so they cannot be exercised live here either."
+
+# Static checks for 20-path.sh's Homebrew PATH gate: the real
+# behavior cannot be exercised live on this Linux host (no
+# /opt/homebrew), but we can at least verify the file checks for
+# the brew binary itself -- the one artifact guaranteed to exist
+# after any Homebrew install method -- rather than
+# /opt/homebrew/etc/paths, which only the less-common .pkg
+# installer variant creates and the standard curl-based installer
+# used on virtually every fresh Apple Silicon Mac does not.
+if grep -q '/opt/homebrew/bin/brew' "${REPO_ROOT}/.config/shell/rc.d/20-path.sh"; then
+	_pass "20-path.sh: Homebrew PATH gate checks for the brew binary itself, not a .pkg-installer-only artifact"
+else
+	_fail "20-path.sh: Homebrew PATH gate no longer checks for /opt/homebrew/bin/brew"
+fi
+# Match the actual file-existence test construct, not just any
+# mention of the path (this file's own explanatory comment
+# legitimately names /opt/homebrew/etc/paths when describing why
+# it is NOT the gate).
+if grep -Eq '\[ +-f +/opt/homebrew/etc/paths +\]' "${REPO_ROOT}/.config/shell/rc.d/20-path.sh"; then
+	_fail "20-path.sh: still gates on [ -f /opt/homebrew/etc/paths ], which the standard curl-based Homebrew installer never creates"
+else
+	_pass "20-path.sh: no longer gates on the .pkg-installer-only /opt/homebrew/etc/paths file test"
+fi
+
+# ----------------------------------------------------------------------
+# 5. Starship
+# ----------------------------------------------------------------------
+
+_info "Starship"
+
+if command -v starship > /dev/null 2>&1; then
+	_starship_cfg_src="${REPO_ROOT}/.config/starship.toml##default"
+	if [ -r "$_starship_cfg_src" ]; then
+		ln -s "$_starship_cfg_src" "${WORKDIR}/starship.toml"
+		_starship_env=(env -i HOME="$FIXTURE_HOME" PATH="$HOST_PATH" STARSHIP_CONFIG="${WORKDIR}/starship.toml")
+	else
+		_starship_env=(env -i HOME="$FIXTURE_HOME" PATH="$HOST_PATH")
+		_skip "no tracked starship.toml##default found; validating with starship's built-in defaults instead"
+	fi
+
+	if "${_starship_env[@]}" starship print-config > "${WORKDIR}/starship-print-config.out" 2> "${WORKDIR}/starship-print-config.err"; then
+		_pass "starship print-config: tracked config parses cleanly (starship's own validation path)"
+	else
+		_fail "starship print-config failed: $(cat "${WORKDIR}/starship-print-config.err")"
+	fi
+
+	for _sh in bash zsh; do
+		if command -v "$_sh" > /dev/null 2>&1; then
+			if "${_starship_env[@]}" starship init "$_sh" > "${WORKDIR}/starship-init-${_sh}.sh" 2> "${WORKDIR}/starship-init-${_sh}.err"; then
+				if "$_sh" -c "source \"${WORKDIR}/starship-init-${_sh}.sh\"" > /dev/null 2> "${WORKDIR}/starship-eval-${_sh}.err"; then
+					_pass "starship init ${_sh}: generated code evaluates cleanly"
+				else
+					_fail "starship init ${_sh}: generated code failed to evaluate: $(cat "${WORKDIR}/starship-eval-${_sh}.err")"
+				fi
+				# Guards the mise >= 2026.7.5 `cargo-starship/latest` symlink
+				# assumption documented in 60-prompt.sh: the emitted init
+				# code must reference the stable `latest` path, not a
+				# version-numbered one that would silently break if mise
+				# ever stopped maintaining that symlink.
+				if grep -Eq 'cargo-starship/[0-9]' "${WORKDIR}/starship-init-${_sh}.sh"; then
+					_fail "starship init ${_sh}: emitted a version-numbered cargo-starship path instead of the stable 'latest' path"
+				else
+					_pass "starship init ${_sh}: emitted path does not pin a version-numbered cargo-starship segment"
+				fi
+			else
+				_fail "starship init ${_sh} failed: $(cat "${WORKDIR}/starship-init-${_sh}.err")"
+			fi
+		fi
+	done
+	unset _sh
+else
+	_skip "starship not installed"
+fi
+
+# ----------------------------------------------------------------------
+# Summary
+# ----------------------------------------------------------------------
+
+echo
+_info "Summary: ${CHECKS} checks run, ${FAILURES} failed, ${SKIPPED} skipped"
+
+if [ "$FAILURES" -gt 0 ]; then
+	exit 1
+fi
+exit 0

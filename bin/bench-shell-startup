@@ -1,0 +1,328 @@
+#!/usr/bin/env bash
+# vi:ts=4:sw=4:noet
+#
+# bin/bench-shell-startup
+#
+# Measures Bash and Zsh login-interactive startup time (`bash -lic
+# true` / `zsh -lic true`) under an isolated fixture HOME/XDG.  mise,
+# fnox, and pitchfork activation is eager (30-tools.sh), so its cost
+# is included in every startup number below; per-tool completions are
+# lazy (70-completions.sh) and contribute only their registration
+# cost at startup.
+#
+# Out of scope: every timed run is `-lic true`, which exits before any
+# prompt renders, so the recurring per-prompt cost of eager activation
+# (mise/fnox/pitchfork's PROMPT_COMMAND/precmd/chpwd hooks, Starship's
+# own render) is not measured here -- only the one-time startup cost is.
+#
+# "Cold": a fresh, never-used fixture cache/data/state per run. This
+# is NOT a true cold kernel/page cache (no root, no cache-dropping
+# tricks) -- it only guarantees mise/zsh/starship have never populated
+# their own on-disk caches (zcompdump, mise's own caches, etc.) for
+# that fixture before the timed run.
+#
+# "Warm": a single fixture cache/data/state directory, primed with 3
+# untimed warmup runs, then measured over the following runs.
+#
+# Every timed shell invocation runs under `script -qec` to allocate a
+# pty, because a raw (no-pty) invocation prints job-control
+# diagnostics ("cannot set terminal process group", "no job control
+# in this shell" for Bash; a zprofile `set` warning for Zsh) purely
+# from the missing controlling terminal -- so the pty is not optional
+# here, it is what keeps those diagnostics out of the "silent
+# startup" measurement. `script` itself has a measurable,
+# fairly constant cost (see _measure_pty_tax below); every _stats()
+# line therefore prints both the raw number (which includes that
+# fixed tax) and a tax-adjusted number with the measured baseline
+# subtracted back out, clearly labeled.
+#
+# Everything runs against a fixture HOME (never the real one) built
+# the same way as bin/check-shell-config; see that script for the
+# rationale behind pointing MISE_DATA_DIR/MISE_CONFIG_DIR/
+# MISE_STATE_DIR at the real (read-only) locations so mise can
+# actually resolve fnox/pitchfork/starship, and for the ownership/
+# mode check applied to those real directories before they are wired
+# into any fixture env.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+readonly REPO_ROOT
+readonly HOST_PATH="$PATH"
+
+_info() { printf 'INFO  %s\n' "$*"; }
+
+REAL_HOME="$HOME"
+REAL_XDG_DATA_HOME="${XDG_DATA_HOME:-${REAL_HOME}/.local/share}"
+REAL_XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-${REAL_HOME}/.config}"
+REAL_XDG_STATE_HOME="${XDG_STATE_HOME:-${REAL_HOME}/.local/state}"
+readonly REAL_XDG_DATA_HOME REAL_XDG_CONFIG_HOME REAL_XDG_STATE_HOME
+readonly REAL_MISE_DATA_DIR="${REAL_XDG_DATA_HOME}/mise"
+readonly REAL_MISE_CONFIG_DIR="${REAL_XDG_CONFIG_HOME}/mise"
+readonly REAL_MISE_STATE_DIR="${REAL_XDG_STATE_HOME}/mise"
+readonly REAL_CARGO_DIR="${REAL_XDG_DATA_HOME}/cargo"
+
+# _real_dir_is_safe <dir> -- see bin/lib/real-dir-safety.sh (shared
+# with bin/check-shell-config). Applied to every REAL_* directory
+# below before it is wired into any fixture env -- an
+# attacker-writable real directory must never be trusted just because
+# it happens to exist on this host.
+# shellcheck source=lib/real-dir-safety.sh
+# shellcheck disable=SC1091
+. "${REPO_ROOT}/bin/lib/real-dir-safety.sh"
+
+SAFE_REAL_MISE_DATA_DIR=""
+if _real_dir_is_safe "$REAL_MISE_DATA_DIR"; then
+	SAFE_REAL_MISE_DATA_DIR="$REAL_MISE_DATA_DIR"
+elif [ -d "$REAL_MISE_DATA_DIR" ]; then
+	_info "real MISE_DATA_DIR (${REAL_MISE_DATA_DIR}) failed the ownership/mode check; not wiring it into the fixture"
+fi
+
+SAFE_REAL_MISE_CONFIG_DIR=""
+if _real_dir_is_safe "$REAL_MISE_CONFIG_DIR"; then
+	SAFE_REAL_MISE_CONFIG_DIR="$REAL_MISE_CONFIG_DIR"
+elif [ -d "$REAL_MISE_CONFIG_DIR" ]; then
+	_info "real MISE_CONFIG_DIR (${REAL_MISE_CONFIG_DIR}) failed the ownership/mode check; not wiring it into the fixture"
+fi
+
+SAFE_REAL_MISE_STATE_DIR=""
+if _real_dir_is_safe "$REAL_MISE_STATE_DIR"; then
+	SAFE_REAL_MISE_STATE_DIR="$REAL_MISE_STATE_DIR"
+elif [ -d "$REAL_MISE_STATE_DIR" ]; then
+	_info "real MISE_STATE_DIR (${REAL_MISE_STATE_DIR}) failed the ownership/mode check; not wiring it into the fixture"
+fi
+
+SAFE_REAL_CARGO_DIR=""
+if _real_dir_is_safe "$REAL_CARGO_DIR"; then
+	SAFE_REAL_CARGO_DIR="$REAL_CARGO_DIR"
+elif [ -d "$REAL_CARGO_DIR" ]; then
+	_info "real CARGO_DIR (${REAL_CARGO_DIR}) failed the ownership/mode check; not wiring it into the fixture"
+fi
+readonly SAFE_REAL_MISE_DATA_DIR SAFE_REAL_MISE_CONFIG_DIR SAFE_REAL_MISE_STATE_DIR SAFE_REAL_CARGO_DIR
+
+COLD_RUNS=10
+WARM_WARMUPS=3
+WARM_RUNS=31
+
+WORKDIR=""
+_cleanup() { [ -n "$WORKDIR" ] && [ -d "$WORKDIR" ] && rm -rf -- "$WORKDIR"; }
+trap _cleanup EXIT
+WORKDIR="$(mktemp -d "${TMPDIR:-/tmp}/bench-shell-startup.XXXXXX")"
+readonly WORKDIR
+
+NEUTRAL_DIR="${WORKDIR}/neutral"
+mkdir -p "$NEUTRAL_DIR"
+readonly NEUTRAL_DIR
+
+# _new_fixture <dir>
+# Builds a fresh fixture HOME + XDG tree rooted at <dir> (which must
+# not yet exist).
+_new_fixture() {
+	_root="$1"
+	mkdir -p "${_root}/home" "${_root}/xdg/cache" "${_root}/xdg/data" "${_root}/xdg/state"
+	mkdir -p "${_root}/xdg/config"
+	# shellcheck disable=SC2174
+	mkdir -m 0700 -p "${_root}/xdg/runtime"
+	for _entry in .profile .bash_profile .bashrc .zshenv .zprofile .zshrc .zshrc.d; do
+		[ -e "${REPO_ROOT}/${_entry}" ] && ln -s "${REPO_ROOT}/${_entry}" "${_root}/home/${_entry}"
+	done
+	ln -s "${REPO_ROOT}/.config/shell" "${_root}/xdg/config/shell"
+	[ -d "${REPO_ROOT}/.config/coreutils" ] && ln -s "${REPO_ROOT}/.config/coreutils" "${_root}/xdg/config/coreutils"
+	mkdir -p "${_root}/home/.local/bin" "${_root}/home/bin"
+	[ -n "$SAFE_REAL_CARGO_DIR" ] && ln -s "$SAFE_REAL_CARGO_DIR" "${_root}/xdg/data/cargo"
+}
+
+# _run_shell <fixture-root> <shell> <shell-flags> <command>
+# Runs one timed invocation under a pty (script -qec) so job-control
+# diagnostics from the lack of a controlling terminal don't pollute
+# the timing run, and prints the elapsed wall time in seconds
+# (nanosecond resolution) on stdout.
+_run_shell() {
+	_root="$1" _shell="$2" _flags="$3" _cmd="$4"
+	_shell_path="$(PATH="$HOST_PATH" command -v "$_shell")"
+	_prefix="$(printf 'env -i HOME=%q PATH=%q SHELL=%q TERM=%q LANG=%q XDG_BIN_HOME=%q XDG_CACHE_HOME=%q XDG_CONFIG_HOME=%q XDG_DATA_HOME=%q XDG_STATE_HOME=%q XDG_RUNTIME_DIR=%q MISE_DATA_DIR=%q MISE_CONFIG_DIR=%q MISE_STATE_DIR=%q' \
+		"${_root}/home" "$HOST_PATH" "$_shell_path" "${TERM:-xterm-256color}" "${LANG:-C.UTF-8}" \
+		"${_root}/home/.local/bin" "${_root}/xdg/cache" "${_root}/xdg/config" "${_root}/xdg/data" "${_root}/xdg/state" "${_root}/xdg/runtime" \
+		"$SAFE_REAL_MISE_DATA_DIR" "$SAFE_REAL_MISE_CONFIG_DIR" "$SAFE_REAL_MISE_STATE_DIR")"
+	_t0=$(date +%s.%N)
+	( cd "$NEUTRAL_DIR" && script -qec "${_prefix} ${_shell} ${_flags} $(printf '%q' "$_cmd")" /dev/null ) > /dev/null 2>&1 || true
+	_t1=$(date +%s.%N)
+	python3 -c "print(f'{$_t1 - $_t0:.6f}')"
+}
+
+# PTY_TAX_MEDIAN: the one-time, fixed cost of `script -qec true
+# /dev/null` on this host, measured once by _measure_pty_tax below. A
+# raw (no-pty) invocation changes bash/zsh's own stderr output
+# (job-control diagnostics), so the pty can't simply be dropped --
+# instead every _stats() call reports both the raw number and this
+# tax subtracted back out.
+PTY_TAX_MEDIAN=0
+
+# _stats <label> <values...>
+# Prints min/median/p95/max for a list of floating point seconds,
+# plus (when PTY_TAX_MEDIAN is nonzero) a second, clearly labeled line
+# with the same stats after subtracting that one-time pty baseline
+# tax from every sample.
+_stats() {
+	_label="$1"; shift
+	python3 - "$PTY_TAX_MEDIAN" "$@" << 'PYEOF'
+import sys
+tax = float(sys.argv[1])
+vals = sorted(float(v) for v in sys.argv[2:])
+n = len(vals)
+def pct(vs, p):
+	if len(vs) == 1:
+		return vs[0]
+	idx = (len(vs) - 1) * p
+	lo = int(idx)
+	hi = min(lo + 1, len(vs) - 1)
+	frac = idx - lo
+	return vs[lo] + (vs[hi] - vs[lo]) * frac
+print(f"min={vals[0]:.3f}s median={pct(vals, 0.5):.3f}s p95={pct(vals, 0.95):.3f}s max={vals[-1]:.3f}s  (n={n})")
+if tax > 0:
+	adj = sorted(max(0.0, v - tax) for v in vals)
+	print(f"  tax-adjusted (raw - {tax:.3f}s pty baseline): min={adj[0]:.3f}s median={pct(adj, 0.5):.3f}s p95={pct(adj, 0.95):.3f}s max={adj[-1]:.3f}s")
+PYEOF
+}
+
+# _measure_pty_tax
+# Measures the fixed cost of `script -qec true /dev/null` (a pty
+# allocation plus a trivial command) once, independent of any shell
+# startup logic, and stores the median in PTY_TAX_MEDIAN. This is the
+# "raw vs tax-adjusted" baseline referenced by _stats above.
+_measure_pty_tax() {
+	_info "Measuring script(1) pty baseline tax (15 runs of 'script -qec true /dev/null')"
+	_times=()
+	for _i in $(seq 1 15); do
+		_t0=$(date +%s.%N)
+		( cd "$NEUTRAL_DIR" && script -qec true /dev/null ) > /dev/null 2>&1 || true
+		_t1=$(date +%s.%N)
+		_times+=("$(python3 -c "print(f'{$_t1 - $_t0:.6f}')")")
+	done
+	PTY_TAX_MEDIAN="$(python3 - "${_times[@]}" << 'PYEOF'
+import sys
+vals = sorted(float(v) for v in sys.argv[1:])
+n = len(vals)
+idx = (n - 1) * 0.5
+lo = int(idx)
+hi = min(lo + 1, n - 1)
+frac = idx - lo
+print(f"{vals[lo] + (vals[hi] - vals[lo]) * frac:.6f}")
+PYEOF
+)"
+	_stats "pty-baseline" "${_times[@]}"
+	_info "pty baseline median: ${PTY_TAX_MEDIAN}s -- included in every raw number below; tax-adjusted figures are also printed"
+}
+
+_bench_cold() {
+	_shell="$1"
+	if ! command -v "$_shell" > /dev/null 2>&1; then
+		_info "${_shell}: not installed, skipping cold benchmark"
+		return
+	fi
+	_info "Cold (${_shell}): ${COLD_RUNS} runs, fresh fixture cache per run"
+	_times=()
+	for _i in $(seq 1 "$COLD_RUNS"); do
+		_root="${WORKDIR}/cold-${_shell}-${_i}"
+		_new_fixture "$_root"
+		_times+=("$(_run_shell "$_root" "$_shell" "-lic" "true")")
+		rm -rf "$_root"
+	done
+	_stats "cold-${_shell}" "${_times[@]}"
+}
+
+# _bench_warm <shell>
+# Builds ${WORKDIR}/warm-<shell>, primes it, and measures it. The
+# fixture root is deliberately left on disk afterward (cleaned up by
+# the top-level trap at exit, not here) so _bench_first_call below
+# can reuse the exact same already-warm cache/data/state for its
+# warm-shell-only lazy-activation numbers.
+_bench_warm() {
+	_shell="$1"
+	if ! command -v "$_shell" > /dev/null 2>&1; then
+		_info "${_shell}: not installed, skipping warm benchmark"
+		return
+	fi
+	_root="${WORKDIR}/warm-${_shell}"
+	_new_fixture "$_root"
+	_info "Warm (${_shell}): ${WARM_WARMUPS} warmups, then ${WARM_RUNS} measured runs, same fixture cache"
+	for _i in $(seq 1 "$WARM_WARMUPS"); do
+		_run_shell "$_root" "$_shell" "-lic" "true" > /dev/null
+	done
+	_times=()
+	for _i in $(seq 1 "$WARM_RUNS"); do
+		_times+=("$(_run_shell "$_root" "$_shell" "-lic" "true")")
+	done
+	_stats "warm-${_shell}" "${_times[@]}"
+}
+
+echo "=== bin/bench-shell-startup ==="
+echo "Host: $(uname -srm). This is Linux only -- no macOS/BSD numbers are available or claimed."
+echo "Targets (evaluated at p95): first interactive <= 3.0s, subsequent <= 1.0s."
+echo "Stretch goal (evaluated at median): <= 0.068s."
+echo
+
+_measure_pty_tax
+echo
+
+for _shell in bash zsh; do
+	_bench_cold "$_shell"
+done
+echo
+for _shell in bash zsh; do
+	_bench_warm "$_shell"
+done
+
+# ----------------------------------------------------------------------
+# First-call timing: fnox, pitchfork.
+#
+# Activation for mise, fnox, and pitchfork is eager (30-tools.sh), so
+# it is already included in every cold/warm startup number above.
+# These figures time a `<tool> --version` call in an already-warm
+# fixture shell, i.e. the pure call cost now that no lazy-activation
+# wrapper sits in front of the first invocation.
+# ----------------------------------------------------------------------
+
+echo
+_info "First-call timing in a warm shell (fnox, pitchfork; activation already eager at startup)"
+
+_bench_first_call() {
+	_tool="$1"
+	if ! PATH="$HOST_PATH" command -v "$_tool" > /dev/null 2>&1; then
+		_info "${_tool}: not installed on this host, skipping first-call timing"
+		return
+	fi
+	for _shell in bash zsh; do
+		if ! command -v "$_shell" > /dev/null 2>&1; then
+			continue
+		fi
+		_warm_root="${WORKDIR}/warm-${_shell}"
+		if [ -d "$_warm_root" ]; then
+			_t_warm="$(_run_shell "$_warm_root" "$_shell" "-lic" "${_tool} --version > /dev/null 2>&1")"
+			printf '  %-6s %-10s warm shell + first call: %ss\n' "$_shell" "$_tool" "$_t_warm"
+		else
+			_info "${_shell}/${_tool}: no warm fixture available (warm benchmark skipped)"
+		fi
+	done
+}
+
+# This list is intentionally duplicated, not shared, with
+# bin/check-shell-config's EAGER_TOOLS array: it is two items, used in
+# exactly one place in each script, and commit 70e25e7 already removed
+# the previous shared bin/lib/lazy-tools.sh once fnox/pitchfork became
+# eager (its message claims the list "now lives only in
+# check-shell-config", which this comment corrects -- it also lives
+# here). A third shared-list file for two items in two call sites was
+# judged not worth the indirection; if either script grows more
+# eagerly-activated tools, or a third consumer appears, extract a
+# shared list file at that point instead. If you add or remove a tool
+# here, update EAGER_TOOLS in bin/check-shell-config too.
+for _tool in fnox pitchfork; do
+	_bench_first_call "$_tool"
+done
+unset _tool
+
+echo
+_info "Done."
