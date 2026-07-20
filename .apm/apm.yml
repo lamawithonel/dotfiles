@@ -1,0 +1,50 @@
+---
+name: home
+version: 0.0.0
+dependencies:
+  apm:
+    - DietrichGebert/ponytail
+    - JuliusBrussee/caveman
+    - shadcn/improve
+    - anthropics/skills/skills/skill-creator
+    - microsoft/playwright-cli/skills/playwright-cli
+    - mattpocock/skills/skills/productivity/writing-great-skills
+    - lamawithonel/karpathy-autoresearch-skill
+  mcp:
+    # DeepWiki -- Free hosted Q&A and code search over any public GitHub repo
+    # https://deepwiki.com
+    - name: deepwiki
+      registry: false
+      transport: streamable-http
+      url: https://mcp.deepwiki.com/mcp
+
+    # GitMCP -- Free hosted MCP endpoint for any GitHub repo, no setup needed
+    # https://gitmcp.io
+    - name: gitmcp
+      registry: false
+      transport: streamable-http
+      url: https://gitmcp.io/docs
+
+    # Context7 -- Hosted service providing up-to-date library and API docs
+    # https://context7.com/dashboard
+    - name: context7
+      registry: false
+      transport: streamable-http
+      url: https://mcp.context7.com/mcp
+      headers:
+        CONTEXT7_API_KEY: ${env:CONTEXT7_API_KEY}
+
+    # paper-search -- Local MCP search service for scholarly papers
+    # https://github.com/openags/paper-search-mcp
+    - name: paper-search
+      registry: false
+      transport: stdio
+      command: paper-search-mcp
+      env:
+        PAPER_SEARCH_MCP_CORE_API_KEY: '${PAPER_SEARCH_MCP_CORE_API_KEY}'
+        PAPER_SEARCH_MCP_DOAJ_API_KEY: '${PAPER_SEARCH_MCP_DOAJ_API_KEY}'
+        PAPER_SEARCH_MCP_IEEE_API_KEY: '${PAPER_SEARCH_MCP_IEEE_API_KEY}'
+        PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: '${PAPER_SEARCH_MCP_UNPAYWALL_EMAIL}'
+        PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: '${PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY}'
+includes: auto
+scripts: {}
