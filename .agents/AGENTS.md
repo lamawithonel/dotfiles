@@ -33,6 +33,33 @@ requests otherwise:
   3 decoupled subsystems, it must halt immediately, output an execution map,
   and return control to the coordinator for finer task partitioning.
 
+## Project-level Host-Local Directories
+
+If a project directory has no declared host-local directory scheme...
+
+- Use `.local/share/` for host-local data (
+- Use `.local/state/` for host-local state
+- Use `.cache/` for host-local temporary files
+- Add them to `.gitignore` to make them host-local, falling back to more
+  specific sub-directories or file patterns if the project uses the directories.
+- Use the XDG base dir specification guidelines when selecting the correct
+  directory.  The directories intentionally mimic the XDG base dir spec to
+  make this classification easy.
+
+## Long-Context Recovery
+
+To recover from crashes or paused sessions...
+
+- Keep a YAML-formatted project journal at `.local/state/agents/journal/<YYYY-MM-DD>.md`
+- Log a journal entry on each turn that edits or deletes a project file.
+- Use `.cache/agents/` as a project-level scratchpad.
+- **DO NOT** use session IDs in path or file names.
+- **DO** use session IDs in file entry headers, metadata, comments, etc.
+- **DO NOT** eagerly read every journal file.
+- **DO** look for and read the latest file at session start.
+- **DO** inform the user if there are files older than 2 weeks old.
+- **DO NOT** trim or purge the directories without asking the user.
+
 ## English Writing Style Guide
 
 - Use two spaces after sentences for readability.  Most text is rendered
@@ -102,6 +129,25 @@ python -c "import os, subprocess; r = subprocess.run(['do-the-thing', 'with', 'a
 - The message body should focus on the intent, motivation, and decisions.
 - Use Git trailers for metadata and references: `Co-authored-by:`,
   `See-also:`, etc.
+
+## Host-Local Project Directories
+
+If a project has not yet declared a specification, use use this directory
+scheme for host-local files:
+
+- `.local/share/` for host-local data 
+- `.local/state/` for host-local state
+- `.cache/` for host-local temporary files
+
+If they are not already used by the project, add these directory patterns
+to the project `.gitignore` on first use or creation of a nested file:
+
+- `.local/`
+- `.cache/`
+
+If the project already uses them and they cannot be safely git-ignored, add
+the next deepest level that can be safely added, for example, `.local/state/`
+if it is unused or `.local/state/<slug>/` if `.local/state/` is used.
 
 ## Tool Preferences
 
