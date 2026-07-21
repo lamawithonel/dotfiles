@@ -74,6 +74,40 @@ To recover from crashes or paused sessions...
   it in place of parentheses or commas.
 - Semicolons are OK when used correctly; they fall flat when overused.
 
+## Agent Prompt Style
+
+- **ALWAYS** use XML-style prompts when crafting instructions for agents.
+- Always start with a `<persona>` section to illicit the desired behavior
+  unless starting from a pre-defined agent persona.
+- **ALWAYS** use a `<prompt>` section for the primary instructions.
+- Use a `<context>` section to orient agents.
+- Use `<return>` with an optional `<template>` to specify return expectations.
+- Use other tags as needed.  Tags are informal with no set schema.
+- Tags may be nested and may include arbitrary parameters.
+
+Example:
+
+```
+<persona name="Mr. Robot">
+You are a...
+</persona>
+
+<context>
+...
+</context>
+
+<prompt>
+...
+</prompt>
+
+<return>
+Return instructions...
+  <template>
+  ...
+  </template>
+</return template>
+```
+
 ## Code Repository Comprehension
 
 When the user points you at a different repository (by path or URL):
@@ -84,17 +118,14 @@ When the user points you at a different repository (by path or URL):
 
 ## No Inline Shell Scripts
 
-- **NEVER use `bash -c`, `sh -c`, `zsh -c`, `dash -c`, or `ksh -c`.**
-- Prefer inline Python scripts or temporary shell script files.
-- Save all temporary scripts to "$TMPDIR/{{namespaced-dir}}".  Front-load
-  TMPDIR variable discovery and hard-code the path thereafter.
-- Do not use shell expansions, even variables.  Prefer Python when they are
-  needed.
+- **NEVER** use `bash -c`, `sh -c`, or other POSIX-like shells with `-c`.
+- Prefer `python -c` or temporary shell script files.
+- Do not use shell expansion features with `Bash()`, not even variables.
 
 Bad:
 
 ```sh
-cd /path/to/thing && VAL=var do-the-thing with arguments | grep 'what I want'
+sh -c "cd /path/to/thing && VAL=var do-the-thing with arguments | grep 'what I want'"
 ```
 
 Good:
@@ -103,19 +134,12 @@ Good:
 python -c "import os, subprocess; r = subprocess.run(['do-the-thing', 'with', 'arguments'], cwd='/path/to/thing', env={**os.environ, 'VAR': 'val'}, capture_output=True, text=True); print('\n'.join(l for l in r.stdout.splitlines() if 'what I want' in l))"
 ```
 <!-- markdownlint-enable -->
-## Temporary Files
-
-- Do not USE `$TMPDIR` in temporary scripts.  Instead, create a temporary
-  directory with `mktemp -d` under the `$TMPDIR/<session-id>` directory.
-- If `$TMPDIR` is not set, use `/tmp/<session-id>` instead.
-- If `mktemp` is not available, create a namespaced temporary directory under
-  `$TMPDIR/<session-id>` or `/tmp/<session-id>`.
 
 ## Software Development Lifecycle
 
-- **Always** use RED -> GREEN testing
-- Always use Behavior-Driven Development (BDD)
-- Obey the Test Pyramid -- Data Types > Units > Services > End-to-End Acceptance
+- **ALWAYS** use RED -> GREEN testing
+- **ALWAYS** use Behavior-Driven Development (BDD)
+- Obey the Test Pyramid: Data Types > Units > Services > End-to-End Acceptance
 
 ## Git Commit Style Guide
 
