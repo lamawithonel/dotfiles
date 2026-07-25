@@ -79,10 +79,12 @@ To recover from crashes or paused sessions...
 - **ALWAYS** use XML-style prompts when crafting instructions for agents.
 - Always start with a `<persona>` section to illicit the desired behavior
   unless starting from a pre-defined agent persona.
-- **ALWAYS** use a `<prompt>` section for the primary instructions.
 - Use a `<context>` section to orient agents.
 - Use `<return>` with an optional `<template>` to specify return expectations.
-- Use other tags as needed.  Tags are informal with no set schema.
+- Use other tags as needed.  Tags are informal with no set schema.  Examples
+  include: `<approach>`, `<deliverables>`, `<example_group>`, `<example>`,
+  `<hard_gates>`, `<kickoff>`, `<role>`, `<scope>`, `<stages>`, `<the_ask>`,
+  `<working_agreement>`, `<success_criteria>`, `<prompt>`, etc.
 - Tags may be nested and may include arbitrary parameters.
 
 Example:
@@ -96,9 +98,13 @@ You are a...
 ...
 </context>
 
-<prompt>
+<the_ask>
 ...
-</prompt>
+  <example_group>
+    <example>...</example>
+    <example>...</example>
+  </example_group>
+</the_ask>
 
 <return>
 Return instructions...
@@ -144,6 +150,7 @@ python -c "import os, subprocess; r = subprocess.run(['do-the-thing', 'with', 'a
 ## Git Commit Style Guide
 
 - One logical change per commit
+- Use Conventional Commits format for the headline: `type(scope): subject`
 - Use Markdown style and formatting for the message body
 - Present tense: "add" not "added"
 - Imperative mood: "fix bug" not "fixes bug"
