@@ -1,6 +1,9 @@
 ---
 name: home
 version: 0.0.0
+targets:
+  - agent-skills
+  - codex
 dependencies:
   apm:
     - DietrichGebert/ponytail
