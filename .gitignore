@@ -7,3 +7,5 @@
 *.local.toml
 *.local.yaml
 .pi-subagents/
+
+!**/.yadmkeep
