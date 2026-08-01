@@ -5,11 +5,13 @@ dependencies:
   apm:
     - DietrichGebert/ponytail
     - JuliusBrussee/caveman
-    - shadcn/improve
     - anthropics/skills/skills/skill-creator
-    - microsoft/playwright-cli/skills/playwright-cli
-    - mattpocock/skills/skills/productivity/writing-great-skills
     - lamawithonel/karpathy-autoresearch-skill
+    - mattpocock/skills/skills/productivity/writing-great-skills
+    - microsoft/playwright-cli/skills/playwright-cli
+    - modular/skills/mojo-python-interop
+    - modular/skills/mojo-syntax
+    - shadcn/improve
   mcp:
     # DeepWiki -- Free hosted Q&A and code search over any public GitHub repo
     # https://deepwiki.com

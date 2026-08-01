@@ -34,6 +34,7 @@ bun = "latest"
 "pipx:github/spec-kit" = "latest"
 "pipx:graphifyy" = "latest"
 "pipx:headroom-ai" = { version = "latest", extras = "all,vector" }
+"pipx:mojo" = { version = "latest", uvx_args = "--prerelease allow" }
 ast-grep = "latest"
 aws-cli = { version = "latest", symlink_bins = "true" }
 bat = "latest"
