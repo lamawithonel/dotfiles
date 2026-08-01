@@ -9,7 +9,6 @@ dependencies:
     - DietrichGebert/ponytail
     - JuliusBrussee/caveman
     - anthropics/skills/skills/skill-creator
-    - lamawithonel/karpathy-autoresearch-skill
     - mattpocock/skills/skills/productivity/writing-great-skills
     - microsoft/playwright-cli/skills/playwright-cli
     - modular/skills/mojo-python-interop
