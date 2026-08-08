@@ -1,5 +1,5 @@
 ---
-name: English Writing Style Guide
+name: english-writing-style-guide
 description: |
   The user's authoritative writing style guide.  Apply these rules when writing
   any English prose, including, but not limited to, code comments, commit
