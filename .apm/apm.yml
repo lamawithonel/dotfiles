@@ -3,6 +3,7 @@ name: home
 version: 0.0.0
 targets:
   - agent-skills
+  - claude
   - codex
 dependencies:
   apm:
@@ -50,5 +51,16 @@ dependencies:
         PAPER_SEARCH_MCP_IEEE_API_KEY: '${PAPER_SEARCH_MCP_IEEE_API_KEY}'
         PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: '${PAPER_SEARCH_MCP_UNPAYWALL_EMAIL}'
         PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: '${PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY}'
+
+    # Serena -- Semantic tools
+    # https://github.com/oraios/serena
+    - name: serena
+      registry: false
+      transport: stdio
+      command: serena
+      args:
+        - start-mcp-server
+        - --context=ide
+        - --project-from-cwd
 includes: auto
 scripts: {}
