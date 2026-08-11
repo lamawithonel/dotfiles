@@ -1,0 +1,570 @@
+{
+  "schema_version": 1,
+  "updated_at": "2026-08-11T10:00:07Z",
+  "notes": [
+    "GLOBAL benchmark and public-pricing facts, keyed by public model identity.",
+    "SYNCABLE: same content on every machine; safe to track in yadm.",
+    "Refreshed headlessly by skills/model-router/scripts/refresh-benchmarks.py (pitchfork daemon 'benchmarks-refresh', 6-hourly).",
+    "Host rosters live in the host-local ~/.agents/models.json, which references these identities via public_id.",
+    "Every numeric value is fetched from a source below; null = not published or not matched, never estimated.",
+    "match.* values are fetch keys (leaderboard display names, API slugs), not data; a wrong key yields null, never a wrong number.",
+    "ELO-scale values (eq_bench, design_arena) only update on drift >= 10 points to avoid churn."
+  ],
+  "sources": {
+    "pricing": {
+      "name": "OpenRouter models API",
+      "url": "https://openrouter.ai/api/v1/models",
+      "fetch": "GET; .data[].pricing is USD per token; multiply by 1e6; negative pricing is a routing-alias sentinel, never store it",
+      "as_of": "2026-08-11"
+    },
+    "terminal_bench": {
+      "name": "Terminal-Bench leaderboard",
+      "url": "https://www.tbench.ai/leaderboard/terminal-bench/2.1",
+      "fetch": "GET page; join self.__next_f.push([1,\"...\"]) flight chunks, unescape, read rows (agent_display.label, model_display.label, metrics.accuracy in percent)",
+      "primary_version": "2.1",
+      "comparability": "scores only comparable within one version; rows with benchmark_versions markers are excluded from scoring",
+      "multi_row_rule": "when a model has rows under multiple agent harnesses, store its best score and record the agent in benchmark_notes",
+      "as_of": "2026-08-11"
+    },
+    "deep_swe": {
+      "name": "Datacurve DeepSWE leaderboard v1.1",
+      "url": "https://deepswe.datacurve.ai/",
+      "fetch": "GET; v1.1 table is server-rendered HTML (model, Pass@1 percent); all rows use the mini-swe-agent harness; distinct from the 2025 Agentica/Together 'DeepSWE' RL agent",
+      "as_of": "2026-08-11"
+    },
+    "artificial_analysis": {
+      "name": "Artificial Analysis Intelligence Index v4.1.1",
+      "url": "https://artificialanalysis.ai/models",
+      "fetch": "per-model pages https://artificialanalysis.ai/models/<slug> with a browser User-Agent contain the sentence '<name> scores N on the Artificial Analysis Intelligence Index'; keyed API v2 preferred when AA_API_KEY is set",
+      "as_of": "2026-08-11"
+    },
+    "eq_bench": {
+      "name": "EQ-Bench 4",
+      "url": "https://eqbench.com/eqbench4/eqbench4_data.js",
+      "fetch": "GET; drop leading //-comment line, strip 'const EQBENCH4_DATA = ' prefix and trailing ';', parse JSON; .models[] carries {model, elo}",
+      "as_of": "2026-08-11"
+    },
+    "design_arena": {
+      "name": "Design Arena, Website category",
+      "url": "https://www.designarena.ai/api/leaderboard",
+      "fetch": "POST {\"arenaType\":\"models\",\"category\":\"website\"}; GET returns 405; .data[] carries {modelId, elo}; recomputes ~2-hourly so a 10-point drift threshold damps churn",
+      "as_of": "2026-08-11"
+    }
+  },
+  "models": {
+    "claude-fable-5": {
+      "display": "Claude Fable 5",
+      "match": {
+        "openrouter": "anthropic/claude-fable-5",
+        "aa_slug": "claude-fable-5",
+        "tb": [
+          "Fable 5"
+        ],
+        "deepswe": [
+          "claude-fable-5"
+        ],
+        "eqbench": [
+          "claude-fable-5"
+        ],
+        "designarena": [
+          "claude-fable-5"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 10.0,
+        "completion_cost_per_m": 50.0,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 62,
+        "terminal_bench_score": 83.82,
+        "deep_swe_score": 70,
+        "eq_bench_score": 1340.4,
+        "design_arena_score": 1327
+      },
+      "benchmark_notes": {
+        "terminal_bench_score": "TB 2.1, Claude Code agent (best row)",
+        "artificial_analysis_index": "'Adaptive Reasoning, Max Effort, Opus 4.8 Fallback' config"
+      }
+    },
+    "claude-opus-5": {
+      "display": "Claude Opus 5",
+      "match": {
+        "openrouter": "anthropic/claude-opus-5",
+        "aa_slug": "claude-opus-5",
+        "tb": [
+          "Opus 5",
+          "Claude Opus 5"
+        ],
+        "deepswe": [
+          "claude-opus-5"
+        ],
+        "eqbench": [
+          "claude-opus-5"
+        ],
+        "designarena": [
+          "claude-opus-5"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 5.0,
+        "completion_cost_per_m": 25.0,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 63,
+        "terminal_bench_score": null,
+        "deep_swe_score": 74,
+        "eq_bench_score": 1385,
+        "design_arena_score": 1337
+      },
+      "benchmark_notes": {
+        "terminal_bench_score": "absent from TB boards as of 2026-08-09"
+      }
+    },
+    "claude-opus-4.8": {
+      "display": "Claude Opus 4.8",
+      "match": {
+        "openrouter": "anthropic/claude-opus-4.8",
+        "aa_slug": "claude-opus-4-8",
+        "tb": [
+          "Opus 4.8",
+          "Claude Opus 4.8"
+        ],
+        "deepswe": [
+          "claude-opus-4-8"
+        ],
+        "eqbench": [
+          "claude-opus-4-8"
+        ],
+        "designarena": [
+          "claude-opus-4-8"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 5.0,
+        "completion_cost_per_m": 25.0,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 57,
+        "terminal_bench_score": 78.88,
+        "deep_swe_score": null,
+        "eq_bench_score": 1281.4,
+        "design_arena_score": 1271
+      },
+      "benchmark_notes": {
+        "all": "identity added for restricted work-host rosters; values populate on the next refresh run",
+        "terminal_bench_score": "TB 2.1, Claude Code agent (best row)"
+      }
+    },
+    "claude-sonnet-5": {
+      "display": "Claude Sonnet 5",
+      "match": {
+        "openrouter": "anthropic/claude-sonnet-5",
+        "aa_slug": "claude-sonnet-5",
+        "tb": [
+          "Sonnet 5",
+          "Claude Sonnet 5"
+        ],
+        "deepswe": [
+          "claude-sonnet-5"
+        ],
+        "eqbench": [
+          "claude-sonnet-5"
+        ],
+        "designarena": [
+          "claude-sonnet-5"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 2.0,
+        "completion_cost_per_m": 10.0,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 55,
+        "terminal_bench_score": 74.61,
+        "deep_swe_score": 54,
+        "eq_bench_score": 1236,
+        "design_arena_score": 1297
+      },
+      "benchmark_notes": {
+        "terminal_bench_score": "TB 2.1, Claude Code agent"
+      }
+    },
+    "claude-haiku-4.5": {
+      "display": "Claude Haiku 4.5",
+      "match": {
+        "openrouter": "anthropic/claude-haiku-4.5",
+        "aa_slug": "claude-4-5-haiku-reasoning",
+        "tb": [
+          "Claude Haiku 4.5"
+        ],
+        "deepswe": [
+          "claude-haiku-4-5"
+        ],
+        "eqbench": [
+          "claude-haiku-4-5-20251001"
+        ],
+        "designarena": [
+          "claude-haiku-4-5"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 1.0,
+        "completion_cost_per_m": 5.0,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 30,
+        "terminal_bench_score": 28.31,
+        "deep_swe_score": null,
+        "eq_bench_score": 1063.9,
+        "design_arena_score": 1144
+      },
+      "benchmark_notes": {
+        "terminal_bench_score": "TB 2.0 -- version differs from primary 2.1; EXCLUDED from scoring",
+        "artificial_analysis_index": "Claude 4.5 Haiku (Reasoning) config"
+      },
+      "benchmark_versions": {
+        "terminal_bench_score": "2.0"
+      }
+    },
+    "deepseek-v4-pro": {
+      "display": "DeepSeek V4 Pro",
+      "match": {
+        "openrouter": "deepseek/deepseek-v4-pro",
+        "aa_slug": "deepseek-v4-pro",
+        "tb": [
+          "DeepSeek V4 Pro"
+        ],
+        "deepswe": [
+          "deepseek-v4-pro"
+        ],
+        "eqbench": [
+          "deepseek-v4-pro"
+        ],
+        "designarena": [
+          "deepseek-v4-pro"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 0.63168,
+        "completion_cost_per_m": 1.26336,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 45,
+        "terminal_bench_score": null,
+        "deep_swe_score": null,
+        "eq_bench_score": 1165.7,
+        "design_arena_score": 1259
+      }
+    },
+    "deepseek-v4-flash": {
+      "display": "DeepSeek V4 Flash",
+      "match": {
+        "openrouter": "deepseek/deepseek-v4-flash",
+        "aa_slug": null,
+        "tb": [
+          "DeepSeek V4 Flash"
+        ],
+        "deepswe": [
+          "deepseek-v4-flash"
+        ],
+        "eqbench": [
+          "deepseek-v4-flash"
+        ],
+        "designarena": [
+          "deepseek-v4-flash"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 0.14,
+        "completion_cost_per_m": 0.28,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": null,
+        "terminal_bench_score": null,
+        "deep_swe_score": 53,
+        "eq_bench_score": null,
+        "design_arena_score": 1230
+      },
+      "benchmark_notes": {
+        "artificial_analysis_index": "AA's deepseek-v4-flash slug aliases the 0731 snapshot; the separate non-reasoning row does not count",
+        "deep_swe_score": "DeepSWE's undated 'deepseek-v4-flash' row credited here, not to 0731"
+      }
+    },
+    "deepseek-v4-flash-0731": {
+      "display": "DeepSeek V4 Flash 0731",
+      "match": {
+        "openrouter": "deepseek/deepseek-v4-flash-0731",
+        "aa_slug": "deepseek-v4-flash",
+        "tb": [
+          "DeepSeek V4 Flash 0731"
+        ],
+        "deepswe": [
+          "deepseek-v4-flash-0731"
+        ],
+        "eqbench": [
+          "deepseek-v4-flash-0731"
+        ],
+        "designarena": [
+          "deepseek-v4-flash-0731"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 0.08,
+        "completion_cost_per_m": 0.18,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 52,
+        "terminal_bench_score": null,
+        "deep_swe_score": null,
+        "eq_bench_score": null,
+        "design_arena_score": 1259
+      },
+      "benchmark_notes": {
+        "artificial_analysis_index": "AA serves this snapshot from the deepseek-v4-flash slug"
+      }
+    },
+    "glm-5.2": {
+      "display": "GLM-5.2",
+      "match": {
+        "openrouter": "z-ai/glm-5.2",
+        "aa_slug": "glm-5-2",
+        "tb": [
+          "GLM-5.2"
+        ],
+        "deepswe": [
+          "glm-5.2"
+        ],
+        "eqbench": [
+          "glm-5.2"
+        ],
+        "designarena": [
+          "glm-5.2"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 0.76,
+        "completion_cost_per_m": 2.42,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 53,
+        "terminal_bench_score": null,
+        "deep_swe_score": 44,
+        "eq_bench_score": 1221.9,
+        "design_arena_score": 1336
+      },
+      "benchmark_notes": {
+        "terminal_bench_score": "TB 2.1 lists GLM-5.1 only; variant scores do not transfer"
+      }
+    },
+    "minimax-m3": {
+      "display": "MiniMax M3",
+      "match": {
+        "openrouter": "minimax/minimax-m3",
+        "aa_slug": "minimax-m3",
+        "tb": [
+          "MiniMax M3"
+        ],
+        "deepswe": [
+          "minimax-m3"
+        ],
+        "eqbench": [
+          "minimax-m3"
+        ],
+        "designarena": [
+          "minimax-m3"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 0.3,
+        "completion_cost_per_m": 1.2,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 45,
+        "terminal_bench_score": null,
+        "deep_swe_score": null,
+        "eq_bench_score": 1149.7,
+        "design_arena_score": 1284
+      }
+    },
+    "inkling": {
+      "display": "Inkling",
+      "match": {
+        "openrouter": "thinkingmachines/inkling",
+        "aa_slug": "inkling",
+        "tb": [
+          "Inkling"
+        ],
+        "deepswe": [
+          "inkling"
+        ],
+        "eqbench": [
+          "Inkling"
+        ],
+        "designarena": [
+          "inkling"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 0.95,
+        "completion_cost_per_m": 4.05,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 42,
+        "terminal_bench_score": null,
+        "deep_swe_score": null,
+        "eq_bench_score": 1225.8,
+        "design_arena_score": 1235
+      },
+      "benchmark_notes": {
+        "artificial_analysis_index": "listed as 'Inkling (xhigh)'"
+      }
+    },
+    "mimo-v2.5-pro": {
+      "display": "MiMo V2.5 Pro",
+      "match": {
+        "openrouter": "xiaomi/mimo-v2.5-pro",
+        "aa_slug": "mimo-v2-5-pro",
+        "tb": [
+          "MiMo V2.5 Pro"
+        ],
+        "deepswe": [
+          "mimo-v2.5-pro"
+        ],
+        "eqbench": [
+          "mimo-v2.5-pro"
+        ],
+        "designarena": [
+          "mimo-v2.5-pro"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 0.435,
+        "completion_cost_per_m": 0.87,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 43,
+        "terminal_bench_score": null,
+        "deep_swe_score": null,
+        "eq_bench_score": 1208.3,
+        "design_arena_score": 1299
+      }
+    },
+    "mimo-v2.5": {
+      "display": "MiMo V2.5",
+      "match": {
+        "openrouter": "xiaomi/mimo-v2.5",
+        "aa_slug": "mimo-v2-5-0424",
+        "tb": [
+          "MiMo V2.5"
+        ],
+        "deepswe": [
+          "mimo-v2.5"
+        ],
+        "eqbench": [
+          "mimo-v2.5"
+        ],
+        "designarena": [
+          "mimo-v2.5"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 0.14,
+        "completion_cost_per_m": 0.28,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 38,
+        "terminal_bench_score": null,
+        "deep_swe_score": null,
+        "eq_bench_score": null,
+        "design_arena_score": 1291
+      },
+      "benchmark_notes": {
+        "artificial_analysis_index": "served from AA's mimo-v2-5-0424 snapshot slug; displays as 'MiMo-V2.5'",
+        "eq_bench_score": "only the pro variant is on EQ-Bench 4; pro score does not transfer"
+      }
+    },
+    "gpt-5.6-luna": {
+      "display": "GPT-5.6 Luna",
+      "match": {
+        "openrouter": "openai/gpt-5.6-luna",
+        "aa_slug": "gpt-5-6-luna",
+        "tb": [
+          "GPT-5.6 Luna"
+        ],
+        "deepswe": [
+          "gpt-5.6-luna"
+        ],
+        "eqbench": [
+          "gpt-5.6-luna"
+        ],
+        "designarena": [
+          "gpt-5.6-luna"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 0.1,
+        "completion_cost_per_m": 0.6,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 52,
+        "terminal_bench_score": 75.73,
+        "deep_swe_score": 67,
+        "eq_bench_score": 1156.3,
+        "design_arena_score": 1277
+      },
+      "benchmark_notes": {
+        "terminal_bench_score": "TB 2.1, Codex agent",
+        "artificial_analysis_index": "'GPT-5.6 Luna (max)'; do not confuse with 'GPT-5.6 Sol'"
+      }
+    },
+    "gemini-3.1-pro-preview": {
+      "display": "Gemini 3.1 Pro Preview",
+      "match": {
+        "openrouter": "google/gemini-3.1-pro-preview",
+        "aa_slug": "gemini-3-1-pro-preview",
+        "tb": [
+          "Gemini 3.1 Pro"
+        ],
+        "deepswe": [
+          "gemini-3.1-pro"
+        ],
+        "eqbench": [
+          "gemini-3.1-pro-preview"
+        ],
+        "designarena": [
+          "gemini-3.1-pro-preview"
+        ]
+      },
+      "pricing": {
+        "prompt_cost_per_m": 2.0,
+        "completion_cost_per_m": 12.0,
+        "source": "openrouter"
+      },
+      "benchmarks": {
+        "artificial_analysis_index": 48,
+        "terminal_bench_score": 65.84,
+        "deep_swe_score": 12,
+        "eq_bench_score": 1142.3,
+        "design_arena_score": 1255
+      },
+      "benchmark_notes": {
+        "terminal_bench_score": "TB 2.1, Gemini CLI agent (best row)",
+        "deep_swe_score": "listed at effort 'high'"
+      }
+    }
+  }
+}
