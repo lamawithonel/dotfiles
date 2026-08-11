@@ -284,6 +284,10 @@ Return instructions...
 - Use `cargo build`, `cargo embed`, and `probe-rs` for Rust build and flash
   operations-- not mise.
 - Use `gh` to interact with GitHub, NEVER `curl`.
+- Use Podman over Docker for container operations.  Rootless mode is
+  the default.
+- Use SELinux-aware bind mounts (`:Z`) when mounting host paths into
+  containers.
 
 ### Dependency & Third-Party Licensing
 
