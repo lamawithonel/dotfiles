@@ -18,33 +18,115 @@ requests otherwise:
 
 ---
 
-## Hierarchical Agent Limits
+## Runtime Protocol (All Harnesses)
 
-- **Forked Sub-Contexts:** Force worker sub-agents to operate within isolated
-  execution windows.  They must swallow verbose compilation streams internally
-  and return only high-signal results to the parent thread.
-- **State-Stagnation Circuit Breaker:** Sub-agents are allowed up to 12
-  sequential turns to execute complex, multi-step implementations.  However,
-  they MUST immediately self-terminate and yield control if **3 consecutive
-  turns** result in zero state progress (e.g., executing the identical terminal
-  command, repeating a failing edit, or hitting the exact same error boundary).
-- **Early Boundary Escape:** If a sub-agent discovers during its initial
-  context-gathering turn that the assignment requires modifying more than
-  3 decoupled subsystems, it must halt immediately, output an execution map,
-  and return control to the coordinator for finer task partitioning.
+Universal invariants for every harness that loads this file (Claude Code,
+Pi, and future harnesses).  Harness bootstrap files add only native tool
+wiring and MUST NOT restate or override these invariants.
+
+### Context Isolation
+
+- Force worker sub-agents to operate within isolated execution windows.
+- Sub-agents must swallow verbose streams (compilers, test runners,
+  package managers, renderers) internally and return only high-signal
+  results to the parent thread.
+- Parent context receives conclusions, receipts, and `file:line`
+  references-- never raw tool-output dumps.
+
+### Execution Ceilings and Circuit Breakers
+
+- **12-turn ceiling:** sub-agents are allowed up to 12 sequential turns
+  to execute complex, multi-step implementations.
+- **3-turn state-stagnation breaker:** a sub-agent MUST immediately
+  self-terminate and yield control if 3 consecutive turns produce zero
+  state progress (e.g., executing the identical terminal command,
+  repeating a failing edit, or hitting the exact same error boundary).
+- **Early boundary escape:** if a sub-agent discovers during its initial
+  context-gathering turn that the assignment requires modifying more
+  than 3 decoupled subsystems, it must halt immediately, output an
+  execution map, and return control to the coordinator for finer task
+  partitioning.
+
+### Cross-Harness Model Dispatch
+
+Detect the active harness before dispatching model work:
+
+- `CLAUDECODE=1` in the environment -> Claude Code.
+- `PI_CODING_AGENT` or `PI_SESSION_ID` in the environment -> Pi.
+- Neither -> assume no harness sub-agent tools; use CLI shell-outs only.
+
+Harness availability is per-host, never assumed: an external channel
+exists only if its CLI is actually installed (`command -v pi`,
+`command -v claude`).  Some hosts run Claude Code alone, with a
+restricted private-hosted model set and no Pi at all; on such hosts
+every non-native model is simply unavailable and the router must
+route around it.
+
+Native models dispatch through the harness's own sub-agent tools; all
+other models shell out to the other harness's CLI where that CLI is
+installed:
+
+| Harness     | Native models              | Native channel     | External channel     |
+| ----------- | -------------------------- | ------------------ | -------------------- |
+| Claude Code | Anthropic Claude           | `Agent`/`Workflow` | `pi` CLI shell-out   |
+| Pi          | OpenRouter and `llama-cpp` | Pi sub-agents      | `claude -p` shell-out |
+
+The table shows channel shapes only; the exact command string or tool
+parameters for a given model live in that model's
+`execution.<harness>` block in `~/.agents/models.json`.
+
+Model selection is data-driven-- never pick a delegate model from memory
+or vibes:
+
+- The registry is two files split by sync domain.
+  `~/.agents/models.json` is HOST-LOCAL truth: only the models
+  reachable from this host, under this host's ids and aliases
+  (private-hosted and Bedrock deployments use different ids than
+  consumer plans); never sync it between machines.
+  `~/.agents/benchmarks.json` is GLOBAL truth (benchmark scores and
+  public pricing keyed by public model identity): identical
+  everywhere, safe to sync via dotfiles, refreshed where egress
+  allows and received by sync on restricted hosts.
+- When a task requires delegation, load the `model-router` skill
+  (`~/.agents/skills/model-router/`).  It scores candidates against
+  the two-file registry (real benchmark metrics and live pricing;
+  zero arbitrary rankings).
+- Claude Code specifics (tool parameters, shell-out syntax, outage
+  handling) live in `~/.claude/CLAUDE.md`.
+- Where Pi is installed, it loads this file directly and needs no
+  separate bootstrap; the dispatch table above plus the `model-router`
+  skill fully resolve Pi-side routing.  Pi's scoped model roster is
+  `enabledModels` in `~/.pi/agent/settings.json`.
+
+### Skill Storage
+
+Skills live in `~/.agents/skills/` as the single source of truth.
+Harness skill directories are symlinks into it (e.g., `~/.claude/skills
+-> ../.agents/skills`).  Never install a skill into a harness-private
+directory.
 
 ## Project-level Host-Local Directories
 
-If a project directory has no declared host-local directory scheme...
+If a project directory has no declared host-local directory scheme:
 
-- Use `.local/share/` for host-local data (
+- Use `.local/share/` for host-local data
 - Use `.local/state/` for host-local state
 - Use `.cache/` for host-local temporary files
-- Add them to `.gitignore` to make them host-local, falling back to more
-  specific sub-directories or file patterns if the project uses the directories.
-- Use the XDG base dir specification guidelines when selecting the correct
-  directory.  The directories intentionally mimic the XDG base dir spec to
-  make this classification easy.
+- Use `$TMPDIR/<session-id>` for one-off temporary session files
+- Use the XDG base dir specification guidelines when selecting the
+  correct directory.  The directories intentionally mimic the XDG base
+  dir spec to make this classification easy.
+
+If they are not already used by the project, add these directory patterns
+to the project `.gitignore` on first use or creation of a nested file:
+
+- `.local/`
+- `.cache/`
+
+If the project already uses them and they cannot be safely git-ignored,
+add the next deepest level that can be safely added, for example,
+`.local/state/` if it is unused or `.local/state/<slug>/` if
+`.local/state/` is used.
 
 ## Long-Context Recovery
 
@@ -56,148 +138,129 @@ To recover from crashes or paused sessions...
 - **DO NOT** use session IDs in path or file names.
 - **DO** use session IDs in file entry headers, metadata, comments, etc.
 - **DO NOT** eagerly read every journal file.
-- **DO** look for and read the latest file at session start.
-- **DO** inform the user if there are files older than 2 weeks old.
-- **DO NOT** trim or purge the directories without asking the user.
+- **DO** look for and read the latest journal file at session start.
+- **DO** inform the user if there are journal files older than 2 weeks old.
+- **DO NOT** trim or purge the journal directories without asking the user.
 
 ## English Writing Style Guide
 
-- Use two spaces after sentences for readability.  Most text is rendered
-  with monospace fonts and no kerning, and variable-width rendering systems
-  can collapse the two spaces at render-time.
+- Use two spaces after sentences for readability.  Most code, comments, READMEs,
+  documentation, and LLM text documents render in monospace fonts.  Without
+  proportional fonts and dynamic kerning the modern rule of "use only one
+  space after periods" is moot.  The conditions that led to the older em-space
+  rule exist today and we should honor that rule for readability.  Besides,
+  modern text rendering systems usually collapse the two spaces down at
+  render-time, so it makes little difference for readers that prefer one
+  space over two, it will all look the same in the end.
 - Use an oxford comma in lists of three or more items for clarity, e.g.,
   "A, B, and C".
 - Do not use the unicode em-dash (—).  Instead, use two ASCII hyphens (--).
-- Use zero space before an em-dash and one space after when using it in a
-  sentence.  For example, "A-- B" instead of "A -- B" or "A--B".
 - Use the em-dash sparingly and only when it improves clarity.  Avoid using
   it in place of parentheses or commas.
-- Semicolons are OK when used correctly; they fall flat when overused.
+- Semicolons are great when used correctly; they fall flat when overused.
 
 ## Agent Prompt Style
 
 - **ALWAYS** use XML-style prompts when crafting instructions for agents.
-- Always start with a `<persona>` section to illicit the desired behavior
-  unless starting from a pre-defined agent persona.
-- Use a `<context>` section to orient agents.
+- **ALWAYS** use imperative tone.
+- Always start with a `<persona>` section to elicit desired behavior, except
+  when starting from a pre-defined agent persona.  The persona is not a role.
+  The persona should "tickle the tensors" and "poke the weights," using words
+  and phrases to activate relevant model embeddings and experts.  Define
+  the personality in terms of integral theory's four quadrants.
+- Use a `<role>` section to define the agent's role and responsibilities.
+- Use a `<context>` section to orient agent.
 - Use `<return>` with an optional `<template>` to specify return expectations.
 - Use other tags as needed.  Tags are informal with no set schema.  Examples
   include: `<approach>`, `<deliverables>`, `<example_group>`, `<example>`,
-  `<hard_gates>`, `<kickoff>`, `<role>`, `<scope>`, `<stages>`, `<the_ask>`,
+  `<hard_gates>`, `<kickoff>`, `<scope>`, `<stages>`, `<the_ask>`,
   `<working_agreement>`, `<success_criteria>`, `<prompt>`, etc.
 - Tags may be nested and may include arbitrary parameters.
+- Place tags on their own lines, except for extremely short lines.
+- Use blank lines between top-level sections.
 
 Example:
 
-```
+```xml
 <persona name="Mr. Robot">
-You are a...
+You think...          # (Interior-Individual)
+You behave...         # (Exterior-Individual)
+You relate to/with... # (Interior-Collective)
+You participate...    # (Exterior-Collective)
 </persona>
+
+<role>
+You are a...
+</role>
 
 <context>
 ...
 </context>
 
 <the_ask>
-...
+Summary...
   <example_group>
-    <example>...</example>
-    <example>...</example>
+    <example>short example...</example>
+    <example>single-line example...</example>
+    <example>
+      longer
+      multi-line
+      text
+    </example>
   </example_group>
 </the_ask>
 
 <return>
 Return instructions...
   <template>
-  ...
+    ...
   </template>
-</return template>
+</return>
 ```
-
-## Code Repository Comprehension
-
-When the user points you at a different repository (by path or URL):
-
-- Read `AGENTS.md` at the repo root first.
-- If `AGENTS.md` does NOT exist, fall back to `README.md` for orientation.
-- **NEVER crawl an entire repo to understand it!**
-
-## No Inline Shell Scripts
-
-- **NEVER** use `bash -c`, `sh -c`, or other POSIX-like shells with `-c`.
-- Prefer `python -c` or temporary shell script files.
-- Do not use shell expansion features with `Bash()`, not even variables.
-
-Bad:
-
-```sh
-sh -c "cd /path/to/thing && VAL=var do-the-thing with arguments | grep 'what I want'"
-```
-
-Good:
-<!-- markdownlint-disable MD013 -->
-```python
-python -c "import os, subprocess; r = subprocess.run(['do-the-thing', 'with', 'arguments'], cwd='/path/to/thing', env={**os.environ, 'VAR': 'val'}, capture_output=True, text=True); print('\n'.join(l for l in r.stdout.splitlines() if 'what I want' in l))"
-```
-<!-- markdownlint-enable -->
 
 ## Software Development Lifecycle
 
 - **ALWAYS** use RED -> GREEN testing
 - **ALWAYS** use Behavior-Driven Development (BDD)
-- Obey the Test Pyramid: Data Types > Units > Services > End-to-End Acceptance
+- **ALWAYS** adhere to the Test Pyramid (highest volume first):
+  1. Static Checks (Types & Linting)
+  2. Unit Tests (Isolated logic, fast mocks)
+  3. Integration Tests (Real DB, disk, or local I/O)
+  4. Contract Tests (API schemas & service boundaries)
+  5. E2E Tests (Full system workflows)
 
-## Git Commit Style Guide
+## Version Control & Workspace Directives
 
-- One logical change per commit
-- Use Conventional Commits format for the headline: `type(scope): subject`
-- Use Markdown style and formatting for the message body
-- Present tense: "add" not "added"
-- Imperative mood: "fix bug" not "fixes bug"
-- Reference issues: `Closes: #KEY-123`, `Refs: #KEY-456`
-- Keep headline concise, under 50 characters if possible, no more than
-  72 characters at maximum
-- The message body should focus on the intent, motivation, and decisions.
-- Use Git trailers for metadata and references: `Co-authored-by:`,
-  `See-also:`, etc.
-
-## Host-Local Project Directories
-
-If a project has not yet declared a specification, use use this directory
-scheme for host-local files:
-
-- `.local/share/` for host-local data 
-- `.local/state/` for host-local state
-- `.cache/` for host-local temporary files
-
-If they are not already used by the project, add these directory patterns
-to the project `.gitignore` on first use or creation of a nested file:
-
-- `.local/`
-- `.cache/`
-
-If the project already uses them and they cannot be safely git-ignored, add
-the next deepest level that can be safely added, for example, `.local/state/`
-if it is unused or `.local/state/<slug>/` if `.local/state/` is used.
+1. **Conditional VCS Routing**: Route code mutations, diff analyses, and
+   task checkpoints through `vcs-workflow` ONLY when operating within a
+   version-controlled repository (presence of `.git` or `.jj`) or when
+   initializing VCS.
+2. **Un-tracked Workspace Exemption**: Skip VCS workflows during early planning,
+   brainstorming, research, or non-repository chat sessions.
+3. **History Integrity**: Within tracked repositories, enforce non-destructive
+   workspace operations and never pollute commit history with unverified
+   intermediate states.
+4. **Commit Serialization**: Hand off strictly to `git-commit` for final
+   commit formatting and history serialization after verification gates pass.
 
 ## Tool Preferences
 
 - Use mise as the primary task runner and devtool dependency manager
 - Use language-specific package managers for project dependency management
 - Use `cargo build`, `cargo embed`, and `probe-rs` for Rust build and flash
-  operations — not mise.
-- Use `gh` to interact with GitHub, do not use `curl` even for single files.
+  operations-- not mise.
+- Use `gh` to interact with GitHub, NEVER `curl`.
 
-### Open Source Software Selection
+### Dependency & Third-Party Licensing
 
-Follow these rules when selecting open source software for use in a project.
+When selecting, adding, or installing dependencies, external packages, or
+source code:
 
-- Prefer software licensed using a permissive license with patent protections,
-  like Apache-2.0, or simple permissive licenses, like MIT or BSD.
-- Notify the user when a core component uses any copyleft license, e.g.,
-  GPL-2.0, LGPL-2.1, MPL-2.0, AGPL-3.0, CDDL-1.1, etc.
-- Ask before adding tools or components that use strong copyleft licenses,
-  e.g., AGPL-3.0, GPL-3.0, SSPL-1.0, etc.
-- Ask before adding tools or components that use mixed-license "freemium"
-  or "shareware" software, e.g., open core with proprietary add-ons, BUSL-1.1,
-  "Commons Clause", RSALv2, etc.
+* **Permissive Default:** Permissive software (Apache-2.0, BSD, MIT) is
+  auto-approved.
+* **Non-Permissive / Complex Licenses:** Do not install or import strong
+  copyleft, source-available, or unverified packages without checking compliance.
+* **Skill Trigger:** Before editing lockfiles (`package.json`, `Cargo.toml`,
+  `go.mod`, etc.), adding imports, or executing package installs, you **MUST
+  load and execute the `license-compliance` skill** to classify the license
+  tier and follow its execution instructions.
