@@ -1,0 +1,216 @@
+---
+name: Prosody and Rhetorical Architecture
+description: |
+  Systematic frameworks for composing structured verse, metrical poetry,
+  and high-impact persuasive prose.  Use this guide when the user asks for
+  poetry, poetic verse, poetic style, emotive writing, or otherwise emotional
+  writing, or when making strong rhetorical appeals, writing persuasive copy
+  such as presentations or product front pages, or developing high-authority
+  narrative framing.
+user-invocable: false
+---
+# Poetic Writing Guide
+
+## Prosaic Writing
+
+When not asked for verse, use elements of this guide to express emotion,
+develop atmosphere, and captivate the reader maintaining prosaic form.
+
+## Verse Selection System Rules
+
+When instructed to compose structured verse, analyze the target emotional
+state, pacing requirements, and structural goals, then apply the corresponding
+prosodic architecture below.
+
+### Epigrammatic Aphoristic Assertion
+* **Trigger Context:** High-stakes persuasion, establishing instant authority,
+  shifting framed narratives, or delivering memorable, conclusive declarations.
+* **Mechanical Execution:**
+  * Construct short, highly memorable, self-contained declarative maxims
+    structured as universal truths.
+  * Reframe broad or abstract concepts into direct, engineered human constructs.
+  * Employ parallel syntactic structures (e.g., *"If you don't like [X],
+    change [Y]"*) to project unshakeable authority and force a complete shift
+    in perspective.
+
+### Pathos-Dominant Nostalgia Architecture
+* **Trigger Context:** Deep emotional resonance, memory activation, high-impact
+  persuasive presentations, or profound personal alignment.
+* **Mechanical Execution:**
+  * Open by reframing a functional or technical concept into a psychological
+    or emotional artifact.
+  * Execute an emotional pivot (*volta*) that redirects focus away from
+    objective features toward internal memory, longing, or belonging.
+  * Anchor the conclusion on a deeply personal, universal human experience
+    (e.g., the quiet ache of memory, the safety of returning home, or feeling
+    understood).
+
+### Paratactic Modernist Cadence
+* **Trigger Context:** Crisp, unshakeable assertions, modern executive copy,
+  or rhythmic, understated persuasion.
+* **Mechanical Execution:**
+  * Stack short, simple, independent clauses sequentially without subordinating
+    conjunctions (*parataxis*).
+  * Rely on stark, bold nouns and concise adjectives arranged in deliberate
+    rhythmic beats.
+  * Incorporate strategic structural pauses (cadenced pauses or caesuras)
+    between brief statements to force the audience to fully absorb each
+    assertion individually.
+
+### Petrarchan (Italian) Sonnet
+* **Trigger Context:** High-concept fixation, single-subject devotion,
+  idealization, or intense psychological longing.
+* **Mechanical Execution:**
+  * Output exactly 14 lines in iambic pentameter.
+  * Construct an 8-line octave (`ABBA ABBA`) followed by a 6-line sestet
+    (`CDECDE` or `CDCDCD`).
+  * Execute a sharp turn in thought or perspective (*volta*) precisely between
+    lines 8 and 9 to release the structural tension accumulated in the octave.
+
+### Spenserian Stanza
+* **Trigger Context:** Slow sensory immersion, tactile atmosphere, luxurious
+  physical detail, or lingering languor.
+* **Mechanical Execution:**
+  * Construct 9-line stanzas with an interlocking rhyme scheme of `ABABBCCBC`.
+  * Write lines 1–8 in standard iambic pentameter (10 syllables).
+  * Extend line 9 into an Alexandrine (iambic hexameter, 12 syllables).  Use
+    the additional two syllables to deliberately stretch vocal delivery and
+    prolong moments of sensory focus.
+
+### Ottava Rima
+* **Trigger Context:** Playful, conversational momentum, witty banter, social
+  intrigue, or knowing rapport.
+* **Mechanical Execution:**
+  * Construct 8-line stanzas in iambic pentameter rhyming `ABABABCC`.
+  * Maintain a rolling, energetic cadence across the first six lines (`ABABAB`).
+  * Deploy the final rhyming couplet (`CC`) to deliver a sharp turn, subtle
+    dual implication, or witty closing punchline.
+
+### Loose / Enjambed Heroic Couplets
+* **Trigger Context:** Fluid, continuous narrative flow, dreamlike atmospheric
+  transitions, or breathless sensory cascades.
+* **Mechanical Execution:**
+  * Compose in paired rhyming lines (`AABBCC...`) using iambic pentameter.
+  * Systematically avoid closed couplets by employing heavy enjambment, allowing
+    syntax and clauses to spill over line breaks.
+  * Integrate occasional feminine (unstressed) line endings to soften cadence
+    transitions.
+
+### Truncated Ballad Stanza
+* **Trigger Context:** Hypnotic enchantment, spellbinding presence, magnetic
+  allure, or trance-like vulnerability.
+* **Mechanical Execution:**
+  * Compose 4-line quatrains rhyming `ABCB` or `ABAB`.
+  * Maintain 4-stress tetrameter for lines 1–3, then abruptly cut line 4
+    down to 2-stress dimeter.
+  * Use the resulting metric silence at the end of the stanza to simulate
+    a missing beat or quiet pause.
+
+### Keatsian Ode Stanza
+* **Trigger Context:** Deep, reflective meditation, heavy sensory density,
+  complex mood exploration, or intoxicating visual richness.
+* **Mechanical Execution:**
+  * Construct 10-line stanzas in iambic pentameter rhyming `ABABCDECDE`.
+  * Open with a melodic `ABAB` quatrain hook.
+  * Transition into a 6-line `CDECDE` sestet, providing structural room to
+    linger on complex imagery without pressure to resolve rapidly.
+
+### Trochaic Tetrameter Catalectic
+* **Trigger Context:** Driving, pulse-like urgency, incantatory persuasion,
+  magnetic appeals, or spell-like rhythmic pressure.
+* **Mechanical Execution:**
+  * Compose 7- to 8-syllable lines using trochaic feet (`DUM-da`), rhyming
+    `AABB` or `ABAB`.
+  * Front-load line stresses by starting each line on an accented syllable.
+  * Apply catalexis by truncating the final unstressed syllable of the line
+    to keep the cadence sharp, driving, and insistent.
+
+### Anapestic Lyric Meter
+* **Trigger Context:** Swaying, effortless motion, whispering closeness,
+  musical lightness, or rhythmic physical fluidity.
+* **Mechanical Execution:**
+  * Compose short 3- or 4-beat quatrains (`ABAB` or `AABB`) using anapestic
+    feet (`da-da-DUM`) mixed with iambs.
+  * Utilize double unstressed syllables to accelerate vocal delivery prior
+    to hitting stressed syllables.
+  * Maintain an undulating, rolling rhythm that mimics natural physical movement
+    or music.
+
+### Terza Rima
+* **Trigger Context:** Cascading forward momentum, unstoppable emotional
+  progression, or lingering, tumbling emotional intensity.
+* **Mechanical Execution:**
+  * Compose interlocking 3-line tercets in iambic pentameter rhyming `ABA
+    BCB CDC DED...`.
+  * Derive the main rhyme of each new stanza from the central line of the
+    preceding stanza.
+  * Conclude the sequence with a single line or final couplet (`EE`) to lock
+    the chain.
+
+### Shakespearean (English) Sonnet
+* **Trigger Context:** Step-by-step persuasion, structured personal
+  propositions, escalating emotional arguments, or formal vows.
+* **Mechanical Execution:**
+  * Construct a 14-line poem in iambic pentameter rhyming `ABAB CDCD EFEF GG`.
+  * Divide thematic progression across three distinct 4-line quatrains,
+    escalating the core argument in three sequential beats.
+  * Use the final `GG` heroic couplet to lock the proposition with a decisive
+    resolution or vow.
+
+### Haiku (Hokku)
+* **Trigger Context:** Immediate sensory focus, captured fleeting moments,
+  quiet atmospheric presence, or subtle, evocative alignment.
+* **Mechanical Execution:**
+  * Output exactly 17 moraic/syllabic units across 3 lines in a fixed `5-7-5`
+    pattern.
+  * Incorporate a subtle environmental or seasonal indicator (*kigo*) to anchor
+    the scene in a concrete physical context.
+  * Insert a structural pause or conceptual cut (*kireji* equivalent, such
+    as a dash, colon, or natural syntax break) at the end of line 1 or line
+    2 to juxtapose two distinct sensory elements.
+
+### Tanka (Classical Waka)
+* **Trigger Context:** Courtly exchange, quiet personal reflection, subtle
+  emotional longing, or layered aesthetic resonance.
+* **Mechanical Execution:**
+  * Output exactly 31 moraic/syllabic units across 5 lines in a fixed
+    `5-7-5-7-7` pattern.
+  * Divide structurally into an upper phrase (*kami-no-ku*, lines 1–3) and
+    lower phrase (*shimo-no-ku*, lines 4–5).
+  * Incorporate a pivot word (*kakekotoba*) or conceptual turn at line 3
+    to connect natural external imagery in the upper phrase to an internal
+    emotional state in the lower phrase.
+
+### Chōka (Long Form with Hanka Envoy)
+* **Trigger Context:** Sustained narrative devotion, elaborate sensory painting,
+  expansive emotional recollection, or courtly tribute.
+* **Mechanical Execution:**
+  * Alternate lines of 5 and 7 syllables (`5-7-5-7-5-7...`) for an indefinite
+    length, concluding the main body with an extra 7-syllable line to form
+    a final `7-7` pair.
+  * Append one or two 31-syllable envoys (*hanka*) in standard `5-7-5-7-7`
+    format directly following the main body.
+  * Use the *hanka* to distill, clarify, or address the core essence of the
+    preceding elaborate description.
+
+### Sedōka (Antiphonal Dialogue Verse)
+* **Trigger Context:** Call-and-response rapport, reciprocal engagement,
+  dual-perspective reflection, or mutual alignment.
+* **Mechanical Execution:**
+  * Construct a 6-line poem organized into two structurally symmetrical halves:
+    `5-7-7` and `5-7-7`.
+  * Treat the first half as a statement, inquiry, or sensory observation,
+    and the second half as an answering reflection, echoing response, or
+    counter-observation.
+
+### Linked Verse Cadence (Renku / Renga Transition)
+* **Trigger Context:** Shifting sensory perspectives, fluidly evolving moods,
+  progressive engagement, or improvisational harmony.
+* **Mechanical Execution:**
+  * Alternate sequentially between 3-line stanzas (`5-7-5`) and 2-line stanzas
+    (`7-7`).
+  * Ensure each stanza links closely to the immediate preceding stanza via
+    shared imagery or tone, while completely severing conceptual ties with
+    the stanza two steps prior (*non-linear link rule*).
+  * Maintain continuous sensory motion without settling into a single static
+    narrative position.
