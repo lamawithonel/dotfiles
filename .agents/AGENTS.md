@@ -134,6 +134,9 @@ To recover from crashes or paused sessions...
 
 - Keep a YAML-formatted project journal at `.local/state/agents/journal/<YYYY-MM-DD>.md`
 - Log a journal entry on each turn that edits or deletes a project file.
+- Journal VCS work by pointer (op-id, change-id) on promotion, not on
+  capture; the jj oplog is the truth and the journal is the index into
+  it.
 - Use `.cache/agents/` as a project-level scratchpad.
 - **DO NOT** use session IDs in path or file names.
 - **DO** use session IDs in file entry headers, metadata, comments, etc.
@@ -231,17 +234,48 @@ Return instructions...
 
 ## Version Control & Workspace Directives
 
-1. **Conditional VCS Routing**: Route code mutations, diff analyses, and
-   task checkpoints through `vcs-workflow` ONLY when operating within a
-   version-controlled repository (presence of `.git` or `.jj`) or when
-   initializing VCS.
-2. **Un-tracked Workspace Exemption**: Skip VCS workflows during early planning,
-   brainstorming, research, or non-repository chat sessions.
-3. **History Integrity**: Within tracked repositories, enforce non-destructive
-   workspace operations and never pollute commit history with unverified
-   intermediate states.
-4. **Commit Serialization**: Hand off strictly to `git-commit` for final
-   commit formatting and history serialization after verification gates pass.
+1. **Conditional VCS Routing**: Route code mutations, diff analyses,
+   and task checkpoints through `vcs-workflow` ONLY when its
+   `scripts/detect_shape.sh` returns a workable shape (colocated,
+   jj-only, jj-workspace, or git-only) or when initializing VCS.
+   Never route to vcs-workflow -- or run ANY jj command, reads
+   included -- when the shape is `worktree-shadowed`; use plain git
+   there.
+2. **Un-tracked Workspace Exemption**: Skip VCS workflows during early
+   planning, brainstorming, research, or non-repository chat sessions.
+3. **History Integrity**: Within tracked repositories, enforce
+   non-destructive workspace operations and never pollute commit
+   history with unverified intermediate states.  Exception: the
+   vcs-workflow preflight may write four allowlisted jj config keys at
+   `--repo` scope, announced in its receipt.
+4. **Commit Serialization**: Hand off to `git-commit` after
+   verification gates pass.  `git-commit` is the codex -- the
+   authority on atomicity criteria, selection doctrine, message
+   structure, style, and trailers.  `vcs-workflow` prepares atomic
+   revisions to that standard and supplies the jj-shape serialization
+   mechanics (its `references/serialization.md`); gates run upstream,
+   judgment stays with the codex.
+5. **Autonomy Ceiling**: The ceiling is the PR.  Pushing a branch and
+   opening a PR may be automatic; merging to the default branch is a
+   standing human gate.
+6. **Vocabulary**: "tier" is reserved for model-access tiers
+   (`~/.agents/models.json`) and license tiers; VCS skills use role
+   nouns (staging layer, serializer) and pipeline step names, never
+   Tier-N.
+7. **Hookless Snapshot Guard**: before any file-targeting
+   `git checkout`, `git restore`, `git stash`, `git clean`, or
+   `git reset` in a colocated jj repo, run a jj snapshot (`jj status`
+   or any jj command) first, in the same turn, with nothing
+   intervening.  These git commands are commonly
+   permission-allow-listed, and allow-listed does not mean safe to run
+   blind against a still-open jj commit.  Prefer
+   `jj restore --from <rev> <path>` whenever the intent is to discard
+   working-copy content: it snapshots before it mutates, so a mistake
+   is one `jj undo` from recovery.
+8. **`/commit` Routing**: `/commit` routes to the `git-commit` skill
+   (the executor).  `caveman-commit` is a message-style layer only;
+   when caveman mode is active, git-commit delegates prose style to it
+   and retains validation, trailers, and serialization.
 
 ## Tool Preferences
 
