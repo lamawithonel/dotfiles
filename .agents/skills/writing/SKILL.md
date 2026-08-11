@@ -36,6 +36,20 @@ user-invocable: false
   of three or more items, whether the list is joined by "and" or by "or".
 - Include one blank line between headings, content, and lists.
 
+## Abbreviations and acronyms
+
+- Spell out every acronym or initialism on first use in a file or
+  document, with the short form in parentheses immediately after,
+  e.g. `representational state transfer (REST)`.  "First use" means
+  the first occurrence reading top to bottom in that file, even when
+  the file is one fragment of a larger website or documentation
+  set-- each file stands on its own.  After that, the short form
+  alone is fine: the Microsoft Writing Style Guide states, "On
+  subsequent mentions in the same article, page, or screen, you can
+  use the acronym without spelling it out."[^acronyms-first-use]
+
+[^acronyms-first-use]: https://learn.microsoft.com/en-us/style-guide/acronyms
+
 ## Markdown syntax rules
 
 - Obey the markdownlint style rules for all Markdown / Commonmark files and
