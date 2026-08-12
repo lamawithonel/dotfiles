@@ -1,6 +1,6 @@
 {
   "schema_version": 1,
-  "updated_at": "2026-08-11T10:00:07Z",
+  "updated_at": "2026-08-12T04:00:07Z",
   "notes": [
     "GLOBAL benchmark and public-pricing facts, keyed by public model identity.",
     "SYNCABLE: same content on every machine; safe to track in yadm.",
@@ -15,7 +15,7 @@
       "name": "OpenRouter models API",
       "url": "https://openrouter.ai/api/v1/models",
       "fetch": "GET; .data[].pricing is USD per token; multiply by 1e6; negative pricing is a routing-alias sentinel, never store it",
-      "as_of": "2026-08-11"
+      "as_of": "2026-08-12"
     },
     "terminal_bench": {
       "name": "Terminal-Bench leaderboard",
@@ -24,31 +24,31 @@
       "primary_version": "2.1",
       "comparability": "scores only comparable within one version; rows with benchmark_versions markers are excluded from scoring",
       "multi_row_rule": "when a model has rows under multiple agent harnesses, store its best score and record the agent in benchmark_notes",
-      "as_of": "2026-08-11"
+      "as_of": "2026-08-12"
     },
     "deep_swe": {
       "name": "Datacurve DeepSWE leaderboard v1.1",
       "url": "https://deepswe.datacurve.ai/",
       "fetch": "GET; v1.1 table is server-rendered HTML (model, Pass@1 percent); all rows use the mini-swe-agent harness; distinct from the 2025 Agentica/Together 'DeepSWE' RL agent",
-      "as_of": "2026-08-11"
+      "as_of": "2026-08-12"
     },
     "artificial_analysis": {
       "name": "Artificial Analysis Intelligence Index v4.1.1",
       "url": "https://artificialanalysis.ai/models",
       "fetch": "per-model pages https://artificialanalysis.ai/models/<slug> with a browser User-Agent contain the sentence '<name> scores N on the Artificial Analysis Intelligence Index'; keyed API v2 preferred when AA_API_KEY is set",
-      "as_of": "2026-08-11"
+      "as_of": "2026-08-12"
     },
     "eq_bench": {
       "name": "EQ-Bench 4",
       "url": "https://eqbench.com/eqbench4/eqbench4_data.js",
       "fetch": "GET; drop leading //-comment line, strip 'const EQBENCH4_DATA = ' prefix and trailing ';', parse JSON; .models[] carries {model, elo}",
-      "as_of": "2026-08-11"
+      "as_of": "2026-08-12"
     },
     "design_arena": {
       "name": "Design Arena, Website category",
       "url": "https://www.designarena.ai/api/leaderboard",
       "fetch": "POST {\"arenaType\":\"models\",\"category\":\"website\"}; GET returns 405; .data[] carries {modelId, elo}; recomputes ~2-hourly so a 10-point drift threshold damps churn",
-      "as_of": "2026-08-11"
+      "as_of": "2026-08-12"
     }
   },
   "models": {
@@ -350,8 +350,8 @@
         ]
       },
       "pricing": {
-        "prompt_cost_per_m": 0.76,
-        "completion_cost_per_m": 2.42,
+        "prompt_cost_per_m": 0.42,
+        "completion_cost_per_m": 1.4,
         "source": "openrouter"
       },
       "benchmarks": {
