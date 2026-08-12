@@ -9,5 +9,6 @@
 .claude/settings.json
 .claude/settings.local.json
 .pi/agent/settings.json
+.srt-settings.json
 
 !**/.yadmkeep

@@ -6,8 +6,17 @@
 # Usage:
 #	harness-settings-apply [--check] [TOOL ...]
 #
-# TOOL is `claude` or `pi`; default is both.  With --check, report
-# drift as a unified diff and exit 1 instead of writing.
+# TOOL is `claude`, `pi`, or `srt`; default is all three, in that
+# order.  With --check, report drift as a unified diff and exit 1
+# instead of writing.
+#
+# The srt target chains off the claude one: portable.json merges
+# into ~/.claude/settings.json, then that merged file's `sandbox`
+# object (minus the Claude-Code-only autoAllowBashIfSandboxed key)
+# becomes the patch for ~/.srt-settings.json, which Pi reads through
+# the ~/.pi/agent/sandbox.json symlink.  Order in the default list
+# matters: claude must reconcile before srt so srt sees the fresh
+# merge.
 #
 # Semantics: RFC 7386 JSON Merge Patch.  Keys declared in the tool's
 # portable.json are authoritative -- objects merge recursively, arrays
@@ -47,6 +56,7 @@ _target_for() {
 	case "$1" in
 		claude) printf '%s\n' "${HOME}/.claude/settings.json" ;;
 		pi) printf '%s\n' "${HOME}/.pi/agent/settings.json" ;;
+		srt) printf '%s\n' "${HOME}/.srt-settings.json" ;;
 		*)
 			printf '%s: unknown tool: %s\n' "$PROG" "$1" >&2
 			return 2
@@ -54,14 +64,38 @@ _target_for() {
 	esac
 }
 
+# Print the path of the merge patch for a tool, or nothing to skip.
+# claude/pi patch from their portable.json; srt derives its patch
+# from the already-merged claude settings file.
+_patch_for() {
+	case "$1" in
+		srt)
+			_src="${HOME}/.claude/settings.json"
+			[ -f "${_src}" ] || return 0
+			_derived="${_workdir}/srt.patch.json"
+			if jq -e '.sandbox
+					| select(type == "object")
+					| del(.autoAllowBashIfSandboxed)' \
+				"${_src}" > "${_derived}" 2> /dev/null; then
+				printf '%s\n' "${_derived}"
+			fi
+			;;
+		*)
+			_p="${CONFIG_DIR}/$1/portable.json"
+			[ -f "${_p}" ] && printf '%s\n' "${_p}"
+			;;
+	esac
+	return 0
+}
+
 _reconcile_one() {
 	_tool="$1"
 	_mode="$2"
-	_patch="${CONFIG_DIR}/${_tool}/portable.json"
 	_target="$(_target_for "${_tool}")"
+	_patch="$(_patch_for "${_tool}")"
 
-	if [ ! -f "${_patch}" ]; then
-		printf '%s: %s: no portable.json, skipping\n' "$PROG" "${_tool}" >&2
+	if [ -z "${_patch}" ]; then
+		printf '%s: %s: no source config, skipping\n' "$PROG" "${_tool}" >&2
 		return 0
 	fi
 
@@ -99,7 +133,7 @@ main() {
 		_mode='check'
 		shift
 	fi
-	[ "$#" -gt 0 ] || set -- claude pi
+	[ "$#" -gt 0 ] || set -- claude pi srt
 
 	_workdir="$(mktemp -d "${TMPDIR:-/tmp}/agents-config.XXXXXX")"
 	trap 'rm -rf "${_workdir}"' EXIT
