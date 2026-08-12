@@ -1,0 +1,4 @@
+#!/bin/sh
+# Re-apply declarative portable config after yadm syncs files in.
+# Safe no-op when everything is already in sync.
+exec "${HOME}/.local/bin/harness-settings-apply"

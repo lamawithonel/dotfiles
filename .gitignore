@@ -2,10 +2,12 @@
 .local/share
 .local/state
 
-*.local
-*.local.json
-*.local.toml
-*.local.yaml
+?*.local
+?*.local.*
 .pi-subagents/
+
+.claude/settings.json
+.claude/settings.local.json
+.pi/agent/settings.json
 
 !**/.yadmkeep

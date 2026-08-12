@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "attribution": {
+    "commit": "Assisted-By: Claude <noreply@anthropic.com>",
+    "sessionUrl": false
+  },
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "/home/lucas/.claude/hooks/lint-shell.sh",
+            "statusMessage": "Linting shell script...",
+            "timeout": 30,
+            "type": "command"
+          }
+        ],
+        "matcher": "Write|Edit|MultiEdit"
+      }
+    ]
+  },
+  "preferredNotifChannel": "ghostty",
+  "promptSuggestionEnabled": false,
+  "statusLine": {
+    "command": "~/.claude/statusline-command.sh",
+    "type": "command"
+  }
+}

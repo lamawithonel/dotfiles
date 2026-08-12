@@ -1,0 +1,18 @@
+{
+  "enableInstallTelemetry": false,
+  "packages": [
+    "npm:pi-subagents",
+    "npm:pi-web-access",
+    {
+      "extensions": [
+        "-dist/index.js"
+      ],
+      "source": "npm:pi-lens"
+    },
+    "npm:@quandev104/pi-rules",
+    "npm:pi-sandbox",
+    "npm:@juicesharp/rpiv-ask-user-question",
+    "npm:pi-effort",
+    "npm:pi-mcp-adapter"
+  ]
+}

@@ -1,0 +1,114 @@
+#!/bin/sh
+#
+# harness-settings-apply -- apply declarative portable config onto
+# live agent settings files.
+#
+# Usage:
+#	harness-settings-apply [--check] [TOOL ...]
+#
+# TOOL is `claude` or `pi`; default is both.  With --check, report
+# drift as a unified diff and exit 1 instead of writing.
+#
+# Semantics: RFC 7386 JSON Merge Patch.  Keys declared in the tool's
+# portable.json are authoritative -- objects merge recursively, arrays
+# replace whole, and an explicit null deletes the key from the target.
+# Keys NOT declared pass through untouched, so host-local config and
+# state written by the tools at runtime both survive.  Output is
+# `jq -S` normalized, writes are atomic (same-directory temp + mv),
+# and a write is skipped entirely when nothing would change, so repeat
+# runs -- including from yadm hooks -- are safe no-ops.
+
+set -o errexit
+set -o nounset
+
+PROG="${0##*/}"
+CONFIG_DIR="${HOME}/.config/agents"
+readonly PROG CONFIG_DIR
+
+# shellcheck disable=SC2016  # $k and $patch are jq variables, not shell
+MERGE_FILTER='
+def mergepatch(patch):
+	if (patch | type) == "object" then
+		(if type == "object" then . else {} end)
+		| reduce (patch | keys_unsorted[]) as $k (.;
+			if patch[$k] == null then
+				del(.[$k])
+			else
+				.[$k] = (.[$k] | mergepatch(patch[$k]))
+			end)
+	else
+		patch
+	end;
+mergepatch($patch[0])
+'
+readonly MERGE_FILTER
+
+_target_for() {
+	case "$1" in
+		claude) printf '%s\n' "${HOME}/.claude/settings.json" ;;
+		pi) printf '%s\n' "${HOME}/.pi/agent/settings.json" ;;
+		*)
+			printf '%s: unknown tool: %s\n' "$PROG" "$1" >&2
+			return 2
+			;;
+	esac
+}
+
+_reconcile_one() {
+	_tool="$1"
+	_mode="$2"
+	_patch="${CONFIG_DIR}/${_tool}/portable.json"
+	_target="$(_target_for "${_tool}")"
+
+	if [ ! -f "${_patch}" ]; then
+		printf '%s: %s: no portable.json, skipping\n' "$PROG" "${_tool}" >&2
+		return 0
+	fi
+
+	_current="${_workdir}/${_tool}.current.json"
+	_merged="${_workdir}/${_tool}.merged.json"
+	if [ -f "${_target}" ]; then
+		jq -S . "${_target}" > "${_current}"
+	else
+		printf '{}\n' > "${_current}"
+	fi
+	jq -S --slurpfile patch "${_patch}" "${MERGE_FILTER}" \
+		"${_current}" > "${_merged}"
+
+	if cmp -s "${_current}" "${_merged}"; then
+		printf '%s: %s: in sync\n' "$PROG" "${_tool}"
+		return 0
+	fi
+
+	if [ "${_mode}" = 'check' ]; then
+		printf '%s: %s: drift\n' "$PROG" "${_tool}"
+		diff -u "${_current}" "${_merged}" || true
+		return 1
+	fi
+
+	mkdir -p "$(dirname "${_target}")"
+	_staged="$(mktemp "${_target}.XXXXXX")"
+	cp "${_merged}" "${_staged}"
+	mv "${_staged}" "${_target}"
+	printf '%s: %s: applied\n' "$PROG" "${_tool}"
+}
+
+main() {
+	_mode='apply'
+	if [ "${1:-}" = '--check' ]; then
+		_mode='check'
+		shift
+	fi
+	[ "$#" -gt 0 ] || set -- claude pi
+
+	_workdir="$(mktemp -d "${TMPDIR:-/tmp}/agents-config.XXXXXX")"
+	trap 'rm -rf "${_workdir}"' EXIT
+
+	_rc=0
+	for _t in "$@"; do
+		_reconcile_one "${_t}" "${_mode}" || _rc=1
+	done
+	return "${_rc}"
+}
+
+main "$@"
