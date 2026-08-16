@@ -1,6 +1,6 @@
 ---
 name: agent-skills-validate
-description: 'Validate an Agent Skill against the Agent Skills Specification (https://agentskills.io/specification).  Checks SKILL.md frontmatter shape (name, description), name/folder match, body length, scripts/ executability, and bundled-resource layout.  Use whenever the user asks to validate a skill, audit a skill folder, check skill compliance, verify SKILL.md, or wants pre-commit/CI checks for a custom skill.  Accepts a path or a registered skill name — any location works (harness skill dirs, symlinked trees, project source dirs); only skills installed by external package managers (apm_modules) are refused, since those are upstream, not owned by the caller.'
+description: 'Validate an Agent Skill against the Agent Skills Specification (https://agentskills.io/specification).  Checks SKILL.md frontmatter shape (name, description), name/folder match, body length, scripts/ executability, and bundled-resource layout.  Spec violations fail; harness-specific frontmatter keys warn, except a near-miss of a real key, which fails because the behaviour the author asked for never happens.  Use whenever the user asks to validate a skill, audit a skill folder, check skill compliance, verify SKILL.md, or wants pre-commit/CI checks for a custom skill.  Accepts a path or a registered skill name — any location works (harness skill dirs, symlinked trees, project source dirs); only skills installed by external package managers (apm_modules) are refused, since those are upstream, not owned by the caller.'
 license: Apache-2.0
 ---
 
@@ -40,13 +40,38 @@ For each skill, 18 spec-derived checks:
 | 13 | Frontmatter has `description:` field                                        |
 | 14 | `description` length is 1–1024 characters (after trim)                      |
 | 15 | `compatibility`, when present, is ≤ 500 characters                          |
-| 16 | Frontmatter uses only spec-recognized keys: `name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools` |
+| 16 | Frontmatter key spelling and portability (two-tiered — see below)          |
 | 17 | Body (post-frontmatter) is under 500 lines                                  |
 | 18 | If `scripts/` exists, every file in it is executable                        |
 
 Checks 3, 4, and 5 are early-exit: if frontmatter isn't closed
 or doesn't parse as a YAML mapping, downstream key/field checks
 are skipped (their failures would be noise).
+
+## Result Tiers
+
+No harness rejects a skill for an unrecognized frontmatter key —
+they drop it and carry on.  So an unknown key is only a defect
+when the skill *depended* on it.  Check 16 sorts on that:
+
+| Key | Tier | Why |
+|-----|------|-----|
+| Spec key: `name`, `description`, `license`, `compatibility`, `metadata`, `allowed-tools` | pass | portable everywhere |
+| Known harness extension: `argument-hint`, `disable-model-invocation`, `user-invocable`, `model` | **warn** | the owning harness honours it; the rest ignore it silently.  Portability note, not a defect |
+| Unrecognized and unlike any real key | **warn** | inert everywhere; costs nothing but bytes |
+| Near-miss of a real key, e.g. `user-invokable` for `user-invocable` | **fail** | the author asked for behaviour that never happens |
+| Near-miss of a *capability guard* — `allowed-tools`, `disable-model-invocation`, `user-invocable` | **fail** | the restriction silently disappears and the skill is more exposed than it was written to be |
+
+That last row is the one that matters.  A typo in a key that
+grants something is a missing feature; a typo in a key that
+*withholds* something is a hole, and it fails silently in exactly
+the direction you would not notice.
+
+Near-miss detection uses `difflib.get_close_matches` at a 0.8
+cutoff and needs `python3`.  Without it, unrecognized keys are
+reported as a single warning and left unclassified.
+
+Warnings count as passes and never change the exit status.
 
 ## Usage
 
@@ -103,13 +128,25 @@ TAP-ish, one line per check:
     not ok 3 - frontmatter closed with second --- (got 1 delimiters)
     ...
 
-Followed by a summary:
+A warning is an `ok` line carrying a `# WARN` directive, followed
+by indented detail:
+
+    ok 16 - frontmatter uses non-spec keys (unknown: argument-hint) # WARN
+    #   WARN:  argument-hint: harness extension, not in the spec; ...
+
+Followed by a summary, which names warnings only when there are
+some:
 
     1..18
-    17 passed, 1 failed
+    18 passed, 0 failed, 1 warning
 
-Exit 0 if all checks pass, non-zero otherwise.  Exit 3 is
-reserved for the apm-refusal contract (see above).
+`validate-all.sh` tallies them per skill:
+
+    # summary: 43 skills, 7 failed, 4 warned, 0 skipped
+
+Exit 0 if no check failed, non-zero otherwise.  Warnings do not
+affect the exit status.  Exit 3 is reserved for the apm-refusal
+contract (see above).
 
 ## CI Integration
 

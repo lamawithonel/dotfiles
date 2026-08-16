@@ -18,7 +18,29 @@ fi
 
 TOTAL=0
 FAILED=0
+WARNED=0
 SKIPPED=0
+
+# Run one skill, print its TAP, and tally the outcome.  Warnings are
+# counted separately and never affect the exit status: they mark keys a
+# harness honours and others drop silently, not defects.
+_validate_one() {
+	local _dir="$1"
+	local _out=""
+	local _rc=0
+
+	_out="$(bash "$VALIDATE" "$_dir" 2>&1)" || _rc=$?
+	printf '%s\n' "$_out"
+
+	case "$_rc" in
+		0) ;;
+		3) SKIPPED=$((SKIPPED + 1)) ;;
+		*) FAILED=$((FAILED + 1)) ;;
+	esac
+
+	[[ "$_out" == *' # WARN'* ]] && WARNED=$((WARNED + 1))
+	return 0
+}
 
 for ROOT in "${ROOTS[@]}"; do
 	# Refuse apm-installed roots wholesale.  Location alone does not
@@ -42,20 +64,11 @@ for ROOT in "${ROOTS[@]}"; do
 		TOTAL=$((TOTAL + 1))
 
 		echo "# === $SKILL_NAME ($SKILL_DIR) ==="
-		if bash "$VALIDATE" "$SKILL_DIR"; then
-			:
-		else
-			_rc=$?
-			if [[ "$_rc" -eq 3 ]]; then
-				SKIPPED=$((SKIPPED + 1))
-			else
-				FAILED=$((FAILED + 1))
-			fi
-		fi
+		_validate_one "$SKILL_DIR"
 		echo ""
 	done
 done
 
-echo "# summary: $TOTAL skills, $FAILED failed, $SKIPPED skipped"
+echo "# summary: $TOTAL skills, $FAILED failed, $WARNED warned, $SKIPPED skipped"
 
 [[ "$FAILED" -eq 0 ]] || exit 1
