@@ -1,16 +1,14 @@
 ---
 name: model-router
 description: >-
-  Empirical, harness-aware model routing for delegated work.  Use
-  whenever a task will be delegated to a sub-agent or another model:
-  "which model", "route this", "delegate", "spawn a worker", "shell out
-  to a model", or any Agent/Workflow/pi dispatch where the model is not
-  explicitly named by the user.  Scores candidates from the two-file
-  registry (host-local ~/.agents/models.json roster + syncable
-  ~/.agents/benchmarks.json) using real benchmark metrics
-  (Terminal-Bench, agentic SWE, Artificial Analysis, EQ-Bench, Design
-  Arena) and live OpenRouter pricing, then dispatches through the
-  active harness's native channel or an external CLI shell-out.
+  Score and select a model for already-scoped delegated work.  Use
+  when the question is "which model", when a dispatch names no model,
+  and whenever `delegate` reaches the model-choice step.  Reads the
+  two-file registry (host-local ~/.agents/models.json roster +
+  syncable ~/.agents/benchmarks.json) and ranks candidates on real
+  benchmark metrics (Terminal-Bench, agentic SWE, Artificial Analysis,
+  EQ-Bench, Design Arena) and live OpenRouter pricing.  Returns the
+  model and its dispatch parameters; `delegate` owns the channel.
 ---
 
 # Model Router
@@ -41,28 +39,13 @@ ever chosen from memory.
 4. Benchmark fields may be `null` (never fabricated).  The scoring
    rules below define how nulls degrade.
 
-## Step 1: Detect the Active Harness
+Harness detection and channel availability are the `delegate` skill's
+job (`references/channel-external.md`).  They never change the
+candidate set-- every registry model is a candidate in every harness--
+but a model whose only channel's CLI is missing on this host is
+ineligible, so run that probe before scoring.
 
-| Signal (environment)               | Harness     |
-| ---------------------------------- | ----------- |
-| `CLAUDECODE=1`                     | Claude Code |
-| `PI_CODING_AGENT` / `PI_SESSION_ID`| Pi          |
-| neither                            | bare shell: CLI shell-outs only |
-
-The harness determines the dispatch channel in Step 4, never the
-candidate set: every registry model is a candidate in every harness,
-subject to the availability probe below.
-
-Channel availability is host-specific-- probe, never assume.  Before
-selecting a model whose channel on this harness is external, confirm
-the CLI exists (`command -v pi`, `command -v claude`); a model whose
-only channel's tool is missing on this host is ineligible.  The
-registry is host-local and normally lists only reachable models; the
-probe is the backstop for a stale registry.  On a Claude-Code-only
-host (no Pi installed) the candidate set is just the registry's
-native Claude entries.
-
-## Step 2: Classify the Task
+## Step 1: Classify the Task
 
 ### Benchmark Profile
 
@@ -90,7 +73,7 @@ block says what feed currently backs each field.
 | 3    | High Abstraction          | zero-to-one design, race conditions, silent systemic failures          |
 | 4    | User Directive            | the user explicitly named a model                                      |
 
-## Step 3: Score
+## Step 2: Score
 
 All benchmarks in the registry are higher-is-better (percentages,
 index points, or ELO alike).
@@ -151,69 +134,25 @@ index points, or ELO alike).
 
 ### Hard Constraints
 
-- Any model whose registry `constraints.tier_4_only` is true is never
-  auto-selected-- Tier 4 (explicit user order) only.  Instances are
-  flagged in the host-local registry, never named in shared files.
+- `constraints.tier_4_only` makes a model ineligible for automatic
+  selection; Tier 4 is its only path in.  Instances are flagged in the
+  host-local registry, never named in shared files.
 - A model whose `context_window` is smaller than the estimated task
   context is ineligible regardless of score.  A null `context_window`
   means unknown; the constraint does not apply, and the Tier 4 issuer
   owns the risk.
-- Zero hardcoded rankings: if you find a ranked model table in any
-  harness file, it is a bug; report it.
 
-## Step 4: Dispatch
+## Step 3: Hand Back
 
-Native when the model's `native_harness` includes the active harness;
-external otherwise.  Execution details come from the model's
-`execution` block in the registry.
+Return the selected model together with its `execution.<harness>`
+block from the registry.  Native when the model's `native_harness`
+includes the active harness, external otherwise; the block is
+authoritative either way and is used verbatim-- `model_param` for a
+native dispatch, `command` for an external one.
 
-The registry's `execution.<harness>` block is authoritative-- run its
-command or use its parameters verbatim; the shapes below are
-orientation, not literal templates (note the `openrouter/` prefix Pi
-requires):
-
-| Active harness | Channel  | How (from the model's `execution` block)                          |
-| -------------- | -------- | ----------------------------------------------------------------- |
-| Claude Code    | native   | `Agent`/`Workflow` tool, `model` = `execution."claude-code".model_param` |
-| Claude Code    | external | run `execution."claude-code".command`, e.g. `pi --model 'openrouter/<vendor>/<model>' -p "$(cat payload.md)" --no-session` |
-| Pi             | native   | Pi sub-agent tool (`pi-subagents` extension), model = `execution.pi.model_ref` |
-| Pi             | external | run `execution.pi.command`, e.g. `claude -p --model claude-opus-5 "$(cat payload.md)"` |
-
-Shell-out hygiene: write the payload to a temp file and substitute it
-with `"$(cat ...)"`-- never inline multi-line prompts into the command
-string.  Ignore the CLI's stderr unless stdout is empty.  Run
-shell-outs with the same memory-capping rules as any heavy tool call.
-
-## Payload Distillation (`<subagent_task>`)
-
-Workers get a distilled, self-contained payload-- never parent
-conversation history.  Target under ~2K tokens.
-
-```xml
-<subagent_task harness="pi" model="openrouter/z-ai/glm-5.2" tier="2" profile="coding">
-  <objective>One sentence.  The single outcome that defines done.</objective>
-  <context>
-    Absolute paths, branch names, and facts the worker cannot cheaply
-    rediscover.  File PATHS, never file dumps-- the worker reads disk.
-  </context>
-  <constraints>
-    Runtime protocol invariants (12-turn ceiling, 3-turn stagnation
-    breaker, early boundary escape) plus task-specific limits.
-  </constraints>
-  <return>
-    Exact shape of the expected answer, plus the acceptance check the
-    worker must run (test command, lint, render) before returning.
-  </return>
-</subagent_task>
-```
-
-Distillation rules:
-
-- Swallow verbose streams in the worker; return conclusions and
-  `file:line` receipts only.
-- Include one runnable acceptance check whenever the task edits code.
-- State the return contract explicitly; unstructured worker output is
-  a routing bug, not a worker quirk.
+`delegate` owns everything downstream: which channel carries the work
+(`references/channel-native.md`, `references/channel-external.md`),
+and the brief the worker receives (`references/brief.md`).
 
 ## Worked Example (illustration only)
 
@@ -241,15 +180,12 @@ Tier 2 selects on V, so `deepseek-v4-flash-0731` wins outright.  Note
 what does NOT happen: luna holds the highest Q (0.691, three
 benchmarks) with 0731 and v4-flash inside its 0.05 band on
 one-benchmark Qs, but the more-benchmarks preference governs Q-based
-selection (Tiers 1 and 3) and never reorders a V ranking.  Dispatch
-(Claude Code, external channel):
-
-    pi --model 'openrouter/deepseek/deepseek-v4-flash-0731' \
-      -p "$(cat payload.md)" --no-session
+selection (Tiers 1 and 3) and never reorders a V ranking.  Hand back
+that model with its external `command`.
 
 Had the task been Tier 3 architecture work (profile `reasoning`),
-max-Q would instead select `claude-opus-5` (aa norm = 1.0)-- native
-`Agent` dispatch with `model: opus`.
+max-Q would instead select `claude-opus-5` (aa norm = 1.0)-- a native
+entry, handed back as `model_param: opus`.
 
 ## Maintenance
 
