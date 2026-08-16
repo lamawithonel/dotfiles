@@ -12,50 +12,17 @@ When the user points you at a code repository or directory:
 
 ## Execution Channels (Claude Code)
 
-Claude Code is the primary coordinator for long-horizon work.  Model
-work dispatches through exactly two channels; the shared invariants and
-harness dispatch table live in `~/.agents/AGENTS.md`.
+Claude Code is the primary coordinator for long-horizon work.  Load
+the `delegate` skill before any `Agent`, `Workflow`, `Task`, or
+background dispatch, and before shelling out to another agent CLI: it
+owns channel choice, the worker's brief, and the pause/halt order.
+Reach `model-router` from there to pick the model.
 
-This file is environment-agnostic by design (it syncs across machines
-via dotfiles): it names no models and assumes no CLI beyond Claude
-Code itself.  Which models exist on THIS host, their `model`
-parameter values, and their deployment-specific ids (consumer,
-Enterprise, and Bedrock ids all differ for the same model) live only
-in the host-local registry `~/.agents/models.json`.
-
-### Native Channel: Claude Models
-
-Dispatch via the `Agent` and `Workflow` tools, taking the `model`
-parameter value from the registry entry's
-`execution."claude-code".model_param`.
+Two rules bind even when no skill loads:
 
 - Never delegate to a model whose registry `constraints.tier_4_only`
-  is true unless the user explicitly orders it (a Tier 4 directive;
-  see the `model-router` skill).
-
-### External Channel: Non-Claude Models (where available)
-
-Some hosts also have the Pi CLI fronting OpenRouter-hosted and local
-`llama.cpp` (`llama-swap`) models; other hosts run Claude Code alone.
-Probe, never assume: `command -v pi`.  Absent Pi, registry models
-without a native Claude Code channel are unavailable here.
-
-```
-pi --model '<provider>/<model-id>' -p '<prompt>'
-```
-
-- The exact per-model command is the registry entry's
-  `execution."claude-code".command`.
-- Ignore Pi's stderr unless there is no stdout.
-- Add `--no-session` for fire-and-forget calls that should not pollute
-  Pi's session store.
-- Wrap the distilled task payload per the `model-router` skill's
-  `<subagent_task>` rules; never paste raw parent context into `-p`.
-
-### Choosing a Model
-
-Load the `model-router` skill (`~/.agents/skills/model-router/`) before
-any delegation.  It scores candidates from `~/.agents/models.json`--
-real benchmark metrics and live pricing.  Hardcoded model rankings and
-model names are prohibited everywhere in this file and in
-`~/.agents/AGENTS.md`; if you find either, it is a bug.
+  is true unless the user explicitly orders it (a Tier 4 directive).
+- While `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, passing `name` to
+  `Agent` launches a teammate, and a teammate reports idle without
+  returning its output.  Name an agent only when the result is allowed
+  not to come back.

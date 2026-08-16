@@ -24,79 +24,26 @@ Universal invariants for every harness that loads this file (Claude Code,
 Pi, and future harnesses).  Harness bootstrap files add only native tool
 wiring and MUST NOT restate or override these invariants.
 
-### Context Isolation
+### Delegation
 
-- Force worker sub-agents to operate within isolated execution windows.
-- Sub-agents must swallow verbose streams (compilers, test runners,
-  package managers, renderers) internally and return only high-signal
-  results to the parent thread.
-- Parent context receives conclusions, receipts, and `file:line`
-  references-- never raw tool-output dumps.
+Load the `delegate` skill (`~/.agents/skills/delegate/`) before handing
+work to any sub-agent, model, or agent CLI.  It owns channel choice,
+the worker's brief, the receipt contract, and the pause/halt order.
+`model-router` scores the model from the two-file registry; never pick
+one from memory or vibes.  Pi's scoped roster is `enabledModels` in
+`~/.pi/agent/settings.json`; Claude Code specifics live in
+`~/.claude/CLAUDE.md`.
 
-### Execution Ceilings and Circuit Breakers
+These bind even when no skill loads:
 
-- **12-turn ceiling:** sub-agents are allowed up to 12 sequential turns
-  to execute complex, multi-step implementations.
-- **3-turn state-stagnation breaker:** a sub-agent MUST immediately
-  self-terminate and yield control if 3 consecutive turns produce zero
-  state progress (e.g., executing the identical terminal command,
-  repeating a failing edit, or hitting the exact same error boundary).
-- **Early boundary escape:** if a sub-agent discovers during its initial
-  context-gathering turn that the assignment requires modifying more
-  than 3 decoupled subsystems, it must halt immediately, output an
-  execution map, and return control to the coordinator for finer task
-  partitioning.
-
-### Cross-Harness Model Dispatch
-
-Detect the active harness before dispatching model work:
-
-- `CLAUDECODE=1` in the environment -> Claude Code.
-- `PI_CODING_AGENT` or `PI_SESSION_ID` in the environment -> Pi.
-- Neither -> assume no harness sub-agent tools; use CLI shell-outs only.
-
-Harness availability is per-host, never assumed: an external channel
-exists only if its CLI is actually installed (`command -v pi`,
-`command -v claude`).  Some hosts run Claude Code alone, with a
-restricted private-hosted model set and no Pi at all; on such hosts
-every non-native model is simply unavailable and the router must
-route around it.
-
-Native models dispatch through the harness's own sub-agent tools; all
-other models shell out to the other harness's CLI where that CLI is
-installed:
-
-| Harness     | Native models              | Native channel     | External channel     |
-| ----------- | -------------------------- | ------------------ | -------------------- |
-| Claude Code | Anthropic Claude           | `Agent`/`Workflow` | `pi` CLI shell-out   |
-| Pi          | OpenRouter and `llama-cpp` | Pi sub-agents      | `claude -p` shell-out |
-
-The table shows channel shapes only; the exact command string or tool
-parameters for a given model live in that model's
-`execution.<harness>` block in `~/.agents/models.json`.
-
-Model selection is data-driven-- never pick a delegate model from memory
-or vibes:
-
-- The registry is two files split by sync domain.
-  `~/.agents/models.json` is HOST-LOCAL truth: only the models
-  reachable from this host, under this host's ids and aliases
-  (private-hosted and Bedrock deployments use different ids than
-  consumer plans); never sync it between machines.
-  `~/.agents/benchmarks.json` is GLOBAL truth (benchmark scores and
-  public pricing keyed by public model identity): identical
-  everywhere, safe to sync via dotfiles, refreshed where egress
-  allows and received by sync on restricted hosts.
-- When a task requires delegation, load the `model-router` skill
-  (`~/.agents/skills/model-router/`).  It scores candidates against
-  the two-file registry (real benchmark metrics and live pricing;
-  zero arbitrary rankings).
-- Claude Code specifics (tool parameters, shell-out syntax, outage
-  handling) live in `~/.claude/CLAUDE.md`.
-- Where Pi is installed, it loads this file directly and needs no
-  separate bootstrap; the dispatch table above plus the `model-router`
-  skill fully resolve Pi-side routing.  Pi's scoped model roster is
-  `enabledModels` in `~/.pi/agent/settings.json`.
+- Workers swallow verbose streams (compilers, test runners, package
+  managers, renderers) and return receipts: conclusions and `file:line`
+  references, never raw tool-output dumps.
+- Workers get at most 12 sequential turns, and self-terminate after 3
+  consecutive turns with zero state progress.
+- Harness and CLI availability is probed, never assumed.
+- Zero hardcoded model rankings: a ranked model table or a model named
+  from memory in any harness file is a bug; report it.
 
 ### Skill Storage
 
@@ -164,62 +111,10 @@ To recover from crashes or paused sessions...
 
 ## Agent Prompt Style
 
-- **ALWAYS** use XML-style prompts when crafting instructions for agents.
-- **ALWAYS** use imperative tone.
-- Always start with a `<persona>` section to elicit desired behavior, except
-  when starting from a pre-defined agent persona.  The persona is not a role.
-  The persona should "tickle the tensors" and "poke the weights," using words
-  and phrases to activate relevant model embeddings and experts.  Define
-  the personality in terms of integral theory's four quadrants.
-- Use a `<role>` section to define the agent's role and responsibilities.
-- Use a `<context>` section to orient agent.
-- Use `<return>` with an optional `<template>` to specify return expectations.
-- Use other tags as needed.  Tags are informal with no set schema.  Examples
-  include: `<approach>`, `<deliverables>`, `<example_group>`, `<example>`,
-  `<hard_gates>`, `<kickoff>`, `<scope>`, `<stages>`, `<the_ask>`,
-  `<working_agreement>`, `<success_criteria>`, `<prompt>`, etc.
-- Tags may be nested and may include arbitrary parameters.
-- Place tags on their own lines, except for extremely short lines.
-- Use blank lines between top-level sections.
-
-Example:
-
-```xml
-<persona name="Mr. Robot">
-You think...          # (Interior-Individual)
-You behave...         # (Exterior-Individual)
-You relate to/with... # (Interior-Collective)
-You participate...    # (Exterior-Collective)
-</persona>
-
-<role>
-You are a...
-</role>
-
-<context>
-...
-</context>
-
-<the_ask>
-Summary...
-  <example_group>
-    <example>short example...</example>
-    <example>single-line example...</example>
-    <example>
-      longer
-      multi-line
-      text
-    </example>
-  </example_group>
-</the_ask>
-
-<return>
-Return instructions...
-  <template>
-    ...
-  </template>
-</return>
-```
+Every instruction written for an agent is a brief: XML-structured,
+imperative, opening with a `<persona>`.  The contract, the tag
+vocabulary, and the worked template live in
+`~/.agents/skills/delegate/references/brief.md`.
 
 ## Software Development Lifecycle
 
