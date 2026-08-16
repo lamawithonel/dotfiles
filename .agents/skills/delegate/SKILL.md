@@ -8,6 +8,7 @@ description: >-
   to split across workers, and when running delegations must be
   paused, resumed, or halted.  Reach for `model-router` from here to
   pick the model.
+argument-hint: "[test]"
 ---
 
 # Delegate
@@ -110,3 +111,30 @@ must pass before returning, and the receipt reports its result.
 | I want caveman-compressed worker output | the `cavecrew` skill |
 
 Read one.  A single-channel task needs exactly one of these.
+
+## `test` -- prove the external channel works
+
+Invoked as `/delegate test`, or whenever an external dispatch fails and
+the report is "the CLI doesn't work".  Run:
+
+```sh
+scripts/test-external.sh          # every case
+scripts/test-external.sh pi       # only cases whose name contains "pi"
+```
+
+Output is TAP.  A case exits 0 (pass), 77 (skip, precondition unmet),
+or nonzero (fail), and prints its own diagnostic.  Report the failing
+case name and its diagnostic; do not re-derive the cause by hand.
+
+Cases live in `scripts/tests/`, run in filename order.  **Add one by
+dropping an executable file in that directory** -- there is no registry
+to update and no runner to edit.
+
+The highest-yield case is `20-pi-credentials`.  An external CLI's
+credential can be denied by the host sandbox policy, and a sandbox that
+fails open leaves the same command working in one context and failing
+in another.  When a peer session reports a CLI broken and it works
+here, compare contexts before comparing commands.
+
+Environment: `DELEGATE_TEST_TIMEOUT` (seconds, default 90),
+`DELEGATE_TEST_PI_MODEL`, `DELEGATE_TEST_LLAMA_URL`.
