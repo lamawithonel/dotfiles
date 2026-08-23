@@ -61,10 +61,13 @@ paths:
 
 Run the verification battery after creating or editing any JavaScript file.
 
-### The Battery
+### 1. Turn-by-Turn Battery (Run on every edit)
 
     npx tsc --noEmit --allowJs --checkJs FILE
     npx eslint FILE --max-warnings 0
+
+### 2. Pre-Commit Boundary Gates (Run before task completion)
+
     npx knip
     npx depcruise src --max-circular 0
 
@@ -73,8 +76,7 @@ Run the verification battery after creating or editing any JavaScript file.
 - **`tsc` / `eslint`**: 0 errors, 0 warnings, exit code 0.
 - **Cyclomatic Complexity**: McCabe complexity <= 10, max nesting depth <= 3 (ESLint `complexity`, `max-depth`).
 - **Promise Safety**: 0 floating promises or misused asynchronous predicates (`no-floating-promises`, `no-misused-promises`).
-- **`knip`**: 0 orphaned exports, unused files, or unlisted `package.json` dependencies.
-- **`depcruise`**: 0 circular module dependencies (`--max-circular 0`).
+- **`knip` / `depcruise`**: 0 orphaned exports, unused files, or circular dependencies at project milestones.
 - **Zero-Dependency Enhancements**: Non-invasive improvements (`// @ts-check` headers or JSDoc annotations on new/modified files) are encouraged when contributing to external codebases, provided they add zero dependencies and the project does not actively forbid them.
 - **Active Project Restrictions**: If an external project explicitly forbids type comments or header directives, enforce invariants via defensive runtime guards (`typeof`, `instanceof`, `?.`, `??`) and match host repository conventions.
 - **Ingress Parsing Exception**: Untyped payload unwrapping is permitted strictly at ingress schema boundaries (`ArkType`/`Valibot`/`Zod`); internal domain models must be 100% strongly typed via JSDoc.
