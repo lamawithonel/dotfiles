@@ -56,13 +56,12 @@ Run the verification battery after creating or editing any Python file.
     ruff check FILE
     ruff format --check FILE
     pyright FILE
-    radon cc -s -nb FILE
 
 ### Pass Criteria & Exceptions
 
 - **`ruff check` / `pyright`**: 0 errors, 0 warnings, exit code 0.
 - **`ruff format --check`**: Diff must be empty (exit code 0).
-- **`radon cc`**: Cyclomatic complexity (CCN) <= 10 per function (Grade A/B).  Refactor anything Grade C or higher (CCN >= 11).
+- **Cyclomatic Complexity**: CCN <= 10 per function (enforced via `ruff` rule `C901` or `radon cc`).
 - **Pattern Matching CCN Exception**: Functions consisting of a single flat `match` block or dispatch table may reach CCN 20, provided branches are <= 3 lines with zero nested conditionals.
 - **Untyped Boundary Exception**: `Any` and `# type: ignore[code]` are permitted strictly at external package boundaries lacking type stubs; always specify the exact error code.
 
