@@ -135,11 +135,14 @@ paths:
 
 Run the verification battery after creating or editing any shell script.
 
-### The Battery
+### 1. Turn-by-Turn Battery (Run on every edit)
 
     sh -n FILE                     # bash -n for Bash-dialect scripts
     shellcheck FILE
     shfmt -d -bn -ci -sr -kp FILE  # diff must be empty
+
+### 2. Contextual & Audit Gates (Run where tooling is installed)
+
     checkbashisms FILE             # #!/bin/sh scripts only
     shellmetrics FILE              # CCN <= 10 / function, <= 8 file average
 
@@ -148,8 +151,8 @@ Run the verification battery after creating or editing any shell script.
 - **`sh -n` / `bash -n`**: 0 syntax errors (zero-cost gate).
 - **`shellcheck`**: 0 errors, 0 warnings (exit code 0).
 - **`shfmt`**: Diff must be empty (exit code 0).
-- **`checkbashisms`**: 0 bashisms in `#!/bin/sh` scripts.
-- **`shellmetrics`**: Cyclomatic complexity <= 10 per function; file average <= 8.
+- **`checkbashisms`**: 0 bashisms in `#!/bin/sh` scripts (run where tool is available).
+- **Complexity Gate**: Cyclomatic complexity <= 10 per function, file average <= 8 (measured via `shellmetrics` where available).
 - **Large Dispatch Table Exception**: Functions consisting of a single flat `case` dispatch table may reach CCN 16 when branches are <= 5 lines with zero nested conditionals.
 - **Throwaway Script Exemption**: Ad-hoc, one-line scratchpad scripts are exempt from `shellmetrics`.
 
