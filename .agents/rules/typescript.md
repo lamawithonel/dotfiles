@@ -63,10 +63,13 @@ paths:
 
 Run the verification battery after creating or editing any TypeScript file.
 
-### The Battery
+### 1. Turn-by-Turn Battery (Run on every edit)
 
     npx tsc --noEmit
     npx eslint FILE --max-warnings 0
+
+### 2. Pre-Commit Boundary Gates (Run before task completion)
+
     npx knip
     npx depcruise src --max-circular 0
 
@@ -75,8 +78,7 @@ Run the verification battery after creating or editing any TypeScript file.
 - **`tsc --noEmit` / `eslint`**: 0 errors, 0 warnings, exit code 0.
 - **Cyclomatic Complexity**: McCabe complexity <= 10, max nesting depth <= 3 (ESLint `complexity`, `max-depth`).
 - **Promise Safety**: 0 floating promises or misused asynchronous predicates (`no-floating-promises`, `no-misused-promises`).
-- **`knip`**: 0 orphaned exports, unused files, or unlisted `package.json` dependencies.
-- **`depcruise`**: 0 circular module dependencies (`--max-circular 0`).
+- **`knip` / `depcruise`**: 0 orphaned exports, unused files, or circular dependencies at project milestones.
 - **Generic Constraint Exception**: `(...args: any[]) => unknown` is permitted strictly in generic parameter constraints (`<F extends (...args: any[]) => unknown>`) to preserve caller argument inference.
 - **Ingress Parsing Exception**: Untyped payload unwrapping is permitted strictly at ingress schema boundaries (`ArkType`/`Valibot`/`Zod`); internal domain models must be 100% strongly typed.
 - **Flat Dispatcher Exception**: Flat `switch` tables, AST tokenizers, and state dispatchers may reach CCN 20, provided branches have 0 nested conditionals and 100% test branch coverage.
