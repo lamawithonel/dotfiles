@@ -127,6 +127,36 @@ vocabulary, and the worked template live in
   4. Contract Tests (API schemas & service boundaries)
   5. E2E Tests (Full system workflows)
 
+## Scope Containment & Modification Boundaries
+
+- **Convention & Policy Discovery**: Before introducing new patterns,
+  libraries, or abstractions, proactively inspect the project for local
+  conventions:
+  1. *Policy & Tooling Probes*: Check project root for local guidelines
+     (e.g., `AGENTS.md`, `CLAUDE.md`, `.claude/rules/`, `.pi/rules/`,
+     `CONTRIBUTING.md`) and tooling configurations (e.g., `pyproject.toml`,
+     `.golangci.yml`, `tsconfig.json`, `build.zig.zon`).
+  2. *Neighborhood Sampling*: Sample 1--2 sibling files in the target
+     directory to observe local idioms (e.g., error wrapping style, logger
+     injection, naming conventions, and package layout).
+  3. *Zero Competing Paradigms*: Match the codebase's existing paradigms;
+     never introduce competing libraries or conflicting design patterns
+     for problems the codebase already solves.
+- **Local Architectural Precedence**: Existing repository architecture,
+  established frameworks, and project-local conventions strictly override
+  global rules.  Do not refactor or replace functional idioms (e.g.,
+  existing web routers or state managers) solely to match global defaults
+  without explicit direction.
+- **Diff-Bounded Verification (Zero Unsolicited Churn)**: Restrict
+  static checks, type narrowing, and linter remediation strictly to the
+  active changeset (functions, structs, and modules under direct
+  modification).  Never perform opportunistic refactoring on untouched
+  legacy code to satisfy modern quality thresholds.
+- **Transient Workspace Exemption**: Un-tracked scratchpads, exploratory
+  technical spikes, benchmarks, and throwaway scripts are exempt from
+  strict type annotations, interface minimization, and cyclomatic
+  complexity gates.
+
 ## Version Control & Workspace Directives
 
 1. **Conditional VCS Routing**: Route code mutations, diff analyses,
