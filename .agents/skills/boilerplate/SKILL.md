@@ -1,6 +1,6 @@
 ---
 name: boilerplate
-description: Scaffold new projects or retrofit existing codebases with standard topologies, universal XDG Base Directory paths, hierarchical config, cross-platform service management (systemd, launchd, Windows, pitchfork), jdx devtooling (mise, hk, fnox), and governance baselines.  Use when asked to scaffold, bootstrap, or initialize a project, retrofit an existing repo, make an application XDG-compliant, configure git hooks with hk, or set up service units.
+description: Scaffold new projects or retrofit existing codebases with standard topologies, universal XDG Base Directory paths, dual policy and configuration hierarchy, secret management (fnox, OS keychains, KMS), cross-platform services (systemd, launchd, Windows, pitchfork), jdx devtools (mise, hk, fnox), and governance baselines.  Use when asked to scaffold, bootstrap, or initialize a project, retrofit an existing repo, make an application XDG-compliant, configure git hooks with hk, or manage secrets.
 license: Apache-2.0
 ---
 
@@ -18,7 +18,7 @@ state/config paths, modern developer tooling, and governance baselines.
 - **`archetype`**: The structural model of a project (CLI, Library, Daemon,
   Workspace).
 - **`facet`**: A discrete operational layer (Topology, Paths, Devtools,
-  Service, Configuration, Governance).
+  Service, Configuration, Secrets, Governance).
 
 ## Universal Invariants
 
@@ -74,7 +74,8 @@ Consult the relevant reference document before generating or modifying files:
 | **Paths & XDG** | XDG v0.8 paths & native OS bundle exceptions | [references/paths-and-xdg.md](references/paths-and-xdg.md) |
 | **Devtools & Hooks** | `mise`, `hk` git hooks, `fnox`, `.gitignore` | [references/dev-tooling-and-hooks.md](references/dev-tooling-and-hooks.md) |
 | **Services** | `pitchfork`, `systemd`, `launchd`, Windows 11 | [references/service-management.md](references/service-management.md) |
-| **Configuration** | Hierarchical config resolution & formats | [references/configuration.md](references/configuration.md) |
+| **Configuration** | Dual policy & config hierarchy, overlays, formats | [references/configuration.md](references/configuration.md) |
+| **Secrets** | Hierarchical fnox, OS keychains, KMS, memory safety | [references/secrets-management.md](references/secrets-management.md) |
 | **Governance** | `AGENTS.md`, SPDX licensing, CI baselines | [references/governance-and-meta.md](references/governance-and-meta.md) |
 
 *Completion Criterion*: Required facets mapped to specific target files.

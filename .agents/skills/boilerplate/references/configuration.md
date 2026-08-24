@@ -30,34 +30,43 @@ scope continuum:
 
 ## 2. Policy Hierarchy (Top-Down Precedence)
 
-Policy governs security boundaries, operational constraints, allowed protocols,
-and licensing mandates.  **Broadest scope takes priority**:
+Policy restricts the state space to a subset of options, usually governing
+security boundaries and operational constraints.  There may be more than
+one policy hierarchy to cover distinct axes, e.g., general configuration
+restrictions + access control.  **Broadest scope takes priority**:
 
 ```
-1. Compile-Time Hardened Policy        (Build-time security flags, baked enterprise policy)
+1. Compile-Time Hardened Policy   (Build-time security flags, baked policy)
       ↓
-2. System / Enterprise Policy          (/etc/<app>/policy.toml, machine-wide policies)
+2. System Policy                  (/etc/<app>/policy.toml, machine-wide policies)
       ↓
-3. User Host-Local Policy              ($XDG_CONFIG_HOME/<app>/policy.local.toml)
+3. User Host-Local Policy         ($XDG_CONFIG_HOME/<app>/policy.local.toml)
       ↓
-4. User Base Policy                    ($XDG_CONFIG_HOME/<app>/policy.toml)
+4. User Base Policy               ($XDG_CONFIG_HOME/<app>/policy.toml)
       ↓
-5. Project Host-Local Policy           (./policy.local.toml, ./AGENTS.local.md)
+5. Project Host-Local Policy      (./policy.local.toml)
       ↓
-6. Project Base Policy                 (./policy.toml, ./AGENTS.md)
+6. Project Base Policy            (./policy.toml)
       ↓
 7. Runtime Execution Environment
 ```
 
+
 ### Policy Invariants
 
-1. **Top-Down Constraint**: A local project config or runtime CLI flag can
+1. **Policy always takes priority over the Configuration Hierarchy**: If
+   a value is defined in both hierarchies, or if a policy directive influences
+   a configuration state, the policy directive "wins".
+2. **Top-Down Constraint**: A local project config or runtime CLI flag can
    tighten policy but cannot loosen, bypass, or disable an upstream security
    or compliance policy.
-2. **Baked Enterprise Policy**: In security-sensitive or read-only package
-   installations (e.g. system immutable packages, hardened daemon builds),
-   enterprise policies can be compiled directly into binary logic or package
-   manifests as an unalterable baseline floor.
+3. **Baked Policy**: In security-sensitive or read-only package installations
+   (e.g. system immutable packages, hardened daemon builds), policies can
+   be compiled directly into binary logic or package manifests as an unalterable
+   baseline floor.
+4. **Policy depends on system integrity**: It should go without saying, if
+   a user can change a system policy file, they may override it.  Policy
+   must always be locked down to least privilege.
 
 ---
 
@@ -67,23 +76,23 @@ Configuration specifies runtime operational values (network ports, endpoints,
 cache sizes, timeouts, log levels).  **Narrowest invocation scope takes priority**:
 
 ```
-1. Direct CLI Arguments / Flags        (--port 8080, --config /custom/path.toml)
+1. Direct CLI Arguments / Flags   (--port 8080, --config /custom/path.toml)
       ↓
-2. Environment Variables               (APP_PORT=8080, APP_LOG_LEVEL=debug)
+2. Environment Variables          (APP_PORT=8080, APP_LOG_LEVEL=debug)
       ↓
-3. Project Host-Local Overlay          (./<app>.local.toml, ./mise.local.toml)
+3. Project Host-Local Overlay     (./<app>.local.toml, ./mise.local.toml)
       ↓
-4. Project Base Config File            (./<app>.toml, ./mise.toml)
+4. Project Base Config File       (./<app>.toml, ./mise.toml)
       ↓
-5. User Host-Local Overlay             ($XDG_CONFIG_HOME/<app>/config.local.toml)
+5. User Host-Local Overlay        ($XDG_CONFIG_HOME/<app>/config.local.toml)
       ↓
-6. User Base XDG Config File           ($XDG_CONFIG_HOME/<app>/config.toml)
+6. User Base XDG Config File      ($XDG_CONFIG_HOME/<app>/config.toml)
       ↓
-7. System XDG Config File              ($XDG_CONFIG_DIRS/<app>/config.toml)
+7. System XDG Config File         ($XDG_CONFIG_DIRS/<app>/config.toml)
       ↓
-8. Compile-Time / Build Options        (Build-time feature flags & defaults)
+8. Compile-Time / Build Options   (Build-time feature flags & defaults)
       ↓
-9. Built-in Defaults                   (Hardcoded fallback constants)
+9. Built-in Defaults              (Hardcoded fallback constants)
 ```
 
 ### Configuration Invariants
@@ -126,3 +135,13 @@ cache sizes, timeouts, log levels).  **Narrowest invocation scope takes priority
   missing.
 - **Dynamic Reloading (`SIGHUP`)**: When receiving `SIGHUP`, re-evaluate
   configuration files and update mutable runtime state atomically.
+
+---
+
+## 7. Secrets Management & Ingestion
+
+Configuration files must **never** store plaintext secrets.  For credential
+storage, hardware/OS keychains (`libsecret`, macOS Keychain, Windows Credential
+Manager), the `_file`/`_env` pointer pattern, hierarchical `fnox` injection,
+and cloud KMS resolution, see
+[references/secrets-management.md](secrets-management.md).
