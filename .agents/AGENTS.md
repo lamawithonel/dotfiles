@@ -1,9 +1,47 @@
 # Global Instructions
 
+## Policy & Configuration Hierarchy
+
+Operational instructions and software systems evaluate governance and runtime
+settings through two opposing precedence hierarchies along the scope continuum
+(from broadest authority to closest invocation):
+
+### 1. Scope Continuum
+1. Built-in Defaults (hardcoded fallbacks)
+2. Compile-Time / Build-Time Options (hardened compiler flags, feature gates, baked enterprise policy)
+3. System-Level (`/etc`, machine-wide policies)
+4. User-Level Base (`$XDG_CONFIG_HOME`, `~/.config`, `~/.agents/AGENTS.md`)
+5. User-Level Host-Local Overlay (`$XDG_CONFIG_HOME/*/*.local.toml`, `~/.agents/AGENTS.local.md`)
+6. Local / Project-Level Base (`$(pwd)/config.toml`, `$(pwd)/mise.toml`, `$(pwd)/AGENTS.md`)
+7. Local / Project-Level Host-Local Overlay (`$(pwd)/*.local.toml`, `$(pwd)/AGENTS.local.md`)
+8. Environment Variables (`$APP_*`, `$XDG_*`)
+9. Direct Command-Line Arguments & Runtime Flags
+
+*Host-Local Overlay Rule*: `*.local.*` and `*.local` files merge with and override
+keys from their corresponding base file.  They represent uncommitted, host-specific
+settings and must always be gitignored.
+
+*Baked Policy Note*: Enterprise policies can occasionally be baked into packages
+at compile time or build time (especially in read-only installations), establishing
+an immutable baseline floor that cannot be relaxed by runtime configuration.
+
+### 2. Policy Hierarchy (Broad-to-Narrow Authority)
+Policy sets security constraints, compliance boundaries, licensing rules, and
+architectural invariants.  **Broadest authority takes strict precedence**:
+- `Compile-Time / Baked Policy` / `System Policy` > `User Host-Local Policy (AGENTS.local.md)` > `User Base Policy (AGENTS.md)` > `Project Host-Local Policy` > `Project Base Policy` > `Runtime Environment`.
+- Narrower scopes (e.g. project files or CLI flags) may further restrict policy
+  but **cannot** relax, disable, or violate upstream governance.
+
+### 3. Configuration Hierarchy (Narrow-to-Broad Specialization)
+Configuration sets runtime parameters, endpoints, ports, log levels, and tuning.
+**Closest invocation takes strict precedence**:
+- `Direct CLI Flags` > `Environment Variables` > `Project Host-Local (config.local.toml)` > `Project Base (config.toml)` > `User Host-Local (config.local.toml)` > `User Base (config.toml)` > `System Config (/etc)` > `Compile-Time Options` > `Built-in Defaults`.
+- Call-site overrides specialize and replace broader fallback defaults.
+
 ## Local Instructions
 
 Read @~/.agents/AGENTS.local.md for local instructions.  Local instructions
-take precedence over global instructions.
+take precedence over global instructions per the Policy Hierarchy.
 
 ## Session Start Instructions
 
@@ -52,13 +90,20 @@ Harness skill directories are symlinks into it (e.g., `~/.claude/skills
 -> ../.agents/skills`).  Never install a skill into a harness-private
 directory.
 
-## Project-level Host-Local Directories
+## Project-Local Directories & Scaffolding
+
+When bootstrapping, scaffolding, or retrofitting a project's directory
+layout, state management, or baseline configuration, load the
+`boilerplate` skill (`~/.agents/skills/boilerplate/`).  It governs
+tiered project topologies, XDG Base Directory (v0.8) compliance,
+hierarchical configuration, jdx devtools (`mise`, `hk`, `fnox`),
+and standard operational metadata.
 
 If a project directory has no declared host-local directory scheme:
 
-- Use `.local/share/` for host-local data
-- Use `.local/state/` for host-local state
-- Use `.cache/` for host-local temporary files
+- Use `.local/share/` for project-local data
+- Use `.local/state/` for project-local state
+- Use `.cache/` for project-local temporary files
 - Use `$TMPDIR/<session-id>` for one-off temporary session files
 - Use the XDG base dir specification guidelines when selecting the
   correct directory.  The directories intentionally mimic the XDG base

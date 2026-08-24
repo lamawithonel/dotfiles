@@ -1,0 +1,34 @@
+# ~/.config/boilerplate/presets/ci.example.yml
+# Standard CI workflow template for GitHub Actions
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verification Battery
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Install mise Devtools
+        uses: jdx/mise-action@v2
+
+      - name: Check Formatting
+        run: mise run fmt
+
+      - name: Run Tier 1 Static Analysis Battery
+        run: mise run check
+
+      - name: Run Automated Test Suite
+        run: mise run test

@@ -1,0 +1,26 @@
+# ~/.config/boilerplate/archetypes/cli.example.toml
+# Archetype definition for command-line tools and utilities
+
+name = "cli"
+description = "Command-line utility with flag parsing, subcommands, and XDG paths"
+
+# Required file paths to generate during scaffolding
+required_files = [
+    "AGENTS.md",
+    "LICENSE",
+    "README.md",
+    ".gitignore",
+    ".gitattributes",
+    "mise.toml",
+    "hk.toml",
+    "src/main.*",
+    "src/cli.*",
+    "src/config.*",
+    "tests/cli_test.*"
+]
+
+[presets]
+# Presets to pull from ~/.config/boilerplate/presets/
+mise = "mise.example.toml"
+hk = "hk.example.toml"
+ci = "ci.example.yml"

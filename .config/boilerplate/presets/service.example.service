@@ -1,0 +1,26 @@
+# ~/.config/boilerplate/presets/service.example.service
+# Systemd user unit template for Linux background services
+
+[Unit]
+Description={{project_name}} User Service
+After=network.target
+
+[Service]
+Type=exec
+ExecStart=%h/.local/bin/{{project_name}} daemon
+Restart=on-failure
+RestartSec=5s
+TimeoutStopSec=10s
+
+# Ephemeral runtime directory in $XDG_RUNTIME_DIR/{{project_name}}
+RuntimeDirectory={{project_name}}
+WorkingDirectory=%h
+
+# Environmental hardening
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.local/share/{{project_name}} %h/.local/state/{{project_name}} %h/.cache/{{project_name}}
+
+[Install]
+WantedBy=default.target

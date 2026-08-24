@@ -1,0 +1,10 @@
+# ~/.config/boilerplate/presets/hk.example.toml
+# Fast git hook orchestration via hk (written in Rust by jdx)
+
+[hooks.pre-commit]
+description = "Execute Tier 1 turn-by-turn checks on staged files before commit"
+run = "mise run check"
+
+[hooks.pre-push]
+description = "Execute full automated test suite and milestone gates before push"
+run = "mise run test"

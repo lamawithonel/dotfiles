@@ -1,0 +1,28 @@
+# ~/.config/boilerplate/archetypes/microservice.example.toml
+# Archetype definition for background services, daemons, and APIs
+
+name = "microservice"
+description = "Long-running daemon or HTTP/gRPC service with telemetry and supervision"
+
+required_files = [
+    "AGENTS.md",
+    "LICENSE",
+    "README.md",
+    ".gitignore",
+    ".gitattributes",
+    "mise.toml",
+    "hk.toml",
+    "pitchfork.toml",
+    "src/main.*",
+    "src/server.*",
+    "src/health.*",
+    "src/config.*",
+    "systemd/service.example.service"
+]
+
+[presets]
+mise = "mise.example.toml"
+hk = "hk.example.toml"
+service = "service.example.service"
+launchd = "launchd.example.plist"
+ci = "ci.example.yml"

@@ -1,0 +1,26 @@
+# ~/.config/boilerplate/presets/license.example.txt
+# Standard license header and root license text templates
+
+[spdx]
+# Standard SPDX Identifier to inject at top of source files
+apache2 = "// SPDX-License-Identifier: Apache-2.0"
+mit = "// SPDX-License-Identifier: MIT"
+proprietary = "// Copyright (c) 2026 {{organization}}. All rights reserved.\n// PROPRIETARY AND CONFIDENTIAL."
+
+[templates]
+# Full root LICENSE file template
+apache2_notice = """
+Copyright 2026 {{author_name}} <{{author_email}}>
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""

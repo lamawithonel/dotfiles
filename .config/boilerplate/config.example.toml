@@ -1,0 +1,32 @@
+# ~/.config/boilerplate/config.example.toml
+# Global user defaults and preferences for the boilerplate skill
+
+[defaults]
+# Default project archetype (cli, library, daemon, workspace)
+archetype = "cli"
+
+# Default open source or enterprise license
+license = "Apache-2.0"
+
+# Default author and organization metadata
+author_name = "Lucas"
+author_email = "lucas@example.com"
+organization = "Personal"
+
+[tooling]
+# Preferred toolchain and task runner (mise)
+runner = "mise"
+
+# Git hook manager (hk)
+hook_manager = "hk"
+
+# Secret manager (fnox)
+secret_manager = "fnox"
+
+# Process supervisor for local development (pitchfork)
+supervisor = "pitchfork"
+
+[xdg]
+# Enforce strict XDG Base Directory (v0.8) compliance across all projects
+enforce_xdg_default = true
+create_host_local_dirs = true # Automatically scaffold .local/ and .cache/

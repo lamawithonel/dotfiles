@@ -1,0 +1,33 @@
+# ~/.config/boilerplate/presets/mise.example.toml
+# Standard mise configuration template for dev tools, environment, and tasks
+
+[tools]
+# Pin exact language runtimes per project
+# rust = "1.85.0"
+# node = "22.14.0"
+# python = "3.12.9"
+# go = "1.24.0"
+# zig = "0.14.0"
+
+[env]
+RUST_BACKTRACE = "1"
+
+[tasks.check]
+description = "Execute Tier 1 turn-by-turn compiler and static analysis gates"
+run = "cargo check && cargo clippy -- -D warnings"
+
+[tasks.test]
+description = "Execute automated test pyramid"
+run = "cargo test"
+
+[tasks.fmt]
+description = "Verify canonical code formatting"
+run = "cargo fmt -- --check"
+
+[tasks.lint]
+description = "Execute linter battery"
+run = "cargo clippy -- -D warnings"
+
+[tasks.ci]
+description = "Full pre-push / CI verification battery"
+depends = ["fmt", "check", "test"]
