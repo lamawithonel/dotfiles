@@ -62,5 +62,14 @@ dependencies:
         - start-mcp-server
         - --context=ide
         - --project-from-cwd
+
+    # Hugging Face -- Repository tools
+    # https://huggingface.co/mcp
+    - name: huggingface
+      registry: false
+      transport: http
+      url: https://huggingface.co/mcp?login
+      env:
+        HF_TOKEN: '${HF_TOKEN}'
 includes: auto
 scripts: {}
