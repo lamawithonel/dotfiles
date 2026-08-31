@@ -1,0 +1,3 @@
+[tools]
+"pipx:mojo" = { version = "latest", uvx_args = "--prerelease allow" }
+"pipx:mojo-compiler" = { version = "latest", uvx_args = "--prerelease allow" }

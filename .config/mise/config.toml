@@ -47,7 +47,6 @@ bun = "latest"
 "pipx:apm-cli" = "latest"
 "pipx:graphifyy" = "latest"
 "pipx:headroom-ai" = { version = "latest", extras = "all,vector" }
-"pipx:mojo" = { version = "latest", uvx_args = "--prerelease allow" }
 "pipx:pyright" = "latest"
 "pipx:radon" = { version = "latest", extras = "toml" }
 "pipx:serena-agent" = "latest"
