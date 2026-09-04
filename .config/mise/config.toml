@@ -4,19 +4,18 @@ env_shell_expand = true
 gpg_verify = true
 node.corepack = true
 node.npm_shim = false
-npm.package_manager = "bun"
 idiomatic_version_file_enable_tools = ["rust"]
 
 [settings.url_replacements]
 "regex:^http://(.*)" = "https://$1"
 
 [tools]
+aube = "latest"
 dotnet = "latest"
 # Install Rust with rust-analyzer and its dependency rust-src for LSP support
 rust = { version = "latest", profile = "default", components = "rust-src,rust-analyzer" }
 go = "latest"
 node = "lts"
-bun = "latest"
 "aqua:LuaLS/lua-language-server" = "latest"
 "aqua:sivchari/gopls-lazy" = "latest"
 "cargo:cargo-audit" = "latest"
