@@ -27,6 +27,7 @@ node = "lts"
 "cargo:kani-verifier" = { version = "latest", locked = true }
 "cargo:mdterm" = "latest"
 "cargo:mqttv5-cli" = "latest"
+"cargo:ryl" = "latest"
 "cargo:starship" = "latest"
 "cargo:usage-cli" = "latest"
 "cargo:tectonic" = "latest"
