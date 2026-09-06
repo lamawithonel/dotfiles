@@ -1,182 +1,150 @@
 # Scoring: Registry Layout, Policy, and Degradation
 
-The policy behind `scripts/score.py --pick`.  `SKILL.md` carries only
-what an agent needs to run the command; everything the command does
-is explained here.  No model is ever chosen from memory.
+This reference defines the mathematical scoring policy and selection
+rules executed by `scripts/score.py --pick`.  All routing decisions must
+read `~/.agents/model-benchmarks.json`; do not select models from memory.
 
-One file: `~/.agents/model-benchmarks.json`, validated by
-`schema/model-benchmarks.schema.json` (JSON Schema 2020-12,
-`schema_version` 3).  Written only by
-`scripts/refresh-benchmarks.py`; humans and agents edit the
-`overrides` block and nothing else.
+---
 
-| Section     | Owner    | Scope                                                        |
-| ----------- | -------- | ------------------------------------------------------------ |
-| `models`    | script   | global facts keyed by roster id: match keys, benchmarks, pricing, `last_seen` |
-| `hosts.<h>` | script   | this host's roster: enabled, channels, execution blocks, probe stamps |
-| `sources`   | script   | per-feed `status` (`ok`/`failed`/`skipped`/`never`), `as_of`, `error` |
-| `overrides` | human    | `tier_4_only`, `tags`, `match` patches, `track_only`, `probe`, notes |
+## 1. Registry Architecture
 
-## Registry Checks (what `score.py` enforces)
+The registry file `~/.agents/model-benchmarks.json` conforms to JSON Schema
+Draft 2020-12 via `schema/model-benchmarks.schema.json`.
 
-1. `check-jsonschema --schemafile ~/.agents/skills/model-router/schema/model-benchmarks.schema.json ~/.agents/model-benchmarks.json`.
-   A schema failure means a hand edit broke the file; fix `overrides`
-   or rerun the refresh script, which restores from `.bak` semantics
-   (it never writes an invalid file).
-2. `hosts` must contain this host's short hostname.  If not, the
-   registry has never been refreshed here: run
-   `scripts/refresh-benchmarks.py` (needs egress for feeds; roster
-   phases work offline) and stop routing until it succeeds.
-3. `score.py` prints a warning per source whose `status` is not `ok`
-   or whose `as_of` is older than 14 days.  Relay the warning; route
-   anyway.  A pitchfork cron daemon (`benchmarks-refresh`, 6-hourly)
-   keeps the file fresh where it runs.
-4. Null is never fabricated.  A null benchmark drops out of the
-   weighted sum (weights renormalize); an all-null model is
-   ineligible for automatic selection and reachable only by user
-   directive.  A feed value not re-seen for 90 days scores as null
-   (`last_seen` age-out), so models that fall off a leaderboard age
-   out without a human nulling them.
-5. `channels.pi` or `channels.claude-code` false on this host makes
-   every entry native to that harness ineligible here, even if listed.
+| Section | Managed By | Scope and Purpose |
+| --- | --- | --- |
+| `models` | Automated script | Benchmark indices, pricing, context window, and `last_seen` timestamps |
+| `hosts.<h>` | Automated script | Host-local capabilities: enabled status, channel mappings, and CLI execution commands |
+| `sources` | Automated script | Status (`ok`, `failed`, `skipped`), retrieval timestamp, and error logs per feed |
+| `overrides` | User / Administrator | Manual overrides: `tier_4_only`, `track_only`, feed match patches, and custom constraints |
 
-Harness detection and channel availability are dispatch concerns
-(`channel-external.md`); the registry records what the refresh script
-observed, and the dispatch step confirms it.
+### Invariant Checks
 
-## Classification Detail
+1. **Schema compliance:** `score.py` validates the registry against
+   `schema/model-benchmarks.schema.json`.
+2. **Host registration:** The registry must contain an entry for the
+   current short hostname under `hosts`.
+3. **Data currency:** If a feed status is not `ok` or the `as_of` date is
+   older than 14 days, `score.py` emits a warning but proceeds with
+   routing.
+4. **Benchmark age-out:** Benchmark values not refreshed within 90 days
+   are treated as `null`.
+5. **Channel eligibility:** If a channel is disabled in `hosts.<h>.channels`,
+   models native to that channel cannot be selected automatically.
 
-### Tiering System
+---
 
-| System    | When                                                   |
-| --------- | ------------------------------------------------------ |
-| `general` | everything not below                                   |
-| `design`  | visual design, UI/UX layout, front-end aesthetics, landing pages, anything judged by how it looks |
+## 2. Classification Systems and Weight Profiles
 
-### Benchmark Profile (general system only)
+### Task Classification
 
-Pick exactly one; it selects the weights in `score.py` `PROFILES`:
+- **`general` system:** Default system for software development, technical
+  reasoning, analysis, and documentation.
+- **`design` system:** Specialized ladder for visual layout, styling,
+  user interface (UI) and user experience (UX) aesthetics, and front-end
+  design.
 
-| Profile     | Task shapes                                          | Weights                                                                   |
-| ----------- | ---------------------------------------------------- | ------------------------------------------------------------------------- |
-| `coding`    | bug fixes, refactors, multi-file edits, test writing | aa_coding .35, deep_swe .25, terminal_bench .15, aa_omniscience .15, aa_factuality .10 |
-| `reasoning` | architecture, root-cause analysis, planning, math    | aa_intelligence .50, aa_omniscience .20, aa_factuality .15, deep_swe .15  |
-| `style`     | copy, docs, formatting, naming, review prose         | design_arena .45, eq_bench .25, aa_factuality .15, aa_intelligence .15    |
+### General Benchmark Profiles
 
-Benchmark fields (all higher-is-better; `aa_factuality` is
-`1 - AA Omniscience hallucination rate`, `terminal_bench` is AA's
-`terminalbench_v2_1` in percent):
+Select exactly one profile to determine the scoring weights:
 
-| Field             | Feed             | Scale        |
-| ----------------- | ---------------- | ------------ |
-| `aa_intelligence` | `aa_api`         | index points |
-| `aa_coding`       | `aa_api`         | index points |
-| `terminal_bench`  | `aa_api`         | percent      |
-| `aa_omniscience`  | `aa_omniscience` | index points |
-| `aa_factuality`   | `aa_omniscience` | 0..1         |
-| `deep_swe`        | `deep_swe`       | percent      |
-| `eq_bench`        | `eq_bench`       | ELO          |
-| `design_arena`    | `design_arena`   | ELO          |
+| Profile | Target Tasks | Benchmark Weights |
+| --- | --- | --- |
+| `coding` | Defect fixes, refactoring, feature implementation, unit testing | `aa_coding` (0.35), `deep_swe` (0.25), `terminal_bench` (0.15), `aa_omniscience` (0.15), `aa_factuality` (0.10) |
+| `reasoning` | Architecture, root-cause analysis, planning, mathematical logic | `aa_intelligence` (0.50), `aa_omniscience` (0.20), `aa_factuality` (0.15), `deep_swe` (0.15) |
+| `style` | Technical writing, documentation, code naming, formatting | `design_arena` (0.45), `eq_bench` (0.25), `aa_factuality` (0.15), `aa_intelligence` (0.15) |
 
-### Complexity Tier (general system)
+### Benchmark Fields and Metric Scales
 
-| Tier | Name                      | Characteristics                                                        |
-| ---- | ------------------------- | ---------------------------------------------------------------------- |
-| 1    | High-Volume / Low-Context | predictable, linear, single-file, deterministic transforms, searches   |
-| 2    | Systems Integration       | multi-file features, bounded refactors, localized API mapping          |
-| 3    | High Abstraction          | zero-to-one design, race conditions, silent systemic failures          |
-| 4    | Frontier                  | correctness above all, cost irrelevant; the best model this host can reach |
+All benchmark values evaluate such that higher numbers represent superior
+performance:
 
-A user who names a model overrides every tier; that is a directive,
-not a tier, and needs no scoring.
+| Metric Field | Source Feed | Units and Scaling |
+| --- | --- | --- |
+| `aa_intelligence` | `aa_api` | Index points |
+| `aa_coding` | `aa_api` | Index points |
+| `terminal_bench` | `aa_api` | Percentage (`terminalbench_v2_1 * 100`) |
+| `aa_omniscience` | `aa_omniscience` | Index points |
+| `aa_factuality` | `aa_omniscience` | Normalized scale 0.0 to 1.0 (`1 - hallucinationRate`) |
+| `deep_swe` | `deep_swe` | Percentage |
+| `eq_bench` | `eq_bench` | ELO rating |
+| `design_arena` | `design_arena` | ELO rating |
 
-### Rung (design system)
+---
 
-The design ladder has four rungs read the same way a user reads the
-Design Arena "preference vs price" chart: 1 = cheapest model on the
-Pareto frontier, 4 = best-looking model on it, 2 and 3 spread evenly
-between.  Pick the rung by how much the visual result matters
-relative to spend; a user directive still overrides.
+## 3. Mathematical Scoring Model
 
-## Scoring
+The scoring engine calculates composite quality and cost metrics across
+eligible candidates:
 
-Run it, do not hand-compute:
+1. **Comparability verification:** If a model's benchmark version
+   differs from the feed's `primary_version`, that benchmark is treated as
+   `null`.
+2. **Min-max normalization:** For each benchmark $b$ across candidates
+   with valid scores:
+   $$\text{norm}(m, b) = \frac{\text{value}(m, b) - \min(b)}{\max(b) - \min(b)}$$
+3. **Quality composite ($Q$):** Computed as the weighted mean of non-null
+   normalized scores:
+   $$Q(m) = \frac{\sum w_b \cdot \text{norm}(m, b)}{\sum w_b}$$
+4. **Blended cost ($C$):** Models a 3:1 input-to-output token ratio
+   (expressed in USD per million tokens):
+   $$C(m) = 0.75 \cdot \text{prompt\_cost} + 0.25 \cdot \text{completion\_cost}$$
+5. **Value index ($V$):** Used for Tier 2 optimization:
+   $$V(m) = \frac{Q(m)}{C(m) + 0.05}$$
 
-```sh
-python3 ~/.agents/skills/model-router/scripts/score.py --system general --profile coding --tier 2
-python3 ~/.agents/skills/model-router/scripts/score.py --system general --profile reasoning --tier 4
-python3 ~/.agents/skills/model-router/scripts/score.py --system design
-python3 ~/.agents/skills/model-router/scripts/score.py --json            # everything, machine-readable
-python3 ~/.agents/skills/model-router/scripts/score.py --include-track-only   # also show overrides.*.track_only models (comparison only, never dispatchable)
-```
+---
 
-What the script does (policy constants live in `score.py` and here,
-never in the registry):
+## 4. Tier Selection Logic
 
-0. **Comparability gate:** a score whose `benchmark_versions[field]`
-   differs from the feed's `primary_version` is treated as null.
-1. **Normalize** each field with min-max across candidates where the
-   value is non-null and comparable.  Min-max because ELO scales have
-   no meaningful zero.  With one scored model, `norm = 1` (weak
-   evidence).
-2. **Quality** `Q = sum(w_b * norm_b) / sum(w_b)` over non-null fields.
-3. **Blended cost** `C = 0.75 * prompt + 0.25 * completion` ($/M),
-   from the model's `pricing` unless the roster entry carries a local
-   `pricing` override (that is how the local class entry gets `C = 0`).
-4. **Select by tier** (general):
+### General System
 
-   | Tier | Rule                                                                       |
-   | ---- | -------------------------------------------------------------------------- |
-   | 1    | eligible if `Q >= 0.40`; pick minimum `C`; ties favor higher `Q`           |
-   | 2    | eligible if `Q >= 0.60`; pick maximum `V = Q / (C + 0.05)`                 |
-   | 3    | pick maximum `Q`; within 0.02 favor lower `C`; within 0.05 favor more non-null benchmarks |
-   | 4    | pick maximum `Q` with `tier_4_only` models eligible; cost ignored; within 0.05 favor more non-null benchmarks |
+- **Tier 1 (High-Volume / Low-Context):** Eligible if $Q \ge 0.40$.  Select
+  the candidate with minimum cost $C$.  Ties resolve in favor of higher
+  $Q$.
+- **Tier 2 (Systems Integration):** Eligible if $Q \ge 0.60$.  Select the
+  candidate with maximum value index $V$.
+- **Tier 3 (High Abstraction):** Select the candidate with maximum
+  quality $Q$.  Candidates within 0.02 of the top $Q$ favor lower cost
+  $C$; candidates within 0.05 favor a higher count of non-null benchmarks.
+- **Tier 4 (Frontier):** Select the candidate with maximum quality $Q$
+  with `tier_4_only` models enabled.  Cost is not evaluated.
 
-   The Tier 2 floor exists because raw `V` lets a very cheap, weak
-   model beat a far better one; integration work needs a quality bar
-   before cost is allowed to decide.
+### Design System (Pareto Frontier)
 
-5. **Design ladder:** candidates with both `design_arena` and `C`;
-   Pareto frontier of (lower `C`, higher ELO) walked cost-ascending;
-   frontier index `i` of `n` maps to rung `1 + round(3 i / (n - 1))`.
-   A rung can be empty when the frontier is short; say so and offer
-   the nearest lower rung.
+The design system evaluates candidates with valid `design_arena` ELO scores
+and blended cost $C$:
 
-### Hard Constraints
+- Candidates are plotted along the Pareto frontier (minimizing cost,
+  maximizing ELO) in ascending cost order.
+- The frontier sequence is mapped across four rungs:
+  - **Rung 1:** Most economical model on the Pareto frontier.
+  - **Rungs 2 and 3:** Intermediate models balancing cost and visual
+    performance.
+  - **Rung 4:** Highest-performing model on the Pareto frontier.
 
-- `overrides.<id>.constraints.tier_4_only` makes a model ineligible
-  for Tiers 1 to 3 and for the design ladder; Tier 4 and a user
-  directive are its only paths in.  Instances are flagged in
-  `overrides`, never named in this file.
-- `track_only` models (benchmarked for comparison, in no roster) are
-  never dispatchable; they appear only with `--include-track-only`.
-- A `context_window` smaller than the estimated task context makes
-  a model ineligible.  Null means unknown; the Tier 4 issuer owns
-  the risk.
+---
 
-## Hand Back
+## 5. Hard Constraints
 
-Return the selected id with its `hosts.<h>.roster.<id>.execution.<harness>`
-block verbatim: `model_param` for a native dispatch (Claude Code
-`Agent` tool), `model_ref` for Pi native, `command` for an external
-channel.  Mention the tier/rung, `Q`, `C`, and any source warnings.
+- **`tier_4_only` constraint:** Models flagged with `tier_4_only` in
+  `overrides` are excluded from Tiers 1 through 3 and the design ladder.
+  They are eligible only at Tier 4 or via explicit user directive.
+- **`track_only` constraint:** Models benchmarked for research comparison
+  only; excluded from automatic dispatch.
+- **Context window limits:** Models whose context window is smaller than
+  the estimated task context are disqualified.
 
-Everything downstream is dispatch: which channel carries the work
-(`channel-native.md`, `channel-external.md`) and the brief the worker
-receives (`brief.md`).
+---
 
-## Maintenance
+## 6. Maintenance Procedures
 
-- Everything is regenerated by `scripts/refresh-benchmarks.py`
-  (`references/pipeline.md` explains each phase, its failure mode, and
-  how to debug a feed).  Pitchfork daemon `benchmarks-refresh` runs it
-  6-hourly with `AA_API_KEY` from fnox; `--dry-run` previews.
-- New model in Pi: appears on the next run.  New Claude model: add
-  `overrides.<anthropic/id>.probe: true` or let the `~/.claude.json`
-  picker cache propose it; the probe decides.
-- Feed match miss: add `overrides.<id>.match.<feed>`; the script logs
-  `matched` counts per feed so a miss is visible.
-- Unit tests: `python3 -m unittest discover -s ~/.agents/skills/model-router/scripts/tests`.
-- Schema changes: bump `schema_version` in the schema (`const`), the
-  script's `empty_registry`, this file, and `references/pipeline.md`
-  in one change.
+- **Model ingestion:** New models in Pi appear automatically on the next
+  refresh.  To add a new Claude model, configure
+  `overrides.<anthropic/id>.probe: true` or populate the CLI picker cache.
+- **Feed match patching:** If a model is active but does not link to feed
+  data, add an entry to `overrides.<id>.match.<feed>`.
+- **Validation test suite:** Run unit tests after modifying scoring logic:
+  `python3 -m unittest discover -s ~/.agents/skills/model-router/scripts/tests`
+- **Schema versioning:** When changing registry layout, increment
+  `schema_version` concurrently in `schema/model-benchmarks.schema.json`,
+  `scripts/refresh-benchmarks.py`, and this document.

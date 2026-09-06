@@ -1,90 +1,81 @@
-# Lifecycle of running delegations
+# Lifecycle of Running Delegations
 
-Two verbs, and they are not interchangeable.
+Managing active delegations requires strict distinction between two
+primary operations: **Pause** and **Halt**.
 
-**Pause** -- work is expected to continue later in this session or a
-successor.  Stop consuming the exhausted resource, flush state, and
-leave the resumable things resumable.
+- **Pause:** Halts active resource consumption while maintaining
+  intermediate execution state so work can resume later in the current
+  session or a future session.
+- **Halt:** Concludes the coordinator session permanently, terminating
+  or detaching workers and recording a clean handoff artifact.
 
-**Halt** -- this coordinator is ending.  Stop cleanly in an order that
-loses nothing, and hand off to whatever picks up.
+Whenever quota exhaustion, rate limits, or context cutoff warnings appear,
+stop launching new tasks immediately.
 
-Both begin the same way: the moment a warning arrives, stop launching
-new delegated work.  Neither is a reason to keep working until the
-cutoff.
+---
 
-## What survives
+## State Persistence by Channel
 
-| Channel | Survives | How it comes back |
+| Channel | Survives Session Restart | Recovery Mechanism |
 | --- | --- | --- |
-| foreground subagent | no | re-dispatch from the brief |
-| background subagent | until the session ends | completion notification; `SendMessage` by name or id resumes it from its transcript |
-| workflow | yes | relaunch with `resumeFromRunId`; the unchanged prefix of `agent()` calls returns from the run cache and only the changed call onward re-runs |
-| teammate | **no** | nothing.  `/resume` and `/rewind` do not restore in-process teammates, and the lead will message ghosts.  Journal a teammate's work or lose it |
-| external shell-out | only if detached | re-run the command; the payload file is the durable input |
-| detached host process | yes | adopt it from the journal -- task ids, container names, log paths -- instead of restarting it |
-| shared task list | yes | local, never uploaded, survives a resumed session |
+| Foreground child (`Agent`, `subagent`) | No | Re-dispatch from the persisted brief |
+| Detached background child | Yes (until process termination) | Notification on completion or reconnect via `SendMessage` / `subagent_supervisor` |
+| Multi-step workflow | Yes | Re-launch using `resumeFromRunId`; unchanged stages return cached results |
+| Claude teammate | **No** | In-process teammates do not survive `/resume`; intermediate work must be recorded in the project journal |
+| External CLI shell-out | Yes (if executed as background daemon) | Adopt via process ID and journal logs; payload file serves as the input record |
+| Shared task list | Yes | Persisted locally across session restarts per `cleanupPeriodDays` |
 
-The brief is the durable form of a foreground worker.  Keep it, and
-re-dispatching is free.
+---
 
-## Pausing
+## Procedure: Pausing Delegations
 
-1. Stop the API-consuming workers: `TaskStop` for tracked tasks, a
-   shutdown request for a teammate, an explicit stop for a running
-   workflow.  An interrupted workflow resumes from its run cache
-   later; that is the whole reason to stop it deliberately rather than
-   let it die mid-flight.
-2. Flush durable state with an explicit NEXT action written down.
-3. Launch any pending long host-side operation -- builds, renders,
-   container jobs -- so the wait costs no wall-clock time.  Host
-   processes outlive the session and keep accumulating output.
-4. Make no further API-consuming moves.
+1. **Stop API-consuming workers:**
+   - Claude Code: Invoke `TaskStop` on active tasks; signal teammate
+     shutdown; pause running workflows.
+   - Pi: Signal child tasks through `subagent_supervisor` or stop
+     tracked workflow runs.
+2. **Preserve run caches:**
+   Ensure workflow scripts flush execution milestones to disk so
+   subsequent runs reuse the cached prefix.
+3. **Flush state to the project journal:**
+   Document pending operations and the explicit `NEXT` action in
+   `.local/state/agents/journal/<YYYY-MM-DD>.md`.
+4. **Trigger detached background tasks:**
+   Initiate compilation, rendering, or test runs that execute
+   out-of-process so elapsed wall-clock time is utilized productively.
+5. **Cease API calls:**
+   Do not poll, send keep-alive messages, or run busy loops against
+   exhausted endpoints.
 
-In-band recovery consumes the same quota that ran out, so a paused
-coordinator cannot poll, heartbeat, or schedule its way back.  Size a
-single sleep to return after the reset, and let it re-invoke the
-session.
+---
 
-## Halting
+## Procedure: Halting Delegations
 
-Order matters:
+When terminating a coordinator run, execute the following sequence in
+order:
 
-1. Monitors first.
-2. Then workflows that hold resumable state, so the run cache is
-   written.
-3. Leave detached background jobs running, and record log and status
-   pointers for them.
-4. Commit or annotate the working tree.
-5. Write the handoff.
-6. Stop.
+1. **Stop observers and monitors:** Terminate background log readers and
+   monitoring loops.
+2. **Flush stateful workflows:** Allow active workflow checkpoints to
+   write to disk.
+3. **Record pointers for detached jobs:** Capture process IDs, container
+   names, and output log locations for any continuing host tasks.
+4. **Commit repository changes:** Commit or snapshot the working tree
+   to ensure all modifications are indexed.
+5. **Author a self-contained handoff document:**
+   Record completed milestones, pending steps, standing constraints, and
+   file paths.  A replacement agent with an empty context window must be
+   able to resume work using this document alone.
+6. **Terminate execution cleanly.**
 
-Handoff-first outranks everything else, including the sleep.  A
-handoff must be self-contained: a zero-context successor -- a
-different model, a fresh window -- continues from that file alone.
-Current state, what is done, what is next, standing constraints, and
-where the other artifacts live.  Budget real time for writing it.
+---
 
-## Crash-only
+## Crash-Only Architecture
 
-A pause and a crash differ only in warning.  Design so they are the
-same event:
+Treat unexpected session interruptions identically to deliberate pauses:
 
-- Progress truth lives on disk -- commits, task-list state, a journal
-  file -- never only in conversation memory.
-- No work unit holds unjournaled critical state longer than one turn.
-- Journal each turn that edits or deletes a project file, and journal
-  version-control work by pointer (op-id, change-id) rather than by
-  copying the diff.
-
-A delegation that has been briefed, journaled, and given a durable
-receipt target is already crash-safe.  One that lives only in the
-coordinator's context is not.
-
-## Triggers
-
-The conditions that start a pause or a halt -- rate-limit windows,
-model cutoff dates, warning and hard-halt timers -- are host-local and
-schedule-specific.  They live in the host's own instructions, not
-here.  This file owns only what happens to delegated work once one of
-them fires.
+- Maintain authoritative state on disk (version control commits, task
+  lists, and journal entries) rather than relying on session memory.
+- Log every turn that modifies project files.
+- Index version control operations by change pointer or revision
+  identifier rather than duplicating large diffs into memory.

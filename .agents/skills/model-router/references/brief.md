@@ -1,40 +1,31 @@
-# The brief
+# The Brief
 
-A **brief** is the distilled, self-contained payload a worker
-receives.  It is never parent conversation history, and it is never a
-raw paste of what the coordinator happens to be holding.  Target under
-roughly 2K tokens.
+A **brief** is a distilled, self-contained instruction payload delivered
+to a delegated worker.  It must not contain raw conversation history or
+unfiltered tool dumps from the parent session.  Target an overall length
+below 2,000 tokens.
 
-The contract below is one contract.  Only the envelope changes with
-the channel.
+## The Contract
 
-## The contract
+Every brief must provide four essential components regardless of the
+underlying channel:
 
-Four things, always, whatever the channel:
+1. **Objective:** Exactly one sentence defining the completion criteria.
+2. **Context:** Absolute file paths, Git revision identifiers, branch
+   names, and system facts that the worker cannot discover easily.
+   Provide file paths rather than inline file dumps; the worker can read
+   the filesystem directly.
+3. **Constraints:** The binding invariants (`<constraints>` block: turn
+   ceiling, circuit breaker, and boundary escape) along with task-specific
+   limits.
+4. **Return:** The expected receipt structure and one concrete, runnable
+   verification command (such as a test suite, linter, or compiler check)
+   that the worker must execute before concluding.
 
-1. **Objective.**  One sentence.  The single outcome that defines
-   done.
-2. **Context.**  Absolute paths, branch names, revision ids, and facts
-   the worker cannot cheaply rediscover.  File *paths*, never file
-   dumps -- the worker reads disk.
-3. **Constraints.**  The ceiling, the breaker, and the boundary escape
-   (see `../SKILL.md`), plus whatever limits this task adds.
-4. **Return.**  The exact shape of the receipt, plus the one runnable
-   acceptance check the worker must pass before returning -- a test
-   command, a lint, a render, a build.
+## Native In-Process Envelope
 
-Distillation rules:
-
-- Swallow verbose streams in the worker; return conclusions and
-  `file:line` receipts only.
-- Include a runnable acceptance check whenever the task edits code.
-- State the return contract explicitly.  Unstructured worker output is
-  a briefing bug, not a worker quirk.
-
-## Envelope: native dispatch
-
-For an `Agent` or `Workflow` call, the brief *is* the prompt string.
-Structure it with the tags below.
+For in-process tools (`Agent`, `Workflow`, or `subagent`), format the
+brief using structured Extensible Markup Language (XML) tags:
 
 ```xml
 <persona name="Mr. Robot">
@@ -44,16 +35,18 @@ You relate to/with... # (Interior-Collective)
 You participate...    # (Exterior-Collective)
 </persona>
 
-<role>
-You are a...
+<role name="Technical Specialist">
+You are an expert developer assigned to a bounded refactoring task.
 </role>
 
 <context>
-...
+Target file: /home/lucas/project/src/core.py
+Repository branch: feature/cleanup
 </context>
 
 <the_ask>
-Summary...
+Refactor the parsing loop to eliminate redundant dictionary allocations.
+Provide runnable unit test coverage.
   <example_group>
     <example>short example...</example>
     <example>single-line example...</example>
@@ -65,57 +58,60 @@ Summary...
   </example_group>
 </the_ask>
 
+<constraints>
+- Cease execution and return immediately if turn count reaches 12.
+- Stop and alter strategy if 3 consecutive turns yield no state change.
+- Halt and return a subsystem map if changes span >3 distinct modules.
+</constraints>
+
 <return>
-Return instructions...
-  <template>
-    ...
+Return only a structured receipt containing:
+- Status: SUCCESS | BLOCKED
+- Verification command and exit code
+- Modified files with line references (file:line)
+- Summary of architectural decisions
+  <template format="markdown|json|yaml|plaintext">
+    <!-- Place schema, template, or target receipt structure here -->
   </template>
 </return>
 ```
 
-## Envelope: external dispatch
+## External CLI Envelope
 
-For a CLI shell-out the brief goes to a payload file, wrapped so the
-routing decision travels with it.  The attributes come from
-`scripts/score.py --pick`.
+For command-line interface (CLI) shell-outs, wrap the native brief in an
+outer `<subagent_task>` tag.  Because external harness runs execute
+out-of-band without native tool-call context injection, this outer wrapper
+signals to the receiving agent that it is operating as a subagent:
 
 ```xml
-<subagent_task harness="pi" model="openrouter/z-ai/glm-5.2" tier="2" profile="coding">
-  <objective>One sentence.  The single outcome that defines done.</objective>
-  <context>
-    Absolute paths, branch names, and facts the worker cannot cheaply
-    rediscover.  File PATHS, never file dumps-- the worker reads disk.
-  </context>
-  <constraints>
-    The ceiling, the breaker, and the boundary escape, plus
-    task-specific limits.
-  </constraints>
-  <return>
-    Exact shape of the expected answer, plus the acceptance check the
-    worker must run (test command, lint, render) before returning.
-  </return>
+<subagent_task>
+  <persona name="...">...</persona>
+  <role name="...">...</role>
+  <context>...</context>
+  <the_ask>...</the_ask>
+  <constraints>...</constraints>
+  <return>...</return>
 </subagent_task>
 ```
 
-## Style
+## Style and Persona Guidelines
 
-Style is the formatting layer of the contract, not a second contract.
-
-- Write XML-style prompts.  Always.
-- Write in the imperative.
-- Open with `<persona>` to elicit the behaviour you want, except when
-  starting from a pre-defined agent persona.  A persona is not a role:
-  it exists to tickle the tensors and poke the weights, choosing words
-  and phrases that activate the relevant embeddings and experts.
-  Define the personality in terms of integral theory's four quadrants.
-- `<role>` states the agent's role and responsibilities.
-- `<context>` orients the agent.
-- `<return>` states return expectations, with an optional
-  `<template>`.
-- Add other tags as needed.  Tags are informal, with no set schema:
-  `<approach>`, `<deliverables>`, `<example_group>`, `<example>`,
-  `<hard_gates>`, `<kickoff>`, `<scope>`, `<stages>`, `<the_ask>`,
-  `<working_agreement>`, `<success_criteria>`, `<prompt>`.
-- Tags may nest and may carry arbitrary parameters.
-- Put tags on their own lines, except extremely short ones.
-- Leave a blank line between top-level sections.
+- Write XML-style prompts in the imperative mood.
+- **The Four-Quadrant Persona:** Open with `<persona>` to condition the
+  behavior of the model, defining the personality using Integral Theory's
+  four quadrants:
+  1. **Interior-Individual (Mind/Intentional):** *"You think..."* (cognitive
+     posture, analytical philosophy, mental orientation).
+  2. **Exterior-Individual (Behavior/Action):** *"You behave..."* (concrete
+     execution patterns, verification habits, coding practices).
+  3. **Interior-Collective (Culture/Relational):** *"You relate to/with..."*
+     (collaboration stance toward the coordinator, expectations of rigor).
+  4. **Exterior-Collective (Systems/Participation):** *"You participate..."*
+     (interaction with the repository architecture, environment, and tooling).
+- A persona is distinct from `<role>`: `<persona>` activates domain priors
+  and cognitive framing, while `<role>` defines the functional assignment
+  and scope of responsibility.
+- Optional tags can be added as required: `<approach>`, `<deliverables>`,
+  `<example_group>`, `<example>`, `<kickoff>`, `<scope>`, `<stages>`,
+  `<working_agreement>`, and `<template>`.
+- Place XML tags on their own lines to preserve clean parser boundaries.

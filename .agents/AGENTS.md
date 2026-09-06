@@ -18,44 +18,27 @@ requests otherwise:
 
 ## Delegation
 
-Trigger: Any hand-off of work to another agent.  This condition includes
-spawning a subagent or child agent, forking a worker, dispatching a fan-out
-or orchestrated pipeline, launching a background or headless run, and
-shelling out to another agent harness from the command-line interface
-(CLI).
+Trigger: Any hand-off of work to another agent, including child agents,
+forks, multi-agent workflows, background workers, or command-line
+interface (CLI) shell-outs.
 
-Perform the following steps in sequence:
-
-1. Load the `model-router` skill (`~/.agents/skills/model-router/`).
-   Do not dispatch any agent until this skill is loaded.  The skill
-   determines whether to delegate work or perform the work inline.
-2. Select the execution channel specified by the skill.  Probe the
-   availability of every harness CLI executable before invocation; do not
-   assume that an executable exists.
-3. Select the model by executing
-   `python3 ~/.agents/skills/model-router/scripts/score.py --pick ...`,
-   and insert the resulting `execution` block verbatim into the brief.  Do
-   not provide a model identifier from memory.
-4. Prepare the worker brief in accordance with
-   `~/.agents/skills/model-router/references/brief.md`, and define the
-   expected receipt shape in the brief.
-
-The following invariants apply and remain binding even if the skill fails
-to load:
-
-- Return a receipt rather than a full transcript.  Workers must suppress
-  raw output from compilers, test runners, package managers, and
-  renderers, and instead return actionable conclusions with `file:line`
-  references.
-- Limit execution to a ceiling of 12 sequential turns per worker.
-- Enforce a circuit breaker: terminate a worker if it executes 3
-  consecutive turns without a state change.
-- Do not use hardcoded rankings.  Do not include a ranked model table or
-  cite a model identifier from memory in any harness file; report any such
-  occurrence as an error and do not use the configuration.
-- Security and approval gates apply to delegated work.  A worker must not
-  perform any action that requires coordinator approval, and a shell-out
-  must not be used to bypass a permission request that the user declined.
+- **Mandatory skill loading:** You MUST load the `model-router` skill
+  (`~/.agents/skills/model-router/`) before performing any delegation or
+  launching any child agent.  The skill determines whether to perform
+  work inline or delegate, governs channel selection, and selects models.
+- **Model selection:** Never select a model identifier from memory or
+  hardcode model rankings.  Always query `scripts/score.py --pick`.
+- **Channel routing and cross-harness execution:** When `score.py
+  --pick` selects a model native to the active harness, use in-process
+  delegation tools.  When it selects a non-native model whose execution
+  block specifies an external command (e.g., Claude Code invoking `pi` to
+  run Gemini, DeepSeek, or Qwen), executing that external CLI command
+  via shell is the intended channel.  Never invoke the active harness's
+  own CLI via shell.
+- **Inherited permissions:** Security and approval gates apply to all
+  delegated work.  A delegated worker must not execute actions requiring
+  user approval without explicit consent, and shell-outs must not be used
+  to bypass declined permission requests.
 
 ## Project-Local Directories & Scaffolding
 

@@ -19,26 +19,19 @@ When the user points you at a code repository or directory:
 
 ## Execution Channels (Claude Code)
 
-Claude Code coordinates long-horizon work.  The delegation rules in
-`~/.agents/AGENTS.md` apply in full.  The following requirements apply
-specifically to Claude Code:
+The delegation rules in `~/.agents/AGENTS.md` apply in full.  The
+`model-router` skill MUST be loaded before invoking `Agent`, `Workflow`,
+or shell-outs.  Claude Code specifics:
 
-- `Agent` performs delegation, `Workflow` performs orchestration, and a
-  `Bash` shell-out to `pi` or `claude -p` executes an external harness that
-  the task list cannot track.  Load the `model-router` skill before you use
-  any of these three channels.  Do not make exceptions for small tasks;
-  the skill determines whether to complete the work inline or delegate.
-- Set `Agent.model` to the `model_param` value supplied by `score.py
-  --pick`.  Do not supply a model identifier from memory, and do not use
-  the tool default when the task tier is known.
-- Dispatch a model flagged with `tier_4_only` in the registry `overrides`
-  only at Tier 4 or when the user explicitly requests it.  Do not permit a
-  workflow to default every agent to a `tier_4_only` model; abort the
-  workflow if this occurs.
+- Set `Agent.model` strictly to the `model_param` returned by
+  `score.py --pick`.  Never use the tool default when the tier is known.
+- Dispatch models flagged `tier_4_only` in `overrides` only at Tier 4 or
+  by explicit user directive.  Do not allow workflows to default agents
+  to a `tier_4_only` model.
 - When `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is enabled, passing `name`
-  to `Agent` launches a teammate whose output does not return to the
-  calling session.  Pass `name` only if the caller does not require the
-  result.
-- Prefer `Agent` or `Workflow` over a `Bash` shell-out when a native model
-  is sufficient.  The native channels provide user tracking, attribution,
-  and cancellation controls; shell-outs do not provide these capabilities.
+  to `Agent` spawns a teammate whose output does not return to the caller.
+  Omit `name` whenever the caller requires the tool result.
+- `Agent` and `Workflow` support Anthropic models only.  When `score.py
+  --pick` selects a non-Anthropic model (such as Gemini, GPT, DeepSeek,
+  or Qwen), executing the returned `command` via `Bash` (shelling out to
+  `pi`) is explicitly authorized.  Never use `Bash` to execute `claude`.
