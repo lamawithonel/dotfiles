@@ -6,7 +6,8 @@
 
 set -o nounset
 
-REGISTRY="${HOME}/.agents/models.json"
+REGISTRY="${HOME}/.agents/model-benchmarks.json"
+HOST="${MODEL_ROUTER_HOST:-$(hostname -s)}"
 PI_SETTINGS="${HOME}/.pi/agent/settings.json"
 
 command -v jq > /dev/null 2>&1 || {
@@ -25,11 +26,13 @@ command -v jq > /dev/null 2>&1 || {
 missing=''
 checked=0
 
-for id in $(jq -r '
-	.models[]
-	| select(.execution["claude-code"].channel == "external")
-	| select(.public_id != null)
-	| .id
+for id in $(jq -r --arg h "${HOST}" '
+	.hosts[$h].roster // {}
+	| to_entries[]
+	| select(.value.enabled == true)
+	| select(.value.is_class_entry != true)
+	| select(.value.execution["claude-code"].channel == "external")
+	| .key
 ' "${REGISTRY}"); do
 	case "${id}" in
 		local/*) continue ;;

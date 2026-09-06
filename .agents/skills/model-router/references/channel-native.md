@@ -9,7 +9,8 @@ CLI, no payload file, no stdout parsing.
 | Pi | OpenRouter and `llama-cpp` | Pi sub-agents (`pi-subagents` extension) |
 
 Take the dispatch parameters verbatim from the chosen model's
-`execution.<harness>` block in `~/.agents/models.json`.  For Claude
+`hosts.<hostname>.roster.<id>.execution.<harness>` block in
+`~/.agents/model-benchmarks.json`.  For Claude
 Code that block is shaped:
 
 ```json
@@ -17,8 +18,8 @@ Code that block is shaped:
 ```
 
 Pass `model_param` as the `Agent` tool's `model`.  Never type a model
-id from memory; `model-router` reads the registry and returns the
-parameter.
+id from memory; `scripts/score.py --pick` reads the registry and
+returns the block.
 
 ## Agent
 

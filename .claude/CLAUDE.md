@@ -10,19 +10,35 @@ When the user points you at a code repository or directory:
 - Read `AGENTS.md` and `AGENTS.local.md` at the repo root first.
 - If neither `AGENTS*.md` file exists, fall back to `README.md`.
 
+## File Edits
+
+- Never rewrite an entire file unless its entire contents are changing.
+- Use the `Edit` tool to make small, precise changes.
+- Prefer the `Edit` tool over the `Write` tool in all cases, except when
+  creating an entirely new file.
+
 ## Execution Channels (Claude Code)
 
-Claude Code is the primary coordinator for long-horizon work.  Load
-the `delegate` skill before any `Agent`, `Workflow`, `Task`, or
-background dispatch, and before shelling out to another agent CLI: it
-owns channel choice, the worker's brief, and the pause/halt order.
-Reach `model-router` from there to pick the model.
+Claude Code coordinates long-horizon work.  The delegation rules in
+`~/.agents/AGENTS.md` apply in full.  The following requirements apply
+specifically to Claude Code:
 
-Two rules bind even when no skill loads:
-
-- Never delegate to a model whose registry `constraints.tier_4_only`
-  is true unless the user explicitly orders it (a Tier 4 directive).
-- While `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, passing `name` to
-  `Agent` launches a teammate, and a teammate reports idle without
-  returning its output.  Name an agent only when the result is allowed
-  not to come back.
+- `Agent` performs delegation, `Workflow` performs orchestration, and a
+  `Bash` shell-out to `pi` or `claude -p` executes an external harness that
+  the task list cannot track.  Load the `model-router` skill before you use
+  any of these three channels.  Do not make exceptions for small tasks;
+  the skill determines whether to complete the work inline or delegate.
+- Set `Agent.model` to the `model_param` value supplied by `score.py
+  --pick`.  Do not supply a model identifier from memory, and do not use
+  the tool default when the task tier is known.
+- Dispatch a model flagged with `tier_4_only` in the registry `overrides`
+  only at Tier 4 or when the user explicitly requests it.  Do not permit a
+  workflow to default every agent to a `tier_4_only` model; abort the
+  workflow if this occurs.
+- When `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is enabled, passing `name`
+  to `Agent` launches a teammate whose output does not return to the
+  calling session.  Pass `name` only if the caller does not require the
+  result.
+- Prefer `Agent` or `Workflow` over a `Bash` shell-out when a native model
+  is sufficient.  The native channels provide user tracking, attribution,
+  and cancellation controls; shell-outs do not provide these capabilities.

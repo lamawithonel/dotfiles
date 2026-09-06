@@ -1,202 +1,197 @@
 ---
 name: model-router
 description: >-
-  Score and select a model for already-scoped delegated work.  Use
-  when the question is "which model", when a dispatch names no model,
-  and whenever `delegate` reaches the model-choice step.  Reads the
-  two-file registry (host-local ~/.agents/models.json roster +
-  syncable ~/.agents/benchmarks.json) and ranks candidates on real
-  benchmark metrics (Terminal-Bench, agentic SWE, Artificial Analysis,
-  EQ-Bench, Design Arena) and live OpenRouter pricing.  Returns the
-  model and its dispatch parameters; `delegate` owns the channel.
+  Delegate work to another agent and pick the model that runs it.
+  Covers spawning a subagent or child agent, forking a worker,
+  fan-out and orchestrated pipelines, background or headless runs,
+  and shell-outs to another agent harness.  Decides whether to hand
+  off at all, which channel carries the work, which model scores best
+  for the task's tier from the benchmark registry, what brief the
+  worker gets, and what receipt it owes back.  Use before any such
+  dispatch, whenever the question is "which model", and when running
+  delegations must be paused, resumed, or halted.
+argument-hint: "[test]"
 ---
 
 # Model Router
 
-Data-driven replacement for hardcoded model rankings.  Every routing
-decision reads the two-file registry and computes a score; no model is
-ever chosen from memory.
+Delegation buys context isolation and parallelism.  It costs a fresh
+context window, a round trip, and everything the worker cannot see
+from inside it.  Decide the **channel** first, then the **model**;
+the brief, the receipt, and the lifecycle all follow from those two
+branches.
 
-- `~/.agents/models.json` -- HOST-LOCAL roster: which models this
-  host reaches, their ids, execution channels, and constraints.
-- `~/.agents/benchmarks.json` -- SYNCABLE global facts: benchmark
-  scores and public pricing keyed by public model identity; roster
-  entries point into it via `public_id`.
+## Do it inline instead
 
-## Step 0: Load and Validate the Registry
+Do the work yourself when:
 
-1. Read `~/.agents/models.json` and `~/.agents/benchmarks.json`.
-2. Check `benchmarks.json` `updated_at`.  A pitchfork cron daemon
-   (`benchmarks-refresh`, 6-hourly) keeps it fresh where it runs; on
-   hosts without it the file arrives via dotfile sync.  If older than
-   14 days, tell the user and offer to run
-   `scripts/refresh-benchmarks.py` (needs open egress) before
-   routing.  Route with stale data only if the user declines or the
-   refresh fails.
-3. If the roster looks wrong (a model errors on dispatch, or the
-   Claude CLI version changed since `models.json` was built), run the
-   discovery workflow at `references/discover-claude-models.md`.
-4. Benchmark fields may be `null` (never fabricated).  The scoring
-   rules below define how nulls degrade.
+- The file, symbol, or value is already known, so the answer is one
+  `Read` or one `Grep`.
+- The context the worker would need is already in the window.
+- The edit is a one-liner in a file already read.
+- Briefing the worker costs more than doing the task.
 
-Harness detection and channel availability are the `delegate` skill's
-job (`references/channel-external.md`).  They never change the
-candidate set-- every registry model is a candidate in every harness--
-but a model whose only channel's CLI is missing on this host is
-ineligible, so run that probe before scoring.
+Delegate when the work fans out across many files, buries its answer
+under verbose streams, splits into independent pieces, or would
+otherwise flood the coordinator with material it never needs again.
 
-## Step 1: Classify the Task
+## Pick the channel
 
-### Benchmark Profile
+| Channel | Dispatch | Reach for it when | Result returns |
+| --- | --- | --- | --- |
+| inline | none | the target is known and bounded | n/a |
+| subagent (spawn, fork, child agent) | `Agent` | fan-out search, a bounded edit, a review -- and the result matters | yes: tool result or task notification |
+| workflow (orchestrate, pipeline, fan-out) | `Workflow` | deterministic fan-out over a known work list, or a run that must survive a pause | yes: the script's return value |
+| teammate | `Agent` with `name`, teams enabled | workers must message each other and share a task list | **no: an idle notification, without the output** |
+| external (shell-out, headless run) | `Bash` running another agent's CLI | a non-Claude model, or the other harness; the only row that starts another harness, and the task list cannot see it | yes: on stdout |
+| pane | `herdr` skill | another coding agent driven in a terminal pane | yes: via read-back |
 
-Pick exactly one profile; it selects the benchmark weights:
+Probe before committing to a channel.  Availability is per-host and
+never assumed: `command -v pi`, `command -v claude`.  A channel whose
+CLI is missing is not a channel, and the work reroutes.
 
-| Profile     | Task shapes                                          | Weights                                     |
-| ----------- | ---------------------------------------------------- | ------------------------------------------- |
-| `coding`    | bug fixes, refactors, multi-file edits, test writing | terminal_bench .45, deep_swe .35, aa_index .20 |
-| `reasoning` | architecture, root-cause analysis, planning, math    | aa_index .70, terminal_bench .15, deep_swe .15 |
-| `style`     | UI/UX, copy, docs, formatting, naming, review prose  | design_arena .50, eq_bench .30, aa_index .20   |
+## The name trap
 
-Field name mapping: `terminal_bench` -> `terminal_bench_score`,
-`deep_swe` -> `deep_swe_score`, `aa_index` ->
-`artificial_analysis_index`, `eq_bench` -> `eq_bench_score`,
-`design_arena` -> `design_arena_score`.  Values come from
-`benchmarks.json` `models[<public_id>].benchmarks`; its `sources`
-block says what feed currently backs each field.
+While `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, an `Agent` call that
+passes a `name` launches a **teammate**, not a subagent -- and a
+teammate's finish is reported as an idle notification that does not
+carry its output.  Naming is the whole trigger; nothing else about the
+call changes.  Any flow that waits on the result stalls.
 
-### Complexity Tier
+So: with teams enabled, pass a `name` only when the result is allowed
+not to come back.  When the result matters, omit the name, or ship
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=0` and get plain subagent
+semantics with names still usable as `SendMessage` addresses.
 
-| Tier | Name                      | Characteristics                                                        |
-| ---- | ------------------------- | ---------------------------------------------------------------------- |
-| 1    | High-Volume / Low-Context | predictable, linear, single-file, deterministic transforms, searches   |
-| 2    | Systems Integration       | multi-file features, bounded refactors, localized API mapping          |
-| 3    | High Abstraction          | zero-to-one design, race conditions, silent systemic failures          |
-| 4    | User Directive            | the user explicitly named a model                                      |
+Details, limits, and the version this was measured against:
+`references/channel-teams.md`.
 
-## Step 2: Score
+## Pick the model
 
-All benchmarks in the registry are higher-is-better (percentages,
-index points, or ELO alike).
+Never type a model id from memory.  The registry
+(`~/.agents/model-benchmarks.json`) scores every model this host can
+reach; `scripts/score.py` picks one and returns its dispatch block.
+A user who names a model overrides this step; that is a directive,
+not a tier.
 
-0. **Comparability gate:** a score whose version differs from the
-   source's `primary_version` (see the model's `benchmark_versions`
-   and the registry `sources` block) is treated as null for scoring.
-   Example: a Terminal-Bench 2.0 score never competes against 2.1
-   rows.
+Classify the task, then run one command:
 
-1. **Normalize** each benchmark `b` per model `m` with min-max across
-   all registry models where the value is non-null and comparable:
+| Tiering system | When                                                                    |
+| -------------- | ----------------------------------------------------------------------- |
+| `general`      | everything not below                                                    |
+| `design`       | visual design, UI/UX layout, landing pages, anything judged by how it looks |
 
-       norm(m, b) = (value(m, b) - min_b) / (max_b - min_b)
+| Profile (general) | Task shapes                                          |
+| ----------------- | ---------------------------------------------------- |
+| `coding`          | bug fixes, refactors, multi-file edits, test writing |
+| `reasoning`       | architecture, root-cause analysis, planning, math    |
+| `style`           | copy, docs, formatting, naming, review prose         |
 
-   Min-max (not divide-by-max) because ELO scales (EQ-Bench, Design
-   Arena) have no meaningful zero; ratio normalization would flatter
-   the worst model.  Degenerate case: with only one scored model,
-   `norm = 1`; treat that benchmark as weak evidence, since it cannot
-   differentiate candidates.
+| Tier | General system                                                   | Design ladder                              |
+| ---- | ---------------------------------------------------------------- | ------------------------------------------ |
+| 1    | high-volume, low-context, single-file, deterministic transforms  | cheapest model on the Pareto frontier      |
+| 2    | multi-file features, bounded refactors, localized API mapping    | second rung                                |
+| 3    | zero-to-one design, race conditions, silent systemic failures    | third rung                                 |
+| 4    | frontier: correctness above all, cost irrelevant                 | best-looking model on the frontier         |
 
-2. **Quality** is the weight-renormalized sum over the profile's
-   benchmarks that are non-null for the model:
+```sh
+python3 ~/.agents/skills/model-router/scripts/score.py --pick --system general --profile coding --tier 2
+python3 ~/.agents/skills/model-router/scripts/score.py --pick --system design --tier 3
+```
 
-       Q(m) = sum(w_b * norm(m, b)) / sum(w_b)   for non-null b
+The JSON that comes back carries `id`, `Q`, `C`, and an `execution`
+block keyed by harness.  Paste the block for the active harness into
+the brief verbatim: `model_param` for the `Agent` tool, `model_ref`
+for Pi native, `command` for an external shell-out.  `id: null` means
+no model qualifies at that tier; drop one tier and say so.
 
-   If ALL profile benchmarks are null, the model is ineligible for
-   automatic selection; it can still be chosen by Tier 4 directive--
-   this is how unbenchmarked local `llama-cpp` quants are used.
+Hard constraints:
 
-   More-benchmarks preference: when a selection compares candidates
-   on Q DIRECTLY (the Tier 1 floor, Tier 3 ranking) and two sit
-   within 0.05, prefer the one with more non-null benchmarks-- a Q
-   built on one benchmark is noisier than a Q built on three.  It
-   never reorders Tier 2's V ranking, and a tier's own tie rule
-   (e.g. Tier 3's within-0.02-favor-cheaper) takes precedence when
-   both fire.
+- A model flagged `tier_4_only` in the registry's `overrides` is
+  reachable only at Tier 4 or by user directive.
+- A `track_only` model is benchmarked for comparison and never
+  dispatchable.
+- A `context_window` smaller than the task's estimated context
+  disqualifies the model; null means unknown and the risk is yours.
 
-3. **Blended cost** models the ~3:1 input:output shape of agentic work:
+If `score.py` refuses (host missing from the registry, schema
+failure) or prints source warnings, read `references/scoring.md`; the
+scoring math, weights, degradation rules, and registry layout live
+there, and feed maintenance lives in `references/pipeline.md`.
 
-       C(m) = 0.75 * prompt_cost_per_m + 0.25 * completion_cost_per_m
+## The four invariants
 
-   Pricing comes from `benchmarks.json` via `public_id`; a `pricing`
-   block directly on the roster entry overrides it (that is how the
-   local `llama-cpp` class entry gets `C = 0`).  A roster entry with
-   `public_id: null` has no benchmarks by construction and follows
-   the all-null rule above.
+These bind every channel, every worker, every time.
 
-4. **Select by tier** (policy constants are tunable policy, not data;
-   they live only here):
+**Swallow.**  The worker eats the verbose streams -- compilers, test
+runners, package managers, renderers -- and they die inside its
+context.  The coordinator never receives a raw tool-output dump.
 
-   | Tier | Rule                                                              |
-   | ---- | ----------------------------------------------------------------- |
-   | 1    | eligible if `Q >= 0.40`; pick minimum `C`; ties favor local       |
-   | 2    | pick maximum `V = Q / (C + 0.05)` (epsilon = host-compute floor)  |
-   | 3    | pick maximum `Q`; ties within 0.02 favor lower `C`                |
-   | 4    | obey the user verbatim; no scoring                                |
+**Ceiling.**  A worker gets at most 12 sequential turns to execute a
+complex, multi-step assignment.
 
-### Hard Constraints
+**Breaker.**  A worker self-terminates and yields control after 3
+consecutive turns with zero state progress: the identical terminal
+command re-run, a failing edit repeated, or the same error boundary
+hit again.
 
-- `constraints.tier_4_only` makes a model ineligible for automatic
-  selection; Tier 4 is its only path in.  Instances are flagged in the
-  host-local registry, never named in shared files.
-- A model whose `context_window` is smaller than the estimated task
-  context is ineligible regardless of score.  A null `context_window`
-  means unknown; the constraint does not apply, and the Tier 4 issuer
-  owns the risk.
+**Boundary escape.**  If the worker discovers during its first
+context-gathering turn that the assignment touches more than 3
+decoupled subsystems, it halts immediately, emits an execution map,
+and hands control back for finer partitioning.
 
-## Step 3: Hand Back
+Ceiling, breaker, and boundary escape are the worker's own
+obligations, so state them in the brief.  Swallow binds both ends.
 
-Return the selected model together with its `execution.<harness>`
-block from the registry.  Native when the model's `native_harness`
-includes the active harness, external otherwise; the block is
-authoritative either way and is used verbatim-- `model_param` for a
-native dispatch, `command` for an external one.
+## The receipt
 
-`delegate` owns everything downstream: which channel carries the work
-(`references/channel-native.md`, `references/channel-external.md`),
-and the brief the worker receives (`references/brief.md`).
+What comes back is a **receipt**: conclusions, decisions, and
+`file:line` references.  Never a transcript, never a file dump, never
+"here is the output of the test run".
 
-## Worked Example (illustration only)
+State the receipt's shape in the brief before dispatch.  Unstructured
+worker output is a briefing bug, not a worker quirk.  When the task
+edits code, the brief names one runnable acceptance check the worker
+must pass before returning, and the receipt reports its result.
 
-Snapshot of one host's registry, 2026-08-09; model names here are
-teaching material, not routing truth-- your host's registry is the
-only candidate source.
+## Where to go next
 
-Task: "fix the failing test in `./foo.rs`"-- profile `coding`,
-Tier 2, running in Claude Code with Pi installed.
+| Next question | Read |
+| --- | --- |
+| What exactly do I send the worker? | `references/brief.md` |
+| Dispatching through `Agent`, `Workflow`, the task list, or a worktree | `references/channel-native.md` |
+| Teammates, mailboxes, team hooks, and their limits | `references/channel-teams.md` |
+| Shelling out to `pi` or `claude -p` | `references/channel-external.md` |
+| Pausing, resuming, or halting work already running | `references/lifecycle.md` |
+| How the model score is computed, weights, degradation | `references/scoring.md` |
+| Refreshing benchmarks, adding a model, debugging a feed | `references/pipeline.md` |
+| I want caveman-compressed worker output | the `cavecrew` skill |
 
-Registry ranges (comparable values only): terminal_bench 2.1
-[65.84, 83.82], deep_swe [12, 74], aa_index [30, 63].  Rows shown:
-top three by V, plus gpt-5.6-luna (highest external Q) and
-claude-sonnet-5 (best-V native model) for contrast.
+Read one.  A single-channel task needs exactly one of these.
 
-| Candidate                | tb    | swe   | aa    | Q     | C ($/M) | V = Q/(C+.05) |
-| ------------------------ | ----- | ----- | ----- | ----- | ------- | ------------- |
-| deepseek-v4-flash-0731   | null  | null  | 0.667 | 0.667 | 0.113   | 4.10          |
-| z-ai/glm-5.2             | null  | 0.516 | 0.697 | 0.582 | 0.108   | 3.69          |
-| deepseek-v4-flash        | null  | 0.661 | null  | 0.661 | 0.175   | 2.94          |
-| openai/gpt-5.6-luna      | 0.550 | 0.887 | 0.667 | 0.691 | 0.225   | 2.51          |
-| claude-sonnet-5          | 0.488 | 0.677 | 0.758 | 0.608 | 4.00    | 0.150         |
+## `test` -- prove the external channel works
 
-Tier 2 selects on V, so `deepseek-v4-flash-0731` wins outright.  Note
-what does NOT happen: luna holds the highest Q (0.691, three
-benchmarks) with 0731 and v4-flash inside its 0.05 band on
-one-benchmark Qs, but the more-benchmarks preference governs Q-based
-selection (Tiers 1 and 3) and never reorders a V ranking.  Hand back
-that model with its external `command`.
+Invoked as `/delegate test`, or whenever an external dispatch fails and
+the report is "the CLI doesn't work".  Run:
 
-Had the task been Tier 3 architecture work (profile `reasoning`),
-max-Q would instead select `claude-opus-5` (aa norm = 1.0)-- a native
-entry, handed back as `model_param: opus`.
+```sh
+scripts/test-external.sh          # every case
+scripts/test-external.sh pi       # only cases whose name contains "pi"
+```
 
-## Maintenance
+Output is TAP.  A case exits 0 (pass), 77 (skip, precondition unmet),
+or nonzero (fail), and prints its own diagnostic.  Report the failing
+case name and its diagnostic; do not re-derive the cause by hand.
 
-- Benchmarks and pricing (`benchmarks.json`): refreshed headlessly by
-  `scripts/refresh-benchmarks.py` -- pitchfork cron daemon
-  `benchmarks-refresh`, 6-hourly, notify-send on change; the user
-  pushes to dotfiles when they choose.  Manual fetch methods:
-  `references/update-registry.md`.
-- Host roster (`models.json`): Pi roster via
-  `references/update-registry.md`; Claude roster via
-  `references/discover-claude-models.md` (seed -> cache -> probe;
-  probe runs OUTSIDE sandboxed tool calls).
-- Schema changes: bump the touched file's `schema_version` and update
-  this file plus the reference workflows in the same change.
+Cases live in `scripts/tests/`, run in filename order.  **Add one by
+dropping an executable file in that directory** -- there is no registry
+to update and no runner to edit.
+
+The highest-yield case is `20-pi-credentials`.  An external CLI's
+credential can be denied by the host sandbox policy, and a sandbox that
+fails open leaves the same command working in one context and failing
+in another.  When a peer session reports a CLI broken and it works
+here, compare contexts before comparing commands.
+
+Environment: `DELEGATE_TEST_TIMEOUT` (seconds, default 90),
+`DELEGATE_TEST_PI_MODEL`, `DELEGATE_TEST_LLAMA_URL`.

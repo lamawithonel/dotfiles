@@ -77,7 +77,7 @@ Return instructions...
 
 For a CLI shell-out the brief goes to a payload file, wrapped so the
 routing decision travels with it.  The attributes come from
-`model-router`.
+`scripts/score.py --pick`.
 
 ```xml
 <subagent_task harness="pi" model="openrouter/z-ai/glm-5.2" tier="2" profile="coding">

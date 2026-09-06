@@ -1,7 +1,12 @@
 # External channel
 
 A model with no native channel in the active harness is reached by
-shelling out to the other harness's CLI.
+shelling out to the other harness's CLI: a headless run of `pi` or
+`claude -p`.  This is the only channel that starts another harness
+rather than another agent, and it is a side door: the run is outside
+the task list, untracked, unattributed, and not stoppable from the
+harness UI.  Reach for it last, only when no native model fits, and
+never as a workaround for a prompt the native channel declined.
 
 ## Detect the harness first
 
@@ -38,8 +43,8 @@ host the candidate set is just the registry's native Claude entries.
 
 ## Run the registry's command
 
-The chosen model's `execution.<harness>` block in
-`~/.agents/models.json` is authoritative.  Run its `command`
+The chosen model's `hosts.<hostname>.roster.<id>.execution.<harness>`
+block in `~/.agents/model-benchmarks.json` is authoritative.  Run its `command`
 verbatim.  The shapes below orient; they are not templates to type
 from memory.
 

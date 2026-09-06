@@ -16,41 +16,46 @@ requests otherwise:
   was resumed-- either `$TMPDIR/<session-id>` or `/tmp/<session-id>` if
   `$TMPDIR` is unset.  Remember the expanded path and hard-code it when used.
 
----
+## Delegation
 
-## Runtime Protocol (All Harnesses)
+Trigger: Any hand-off of work to another agent.  This condition includes
+spawning a subagent or child agent, forking a worker, dispatching a fan-out
+or orchestrated pipeline, launching a background or headless run, and
+shelling out to another agent harness from the command-line interface
+(CLI).
 
-Universal invariants for every harness that loads this file (Claude Code,
-Pi, and future harnesses).  Harness bootstrap files add only native tool
-wiring and MUST NOT restate or override these invariants.
+Perform the following steps in sequence:
 
-### Delegation
+1. Load the `model-router` skill (`~/.agents/skills/model-router/`).
+   Do not dispatch any agent until this skill is loaded.  The skill
+   determines whether to delegate work or perform the work inline.
+2. Select the execution channel specified by the skill.  Probe the
+   availability of every harness CLI executable before invocation; do not
+   assume that an executable exists.
+3. Select the model by executing
+   `python3 ~/.agents/skills/model-router/scripts/score.py --pick ...`,
+   and insert the resulting `execution` block verbatim into the brief.  Do
+   not provide a model identifier from memory.
+4. Prepare the worker brief in accordance with
+   `~/.agents/skills/model-router/references/brief.md`, and define the
+   expected receipt shape in the brief.
 
-Load the `delegate` skill (`~/.agents/skills/delegate/`) before handing
-work to any sub-agent, model, or agent CLI.  It owns channel choice,
-the worker's brief, the receipt contract, and the pause/halt order.
-`model-router` scores the model from the two-file registry; never pick
-one from memory or vibes.  Pi's scoped roster is `enabledModels` in
-`~/.pi/agent/settings.json`; Claude Code specifics live in
-`~/.claude/CLAUDE.md`.
+The following invariants apply and remain binding even if the skill fails
+to load:
 
-These bind even when no skill loads:
-
-- Workers swallow verbose streams (compilers, test runners, package
-  managers, renderers) and return receipts: conclusions and `file:line`
-  references, never raw tool-output dumps.
-- Workers get at most 12 sequential turns, and self-terminate after 3
-  consecutive turns with zero state progress.
-- Harness and CLI availability is probed, never assumed.
-- Zero hardcoded model rankings: a ranked model table or a model named
-  from memory in any harness file is a bug; report it.
-
-### Skill Storage
-
-Skills live in `~/.agents/skills/` as the single source of truth.
-Harness skill directories are symlinks into it (e.g., `~/.claude/skills
--> ../.agents/skills`).  Never install a skill into a harness-private
-directory.
+- Return a receipt rather than a full transcript.  Workers must suppress
+  raw output from compilers, test runners, package managers, and
+  renderers, and instead return actionable conclusions with `file:line`
+  references.
+- Limit execution to a ceiling of 12 sequential turns per worker.
+- Enforce a circuit breaker: terminate a worker if it executes 3
+  consecutive turns without a state change.
+- Do not use hardcoded rankings.  Do not include a ranked model table or
+  cite a model identifier from memory in any harness file; report any such
+  occurrence as an error and do not use the configuration.
+- Security and approval gates apply to delegated work.  A worker must not
+  perform any action that requires coordinator approval, and a shell-out
+  must not be used to bypass a permission request that the user declined.
 
 ## Project-Local Directories & Scaffolding
 
@@ -122,7 +127,7 @@ To recover from crashes or paused sessions...
 Every instruction written for an agent is a brief: XML-structured,
 imperative, opening with a `<persona>`.  The contract, the tag
 vocabulary, and the worked template live in
-`~/.agents/skills/delegate/references/brief.md`.
+`~/.agents/skills/model-router/references/brief.md`.
 
 ## Software Development Lifecycle
 
@@ -192,8 +197,8 @@ vocabulary, and the worked template live in
    opening a PR may be automatic; merging to the default branch is a
    standing human gate.
 6. **Vocabulary**: "tier" is reserved for model-access tiers
-   (`~/.agents/models.json`) and license tiers; VCS skills use role
-   nouns (staging layer, serializer) and pipeline step names, never
+   (`~/.agents/model-benchmarks.json`) and license tiers; VCS skills use
+   role nouns (staging layer, serializer) and pipeline step names, never
    Tier-N.
 7. **Hookless Snapshot Guard**: before any file-targeting
    `git checkout`, `git restore`, `git stash`, `git clean`, or
