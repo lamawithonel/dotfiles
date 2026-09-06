@@ -17,6 +17,7 @@ rust = { version = "latest", profile = "default", components = "rust-src,rust-an
 go = "latest"
 node = "lts"
 "aqua:LuaLS/lua-language-server" = "latest"
+"aqua:bahdotsh/mdterm" = "latest"
 "aqua:sivchari/gopls-lazy" = "latest"
 "cargo:cargo-audit" = "latest"
 "cargo:cargo-binstall" = "latest"
