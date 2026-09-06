@@ -1,0 +1,1181 @@
+{
+  "hosts": {
+    "lama-pc-01": {
+      "channels": {
+        "claude-code": true,
+        "pi": true
+      },
+      "probed_at": "2026-09-06T10:00:09Z",
+      "probed_with": {
+        "claude": "2.1.259 (Claude Code)",
+        "pi": "0.84.4"
+      },
+      "roster": {
+        "anthropic/claude-fable-5-1[1m]": {
+          "context_window": 1000000,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "native",
+              "model_param": "fable",
+              "tool": "Agent"
+            },
+            "pi": {
+              "channel": "external",
+              "command": "claude -p --offline --model claude-fable-5-1[1m] \"$(cat payload.md)\""
+            }
+          },
+          "native_harness": [
+            "claude-code"
+          ]
+        },
+        "anthropic/claude-haiku-4.5": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "native",
+              "model_param": "haiku",
+              "tool": "Agent"
+            },
+            "pi": {
+              "channel": "external",
+              "command": "claude -p --offline --model claude-haiku-4.5 \"$(cat payload.md)\""
+            }
+          },
+          "native_harness": [
+            "claude-code"
+          ]
+        },
+        "anthropic/claude-opus-5": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "native",
+              "model_param": "opus",
+              "tool": "Agent"
+            },
+            "pi": {
+              "channel": "external",
+              "command": "claude -p --offline --model claude-opus-5 \"$(cat payload.md)\""
+            }
+          },
+          "native_harness": [
+            "claude-code"
+          ]
+        },
+        "anthropic/claude-sonnet-5": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "native",
+              "model_param": "sonnet",
+              "tool": "Agent"
+            },
+            "pi": {
+              "channel": "external",
+              "command": "claude -p --offline --model claude-sonnet-5 \"$(cat payload.md)\""
+            }
+          },
+          "native_harness": [
+            "claude-code"
+          ]
+        },
+        "deepseek/deepseek-v4-flash-0731": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'openrouter/deepseek/deepseek-v4-flash-0731' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "openrouter/deepseek/deepseek-v4-flash-0731"
+            }
+          },
+          "native_harness": [
+            "pi"
+          ]
+        },
+        "deepseek/deepseek-v4-pro-0813": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'openrouter/deepseek/deepseek-v4-pro-0813' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "openrouter/deepseek/deepseek-v4-pro-0813"
+            }
+          },
+          "native_harness": [
+            "pi"
+          ]
+        },
+        "google/gemini-3.7-flash": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'openrouter/google/gemini-3.7-flash' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "openrouter/google/gemini-3.7-flash"
+            }
+          },
+          "native_harness": [
+            "pi"
+          ]
+        },
+        "google/gemini-3.8-flash": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'openrouter/google/gemini-3.8-flash' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "openrouter/google/gemini-3.8-flash"
+            }
+          },
+          "native_harness": [
+            "pi"
+          ]
+        },
+        "local/llama-swap": {
+          "context_window": null,
+          "count": 145,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'llama-swap/<name>' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "llama-swap/<name>"
+            }
+          },
+          "is_class_entry": true,
+          "native_harness": [
+            "pi"
+          ],
+          "note": "Class entry for 145 local quants; discover names with: jq -r '.enabledModels[] | select(startswith(\"llama-swap/\"))' ~/.pi/agent/settings.json",
+          "pricing": {
+            "completion_cost_per_m": 0.0,
+            "note": "Host compute only; the router's epsilon floor keeps V finite.",
+            "prompt_cost_per_m": 0.0,
+            "source": "local"
+          }
+        },
+        "moonshotai/kimi-k3": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'openrouter/moonshotai/kimi-k3' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "openrouter/moonshotai/kimi-k3"
+            }
+          },
+          "native_harness": [
+            "pi"
+          ]
+        },
+        "openai/gpt-5.6-sol": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'openrouter/openai/gpt-5.6-sol' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "openrouter/openai/gpt-5.6-sol"
+            }
+          },
+          "native_harness": [
+            "pi"
+          ]
+        },
+        "z-ai/glm-5.2": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'openrouter/z-ai/glm-5.2' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "openrouter/z-ai/glm-5.2"
+            }
+          },
+          "native_harness": [
+            "pi"
+          ]
+        },
+        "z-ai/glm-5.3": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'openrouter/z-ai/glm-5.3' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "openrouter/z-ai/glm-5.3"
+            }
+          },
+          "native_harness": [
+            "pi"
+          ]
+        },
+        "z-ai/glm-5.3-flash": {
+          "context_window": null,
+          "enabled": true,
+          "execution": {
+            "claude-code": {
+              "channel": "external",
+              "command": "pi --offline --model 'openrouter/z-ai/glm-5.3-flash' -p \"$(cat payload.md)\" --no-session"
+            },
+            "pi": {
+              "channel": "native",
+              "model_ref": "openrouter/z-ai/glm-5.3-flash"
+            }
+          },
+          "native_harness": [
+            "pi"
+          ]
+        }
+      }
+    }
+  },
+  "models": {
+    "anthropic/claude-fable-5-1[1m]": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 81.6,
+        "aa_factuality": 0.2742,
+        "aa_intelligence": 56.8,
+        "aa_omniscience": 43.45,
+        "deep_swe": null,
+        "design_arena": 1321.0,
+        "eq_bench": null,
+        "terminal_bench": 91.39
+      },
+      "context_window": null,
+      "display_name": "Claude Fable 5.1 (Adaptive Reasoning, Max Effort, Default Fallback)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "design_arena": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "claude-fable-5-1",
+        "deepswe": [
+          "claude-fable-5-1",
+          "claude-fable-5-1"
+        ],
+        "designarena": [
+          "claude-fable-5-1",
+          "claude-fable-5-1"
+        ],
+        "eqbench": [
+          "anthropic/claude-fable-5-1",
+          "claude-fable-5-1",
+          "claude-fable-5-1"
+        ],
+        "openrouter": "anthropic/claude-fable-5-1"
+      },
+      "pricing": {
+        "completion_cost_per_m": 50,
+        "prompt_cost_per_m": 10,
+        "source": "aa_api"
+      },
+      "provider": "anthropic"
+    },
+    "anthropic/claude-haiku-4.5": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": null,
+        "aa_factuality": null,
+        "aa_intelligence": null,
+        "aa_omniscience": null,
+        "deep_swe": null,
+        "design_arena": 1135.0,
+        "eq_bench": 1063.9,
+        "terminal_bench": null
+      },
+      "context_window": 200000,
+      "display_name": null,
+      "last_seen": {
+        "design_arena": "2026-09-06",
+        "eq_bench": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "claude-haiku-4-5",
+        "deepswe": [
+          "claude-haiku-4.5",
+          "claude-haiku-4-5"
+        ],
+        "designarena": [
+          "claude-haiku-4.5",
+          "claude-haiku-4-5"
+        ],
+        "eqbench": [
+          "claude-haiku-4-5-20251001",
+          "claude-haiku-4-5"
+        ],
+        "openrouter": "anthropic/claude-haiku-4.5"
+      },
+      "pricing": {
+        "completion_cost_per_m": 5.0,
+        "prompt_cost_per_m": 1.0,
+        "source": "openrouter"
+      },
+      "provider": "anthropic"
+    },
+    "anthropic/claude-opus-5": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 78,
+        "aa_factuality": 0.3918,
+        "aa_intelligence": 54.1,
+        "aa_omniscience": 37.0666666666667,
+        "deep_swe": 74.0,
+        "design_arena": 1320.0,
+        "eq_bench": 1385.0,
+        "terminal_bench": 89.14
+      },
+      "context_window": 1000000,
+      "display_name": "Claude Opus 5 (Adaptive Reasoning, Max Effort)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "eq_bench": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "claude-opus-5",
+        "deepswe": [
+          "claude-opus-5",
+          "claude-opus-5"
+        ],
+        "designarena": [
+          "claude-opus-5",
+          "claude-opus-5"
+        ],
+        "eqbench": [
+          "anthropic/claude-opus-5",
+          "claude-opus-5",
+          "claude-opus-5"
+        ],
+        "openrouter": "anthropic/claude-opus-5"
+      },
+      "pricing": {
+        "completion_cost_per_m": 25.0,
+        "prompt_cost_per_m": 5.0,
+        "source": "openrouter"
+      },
+      "provider": "anthropic"
+    },
+    "anthropic/claude-sonnet-5": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 71.5,
+        "aa_factuality": null,
+        "aa_intelligence": 45.1,
+        "aa_omniscience": null,
+        "deep_swe": 54.0,
+        "design_arena": 1290.0,
+        "eq_bench": 1236.0,
+        "terminal_bench": 80.52
+      },
+      "context_window": 1000000,
+      "display_name": "Claude Sonnet 5 (Adaptive Reasoning, Max Effort)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "eq_bench": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "claude-sonnet-5",
+        "deepswe": [
+          "claude-sonnet-5",
+          "claude-sonnet-5"
+        ],
+        "designarena": [
+          "claude-sonnet-5",
+          "claude-sonnet-5"
+        ],
+        "eqbench": [
+          "anthropic/claude-sonnet-5",
+          "claude-sonnet-5",
+          "claude-sonnet-5"
+        ],
+        "openrouter": "anthropic/claude-sonnet-5"
+      },
+      "pricing": {
+        "completion_cost_per_m": 10.0,
+        "prompt_cost_per_m": 2.0,
+        "source": "openrouter"
+      },
+      "provider": "anthropic"
+    },
+    "deepseek/deepseek-v4-flash-0731": {
+      "benchmark_notes": {
+        "aa_slug": "AA's deepseek-v4-flash slug aliases the 0731 snapshot"
+      },
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 69.1,
+        "aa_factuality": null,
+        "aa_intelligence": 40.8,
+        "aa_omniscience": null,
+        "deep_swe": null,
+        "design_arena": 1252.0,
+        "eq_bench": null,
+        "terminal_bench": 78.65
+      },
+      "context_window": 1310720,
+      "display_name": "DeepSeek V4 Flash 0731 (Reasoning, Max Effort)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "deepseek-v4-flash",
+        "deepswe": [
+          "deepseek-v4-flash-0731",
+          "deepseek-v4-flash-0731"
+        ],
+        "designarena": [
+          "deepseek-v4-flash-0731",
+          "deepseek-v4-flash-0731"
+        ],
+        "eqbench": [
+          "deepseek/deepseek-v4-flash-0731",
+          "deepseek-v4-flash-0731",
+          "deepseek-v4-flash-0731"
+        ],
+        "openrouter": "deepseek/deepseek-v4-flash-0731"
+      },
+      "pricing": {
+        "completion_cost_per_m": 0.09996,
+        "prompt_cost_per_m": 0.04998,
+        "source": "openrouter"
+      },
+      "provider": "deepseek"
+    },
+    "deepseek/deepseek-v4-pro-0813": {
+      "benchmark_notes": {
+        "aa_slug": "AA's deepseek-v4-pro slug is the 0813 snapshot (page title 'DeepSeek V4 Pro 0813')"
+      },
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 68.8,
+        "aa_factuality": 0.0517,
+        "aa_intelligence": 42.1,
+        "aa_omniscience": 0.833333333333333,
+        "deep_swe": 63.0,
+        "design_arena": 1249.0,
+        "eq_bench": null,
+        "terminal_bench": 78.65
+      },
+      "context_window": 1048576,
+      "display_name": "DeepSeek V4 Pro 0813 (Reasoning, Max Effort)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "deepseek-v4-pro",
+        "deepswe": [
+          "deepseek-v4-pro-0813",
+          "deepseek-v4-pro"
+        ],
+        "designarena": [
+          "deepseek-v4-pro-0813",
+          "deepseek-v4-pro"
+        ],
+        "eqbench": [
+          "deepseek/deepseek-v4-pro-0813",
+          "deepseek-v4-pro-0813",
+          "deepseek-v4-pro-0813"
+        ],
+        "openrouter": "deepseek/deepseek-v4-pro-0813"
+      },
+      "pricing": {
+        "completion_cost_per_m": 3.36204,
+        "prompt_cost_per_m": 1.12068,
+        "source": "openrouter"
+      },
+      "provider": "deepseek"
+    },
+    "google/gemini-3.7-flash": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 76.1,
+        "aa_factuality": null,
+        "aa_intelligence": 45.2,
+        "aa_omniscience": null,
+        "deep_swe": 65.0,
+        "design_arena": 1314.0,
+        "eq_bench": null,
+        "terminal_bench": 85.77
+      },
+      "context_window": 1048576,
+      "display_name": "Gemini 3.7 Flash (high)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "gemini-3-7-flash",
+        "deepswe": [
+          "gemini-3.7-flash",
+          "gemini-3-7-flash"
+        ],
+        "designarena": [
+          "gemini-3.7-flash",
+          "gemini-3-7-flash"
+        ],
+        "eqbench": [
+          "google/gemini-3.7-flash",
+          "gemini-3.7-flash",
+          "gemini-3-7-flash"
+        ],
+        "openrouter": "google/gemini-3.7-flash"
+      },
+      "pricing": {
+        "completion_cost_per_m": 3.75,
+        "prompt_cost_per_m": 0.75,
+        "source": "openrouter"
+      },
+      "provider": "google"
+    },
+    "google/gemini-3.8-flash": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 76.3,
+        "aa_factuality": 0.4482,
+        "aa_intelligence": 47.1,
+        "aa_omniscience": 29.55,
+        "deep_swe": 74.0,
+        "design_arena": 1312.0,
+        "eq_bench": null,
+        "terminal_bench": 87.64
+      },
+      "context_window": 1048576,
+      "display_name": "Gemini 3.8 Flash (high)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "gemini-3-8-flash",
+        "deepswe": [
+          "gemini-3.8-flash",
+          "gemini-3-8-flash"
+        ],
+        "designarena": [
+          "gemini-3.8-flash",
+          "gemini-3-8-flash"
+        ],
+        "eqbench": [
+          "google/gemini-3.8-flash",
+          "gemini-3.8-flash",
+          "gemini-3-8-flash"
+        ],
+        "openrouter": "google/gemini-3.8-flash"
+      },
+      "pricing": {
+        "completion_cost_per_m": 3.75,
+        "prompt_cost_per_m": 0.75,
+        "source": "openrouter"
+      },
+      "provider": "google"
+    },
+    "meta/muse-spark-1.3": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 76.3,
+        "aa_factuality": 0.6635,
+        "aa_intelligence": 53,
+        "aa_omniscience": 24.9333333333333,
+        "deep_swe": null,
+        "design_arena": 1360.0,
+        "eq_bench": null,
+        "terminal_bench": 85.77
+      },
+      "context_window": 1048576,
+      "display_name": "Muse Spark 1.3 (max)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "muse-spark-1-3",
+        "deepswe": [
+          "muse-spark-1.3",
+          "muse-spark-1-3"
+        ],
+        "designarena": [
+          "muse-spark-1.3",
+          "muse-spark-1-3"
+        ],
+        "eqbench": [
+          "meta/muse-spark-1.3",
+          "muse-spark-1.3",
+          "muse-spark-1-3"
+        ],
+        "openrouter": "meta/muse-spark-1.3"
+      },
+      "pricing": {
+        "completion_cost_per_m": 4.25,
+        "prompt_cost_per_m": 1.25,
+        "source": "openrouter"
+      },
+      "provider": "meta",
+      "track_only": true
+    },
+    "moonshotai/kimi-k3": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 76.2,
+        "aa_factuality": 0.468,
+        "aa_intelligence": 50.2,
+        "aa_omniscience": 19.7,
+        "deep_swe": 69.0,
+        "design_arena": 1356.0,
+        "eq_bench": 1339.3,
+        "terminal_bench": 85.02
+      },
+      "context_window": 1048576,
+      "display_name": "Kimi K3 (max)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "eq_bench": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "kimi-k3",
+        "deepswe": [
+          "kimi-k3",
+          "kimi-k3"
+        ],
+        "designarena": [
+          "kimi-k3",
+          "kimi-k3"
+        ],
+        "eqbench": [
+          "moonshotai/kimi-k3",
+          "kimi-k3",
+          "kimi-k3"
+        ],
+        "openrouter": "moonshotai/kimi-k3"
+      },
+      "pricing": {
+        "completion_cost_per_m": 15.0,
+        "prompt_cost_per_m": 3.0,
+        "source": "openrouter"
+      },
+      "provider": "moonshotai"
+    },
+    "openai/gpt-5.6-sol": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 77.4,
+        "aa_factuality": 0.078,
+        "aa_intelligence": 51.3,
+        "aa_omniscience": 21.9666666666667,
+        "deep_swe": 73.0,
+        "design_arena": 1327.0,
+        "eq_bench": 1250.3,
+        "terminal_bench": 88.01
+      },
+      "context_window": 1050000,
+      "display_name": "GPT-5.6 Sol (max)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "eq_bench": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "gpt-5-6-sol",
+        "deepswe": [
+          "gpt-5.6-sol",
+          "gpt-5-6-sol"
+        ],
+        "designarena": [
+          "gpt-5.6-sol",
+          "gpt-5-6-sol"
+        ],
+        "eqbench": [
+          "openai/gpt-5.6-sol",
+          "gpt-5.6-sol",
+          "gpt-5-6-sol"
+        ],
+        "openrouter": "openai/gpt-5.6-sol"
+      },
+      "pricing": {
+        "completion_cost_per_m": 10.0,
+        "prompt_cost_per_m": 2.0,
+        "source": "openrouter"
+      },
+      "provider": "openai"
+    },
+    "openai/gpt-6-astra": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 76.9,
+        "aa_factuality": 0.4866,
+        "aa_intelligence": 54.7,
+        "aa_omniscience": 43.4,
+        "deep_swe": 74.0,
+        "design_arena": null,
+        "eq_bench": null,
+        "terminal_bench": 88.39
+      },
+      "context_window": 1050000,
+      "display_name": "GPT-6 Astra (max)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "gpt-6-astra",
+        "deepswe": [
+          "gpt-6-astra",
+          "gpt-6-astra"
+        ],
+        "designarena": [
+          "gpt-6-astra",
+          "gpt-6-astra"
+        ],
+        "eqbench": [
+          "openai/gpt-6-astra",
+          "gpt-6-astra",
+          "gpt-6-astra"
+        ],
+        "openrouter": "openai/gpt-6-astra"
+      },
+      "pricing": {
+        "completion_cost_per_m": 50.0,
+        "prompt_cost_per_m": 10.0,
+        "source": "openrouter"
+      },
+      "provider": "openai",
+      "track_only": true
+    },
+    "x-ai/grok-4.6": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 76.8,
+        "aa_factuality": 0.6571,
+        "aa_intelligence": 50.6,
+        "aa_omniscience": 30.4833333333333,
+        "deep_swe": 67.0,
+        "design_arena": null,
+        "eq_bench": null,
+        "terminal_bench": 88.39
+      },
+      "context_window": 500000,
+      "display_name": "Grok 4.6 (high)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "grok-4-6",
+        "deepswe": [
+          "grok-4.6",
+          "grok-4-6"
+        ],
+        "designarena": [
+          "grok-4.6",
+          "grok-4-6"
+        ],
+        "eqbench": [
+          "x-ai/grok-4.6",
+          "grok-4.6",
+          "grok-4-6"
+        ],
+        "openrouter": "x-ai/grok-4.6"
+      },
+      "pricing": {
+        "completion_cost_per_m": 6.0,
+        "prompt_cost_per_m": 2.0,
+        "source": "openrouter"
+      },
+      "provider": "x-ai",
+      "track_only": true
+    },
+    "z-ai/glm-5.2": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 68.8,
+        "aa_factuality": null,
+        "aa_intelligence": 42.5,
+        "aa_omniscience": null,
+        "deep_swe": 44.0,
+        "design_arena": 1313.0,
+        "eq_bench": 1221.9,
+        "terminal_bench": 77.9
+      },
+      "context_window": 1048576,
+      "display_name": "GLM-5.2 (max)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "design_arena": "2026-09-06",
+        "eq_bench": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "glm-5-2",
+        "deepswe": [
+          "glm-5.2",
+          "glm-5-2"
+        ],
+        "designarena": [
+          "glm-5.2",
+          "glm-5-2"
+        ],
+        "eqbench": [
+          "z-ai/glm-5.2",
+          "glm-5.2",
+          "glm-5-2"
+        ],
+        "openrouter": "z-ai/glm-5.2"
+      },
+      "pricing": {
+        "completion_cost_per_m": 3.036,
+        "prompt_cost_per_m": 0.966,
+        "source": "openrouter"
+      },
+      "provider": "z-ai"
+    },
+    "z-ai/glm-5.3": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 74.8,
+        "aa_factuality": 0.7045,
+        "aa_intelligence": 48.6,
+        "aa_omniscience": 14.3,
+        "deep_swe": 69.0,
+        "design_arena": null,
+        "eq_bench": null,
+        "terminal_bench": 83.9
+      },
+      "context_window": 1310720,
+      "display_name": "GLM-5.3 (max)",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "glm-5-3",
+        "deepswe": [
+          "glm-5.3",
+          "glm-5-3"
+        ],
+        "designarena": [
+          "glm-5.3",
+          "glm-5-3"
+        ],
+        "eqbench": [
+          "z-ai/glm-5.3",
+          "glm-5.3",
+          "glm-5-3"
+        ],
+        "openrouter": "z-ai/glm-5.3"
+      },
+      "pricing": {
+        "completion_cost_per_m": 4.4,
+        "prompt_cost_per_m": 1.4,
+        "source": "openrouter"
+      },
+      "provider": "z-ai"
+    },
+    "z-ai/glm-5.3-flash": {
+      "benchmark_notes": {},
+      "benchmark_versions": {},
+      "benchmarks": {
+        "aa_coding": 71.5,
+        "aa_factuality": 0.7237,
+        "aa_intelligence": 46.2,
+        "aa_omniscience": 7.46666666666667,
+        "deep_swe": 63.0,
+        "design_arena": null,
+        "eq_bench": null,
+        "terminal_bench": 84.27
+      },
+      "context_window": 1310720,
+      "display_name": "GLM-5.3-Flash",
+      "last_seen": {
+        "aa_api": "2026-09-06",
+        "aa_omniscience": "2026-09-06",
+        "deep_swe": "2026-09-06",
+        "openrouter": "2026-09-06"
+      },
+      "match": {
+        "aa_slug": "glm-5-3-flash",
+        "deepswe": [
+          "glm-5.3-flash",
+          "glm-5-3-flash"
+        ],
+        "designarena": [
+          "glm-5.3-flash",
+          "glm-5-3-flash"
+        ],
+        "eqbench": [
+          "z-ai/glm-5.3-flash",
+          "glm-5.3-flash",
+          "glm-5-3-flash"
+        ],
+        "openrouter": "z-ai/glm-5.3-flash"
+      },
+      "pricing": {
+        "completion_cost_per_m": 0.25,
+        "prompt_cost_per_m": 0.075,
+        "source": "openrouter"
+      },
+      "provider": "z-ai"
+    }
+  },
+  "notes": [
+    "Unified model-router registry.  Written by skills/model-router/scripts/refresh-benchmarks.py; edit only the overrides block by hand.  Schema: skills/model-router/schema/model-benchmarks.schema.json.",
+    "2026-09-06: schema v3 replaces ~/.agents/models.json + benchmarks.json.  Rosters per host under hosts.<hostname>; benchmarks global; overrides hand-owned."
+  ],
+  "overrides": {
+    "anthropic/claude-fable-5-1[1m]": {
+      "constraints": {
+        "tier_4_only": true
+      },
+      "notes": "Fable is Tier 4 only: never auto-selected.  Native Claude Code dispatch bills the subscription; pricing here is OpenRouter USD for cross-model comparison.",
+      "probe": true,
+      "tags": [
+        "frontier",
+        "adaptive-reasoning"
+      ]
+    },
+    "anthropic/claude-haiku-4.5": {
+      "match": {
+        "eqbench": [
+          "claude-haiku-4-5-20251001",
+          "claude-haiku-4-5"
+        ]
+      },
+      "probe": true,
+      "tags": [
+        "high-volume",
+        "low-latency"
+      ]
+    },
+    "anthropic/claude-opus-5": {
+      "probe": true,
+      "tags": [
+        "deep-reasoning"
+      ]
+    },
+    "anthropic/claude-sonnet-5": {
+      "probe": true,
+      "tags": [
+        "workhorse"
+      ]
+    },
+    "deepseek/deepseek-v4-flash-0731": {
+      "benchmark_notes": {
+        "aa_slug": "AA's deepseek-v4-flash slug aliases the 0731 snapshot"
+      },
+      "match": {
+        "aa_slug": "deepseek-v4-flash"
+      }
+    },
+    "deepseek/deepseek-v4-pro-0813": {
+      "benchmark_notes": {
+        "aa_slug": "AA's deepseek-v4-pro slug is the 0813 snapshot (page title 'DeepSeek V4 Pro 0813')"
+      },
+      "match": {
+        "aa_slug": "deepseek-v4-pro",
+        "deepswe": [
+          "deepseek-v4-pro-0813",
+          "deepseek-v4-pro"
+        ],
+        "designarena": [
+          "deepseek-v4-pro-0813",
+          "deepseek-v4-pro"
+        ]
+      }
+    },
+    "meta/muse-spark-1.3": {
+      "notes": "Not allowed in Pi; tracked for acceptance comparison.",
+      "track_only": true
+    },
+    "openai/gpt-6-astra": {
+      "constraints": {
+        "tier_4_only": true
+      },
+      "notes": "Not in the Pi roster; benchmarked for comparison and reachable only by Tier 4 directive.",
+      "track_only": true
+    },
+    "x-ai/grok-4.6": {
+      "notes": "Not allowed in Pi; tracked for acceptance comparison.",
+      "track_only": true
+    },
+    "z-ai/glm-5.3": {
+      "tags": [
+        "open-weights",
+        "ui-strong"
+      ]
+    },
+    "z-ai/glm-5.3-flash": {
+      "tags": [
+        "open-weights",
+        "high-volume"
+      ]
+    }
+  },
+  "schema_version": 3,
+  "sources": {
+    "aa_api": {
+      "as_of": "2026-09-06",
+      "error": null,
+      "fetch": "GET with x-api-key (AA_API_KEY); evaluations.artificial_analysis_{intelligence,coding}_index, terminalbench_v2_1 (fraction, stored x100), pricing fallback",
+      "fetched_by": "lama-pc-01",
+      "matched": 15,
+      "name": "Artificial Analysis API v2",
+      "primary_version": "2.1",
+      "status": "ok",
+      "url": "https://artificialanalysis.ai/api/v2/data/llms/models"
+    },
+    "aa_omniscience": {
+      "as_of": "2026-09-06",
+      "error": null,
+      "fetch": "GET page; Next.js flight data; per slug: omniscience, omniscienceBreakdown.hallucinationRate (stored as aa_factuality = 1 - rate)",
+      "fetched_by": "lama-pc-01",
+      "matched": 11,
+      "name": "Artificial Analysis Omniscience",
+      "status": "ok",
+      "url": "https://artificialanalysis.ai/evaluations/omniscience"
+    },
+    "claude_roster": {
+      "as_of": "2026-09-06",
+      "error": null,
+      "fetch": "candidates: old roster + additionalModelOptionsCache + overrides.*.probe; truth: claude -p probe",
+      "fetched_by": "lama-pc-01",
+      "matched": 4,
+      "name": "Claude Code deployment roster",
+      "status": "ok",
+      "url": "file://~/.claude.json"
+    },
+    "deep_swe": {
+      "as_of": "2026-09-06",
+      "error": null,
+      "fetch": "GET; server-rendered table (model, Pass@1 percent); all rows mini-swe-agent",
+      "fetched_by": "lama-pc-01",
+      "matched": 12,
+      "name": "Datacurve DeepSWE v1.1",
+      "status": "ok",
+      "url": "https://deepswe.datacurve.ai/"
+    },
+    "design_arena": {
+      "as_of": "2026-09-06",
+      "error": null,
+      "fetch": "POST {arenaType:models, category:website}; .data[] {modelId, elo}",
+      "fetched_by": "lama-pc-01",
+      "matched": 12,
+      "name": "Design Arena, Website category",
+      "status": "ok",
+      "url": "https://www.designarena.ai/api/leaderboard"
+    },
+    "eq_bench": {
+      "as_of": "2026-09-06",
+      "error": null,
+      "fetch": "GET; strip 'const EQBENCH4_DATA = ' and trailing ';'; .models[] {model, elo}",
+      "fetched_by": "lama-pc-01",
+      "matched": 6,
+      "name": "EQ-Bench 4",
+      "status": "ok",
+      "url": "https://eqbench.com/eqbench4/eqbench4_data.js"
+    },
+    "openrouter": {
+      "as_of": "2026-09-06",
+      "error": null,
+      "fetch": "GET; .data[].pricing USD per token x1e6; negative = routing-alias sentinel, skipped",
+      "fetched_by": "lama-pc-01",
+      "matched": 15,
+      "name": "OpenRouter models API",
+      "status": "ok",
+      "url": "https://openrouter.ai/api/v1/models"
+    },
+    "pi_roster": {
+      "as_of": "2026-09-06",
+      "error": null,
+      "fetch": "enabledModels[]",
+      "fetched_by": "lama-pc-01",
+      "matched": 10,
+      "name": "Pi scoped models",
+      "status": "ok",
+      "url": "file://~/.pi/agent/settings.json"
+    }
+  },
+  "updated_at": "2026-09-06T10:00:09Z"
+}

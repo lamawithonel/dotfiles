@@ -1,0 +1,235 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://lamanet.yamanishi.us/schemas/model-router/model-benchmarks.schema.json",
+  "title": "model-router unified registry",
+  "description": "One file: global benchmark facts (models), per-host rosters (hosts), hand-owned overrides.  Written only by scripts/refresh-benchmarks.py; overrides are edited by hand.  Null means 'never fetched' -- a fetch that fails keeps old values, it never writes null over a value.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "updated_at", "sources", "overrides", "models", "hosts"],
+  "properties": {
+    "$schema": { "type": "string" },
+    "schema_version": { "const": 3 },
+    "updated_at": { "$ref": "#/$defs/datetime" },
+    "notes": { "type": "array", "items": { "type": "string" } },
+    "sources": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "openrouter": { "$ref": "#/$defs/source" },
+        "aa_api": { "$ref": "#/$defs/source" },
+        "aa_omniscience": { "$ref": "#/$defs/source" },
+        "deep_swe": { "$ref": "#/$defs/source" },
+        "eq_bench": { "$ref": "#/$defs/source" },
+        "design_arena": { "$ref": "#/$defs/source" },
+        "pi_roster": { "$ref": "#/$defs/source" },
+        "claude_roster": { "$ref": "#/$defs/source" }
+      }
+    },
+    "overrides": {
+      "description": "Hand-owned.  Keyed by roster id.  The script merges these on top of generated data and never edits them.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/model_id" },
+      "additionalProperties": { "$ref": "#/$defs/override" }
+    },
+    "models": {
+      "description": "Global facts keyed by roster id (vendor/model).  Shared across hosts.",
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/model_id" },
+      "additionalProperties": { "$ref": "#/$defs/model" }
+    },
+    "hosts": {
+      "description": "Host-local rosters keyed by short hostname.  Each host writes only its own block.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[A-Za-z0-9._-]+$" },
+      "additionalProperties": { "$ref": "#/$defs/host" }
+    }
+  },
+  "$defs": {
+    "date": { "type": ["string", "null"], "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}$" },
+    "datetime": { "type": "string", "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}Z$" },
+    "model_id": { "type": "string", "pattern": "^[a-z0-9-]+/[A-Za-z0-9._:\\[\\]-]+$" },
+    "score": { "type": ["number", "null"] },
+    "unit_interval": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+    "price": { "type": ["number", "null"], "minimum": 0 },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "status", "as_of"],
+      "properties": {
+        "name": { "type": "string" },
+        "url": { "type": "string" },
+        "fetch": { "type": "string" },
+        "status": { "enum": ["ok", "failed", "skipped", "never"] },
+        "as_of": { "$ref": "#/$defs/date" },
+        "fetched_by": { "type": ["string", "null"] },
+        "error": { "type": ["string", "null"] },
+        "primary_version": { "type": ["string", "null"] },
+        "matched": { "type": ["integer", "null"], "minimum": 0 },
+        "note": { "type": "string" }
+      }
+    },
+    "match": {
+      "description": "Feed keys.  Generated from the id by rule; overrides.<id>.match patches any key.",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "openrouter": { "type": ["string", "null"] },
+        "aa_slug": { "type": ["string", "null"] },
+        "deepswe": { "type": "array", "items": { "type": "string" } },
+        "eqbench": { "type": "array", "items": { "type": "string" } },
+        "designarena": { "type": "array", "items": { "type": "string" } }
+      }
+    },
+    "benchmarks": {
+      "description": "All higher-is-better.  aa_factuality = 1 - AA Omniscience hallucination rate.  terminal_bench is AA's terminalbench_v2_1 in percent.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["aa_intelligence", "aa_coding", "aa_omniscience", "aa_factuality", "terminal_bench", "deep_swe", "eq_bench", "design_arena"],
+      "properties": {
+        "aa_intelligence": { "$ref": "#/$defs/score" },
+        "aa_coding": { "$ref": "#/$defs/score" },
+        "aa_omniscience": { "$ref": "#/$defs/score" },
+        "aa_factuality": { "$ref": "#/$defs/unit_interval" },
+        "terminal_bench": { "$ref": "#/$defs/score" },
+        "deep_swe": { "$ref": "#/$defs/score" },
+        "eq_bench": { "$ref": "#/$defs/score" },
+        "design_arena": { "$ref": "#/$defs/score" }
+      }
+    },
+    "pricing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt_cost_per_m", "completion_cost_per_m", "source"],
+      "properties": {
+        "prompt_cost_per_m": { "$ref": "#/$defs/price" },
+        "completion_cost_per_m": { "$ref": "#/$defs/price" },
+        "source": { "enum": ["openrouter", "aa_api", "local", null] },
+        "note": { "type": "string" }
+      }
+    },
+    "model": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "match", "benchmarks", "pricing", "last_seen"],
+      "properties": {
+        "provider": { "type": "string" },
+        "display_name": { "type": ["string", "null"] },
+        "context_window": { "type": ["integer", "null"], "minimum": 1 },
+        "match": { "$ref": "#/$defs/match" },
+        "benchmarks": { "$ref": "#/$defs/benchmarks" },
+        "benchmark_versions": {
+          "description": "field -> version string when a score comes from a non-primary benchmark version; the router treats such scores as null.",
+          "type": "object",
+          "additionalProperties": { "type": "string" }
+        },
+        "benchmark_notes": { "type": "object", "additionalProperties": { "type": "string" } },
+        "pricing": { "$ref": "#/$defs/pricing" },
+        "last_seen": {
+          "description": "feed -> date the model was last present in that feed.  A value whose last_seen is older than the router's age-out window scores as null.",
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "openrouter": { "$ref": "#/$defs/date" },
+            "aa_api": { "$ref": "#/$defs/date" },
+            "aa_omniscience": { "$ref": "#/$defs/date" },
+            "deep_swe": { "$ref": "#/$defs/date" },
+            "eq_bench": { "$ref": "#/$defs/date" },
+            "design_arena": { "$ref": "#/$defs/date" }
+          }
+        },
+        "track_only": {
+          "description": "True when the model is benchmarked for comparison but is in no host roster (set via overrides).",
+          "type": "boolean"
+        }
+      }
+    },
+    "execution_block": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["channel"],
+      "properties": {
+        "channel": { "enum": ["native", "external"] },
+        "tool": { "type": "string" },
+        "model_param": { "type": "string" },
+        "model_ref": { "type": "string" },
+        "command": { "type": "string" }
+      }
+    },
+    "roster_entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "native_harness", "execution"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "native_harness": { "type": "array", "items": { "enum": ["pi", "claude-code"] }, "minItems": 1 },
+        "execution": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "pi": { "$ref": "#/$defs/execution_block" },
+            "claude-code": { "$ref": "#/$defs/execution_block" }
+          }
+        },
+        "context_window": { "type": ["integer", "null"], "minimum": 1 },
+        "is_class_entry": { "type": "boolean" },
+        "count": { "type": ["integer", "null"], "minimum": 0 },
+        "pricing": {
+          "description": "Local override; only source 'local' allowed here.",
+          "allOf": [
+            { "$ref": "#/$defs/pricing" },
+            { "properties": { "source": { "const": "local" } } }
+          ]
+        },
+        "note": { "type": ["string", "null"] }
+      }
+    },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["probed_at", "probed_with", "channels", "roster"],
+      "properties": {
+        "probed_at": { "$ref": "#/$defs/datetime" },
+        "probed_with": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "claude": { "type": ["string", "null"] },
+            "pi": { "type": ["string", "null"] }
+          }
+        },
+        "channels": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pi", "claude-code"],
+          "properties": {
+            "pi": { "type": "boolean" },
+            "claude-code": { "type": "boolean" }
+          }
+        },
+        "roster": {
+          "type": "object",
+          "propertyNames": { "$ref": "#/$defs/model_id" },
+          "additionalProperties": { "$ref": "#/$defs/roster_entry" }
+        }
+      }
+    },
+    "override": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "constraints": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": { "tier_4_only": { "type": "boolean" } }
+        },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "match": { "$ref": "#/$defs/match" },
+        "track_only": { "type": "boolean" },
+        "probe": { "description": "anthropic/* only: include in the Claude entitlement probe even if absent from cache and roster.", "type": "boolean" },
+        "context_window": { "type": ["integer", "null"], "minimum": 1 },
+        "benchmark_notes": { "type": "object", "additionalProperties": { "type": "string" } },
+        "notes": { "type": "string" }
+      }
+    }
+  }
+}
