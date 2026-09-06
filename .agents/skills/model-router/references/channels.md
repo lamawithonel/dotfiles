@@ -12,6 +12,7 @@ they maintain tracking, user attribution, and structured return values.
 | Multi-step orchestration | `Workflow` | `subagent` (`workflowScript`, `lanes`) | In-process, deterministic, scripted |
 | Supervise active child | `SendMessage` | `subagent_supervisor` | In-process backchannel |
 | Await detached work | Native task notification | `bg_wait` | Passive completion coordination |
+| Terminal workspace pane | `herdr` skill | `herdr` skill | Interactive terminal pane, read-back result |
 | External CLI fallback | `Bash` (`pi -p ...`) | `bash` (`claude -p ...`) | Out-of-band, untracked process |
 
 ---
@@ -62,6 +63,12 @@ task list.
   - Set `{ id, nonBlocking: true }` to register a wake callback.
   - Set `{ all: true }` only when a blocking result is strictly required
     in the current turn.
+
+### Terminal Workspace Panes (`herdr` skill)
+
+When an interactive visual inspection or a persistent terminal session is
+desired, use the `herdr` skill to drive another coding agent in a separate
+terminal pane.  Results are returned via terminal buffer read-back.
 
 ---
 
