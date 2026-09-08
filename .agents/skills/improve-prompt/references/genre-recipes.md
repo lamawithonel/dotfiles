@@ -1,9 +1,10 @@
 # Genre Recipes
 
-Long-form backing for the S2 router.  Two orthogonal inputs decide
+Long-form backing for the S2 router.  Three orthogonal inputs decide
 technique: **genre** picks which technique families are *eligible*;
 **complexity** (TELeR-style: single-step / multi-step / multi-deliverable)
-picks *how much* scaffold to deploy.  Load this file once a genre is
+picks *how much* scaffold to deploy; the **target model family**
+(era-stamped section below) filters both.  Load this file once a genre is
 diagnosed: read the matching section for the evidence and slot-weighting
 that the compact S2 row does not carry, then apply the shared rewrite
 mechanics at the end.  The ADD lists are in the S2 table; the sections below
@@ -29,6 +30,7 @@ add only the *why* (evidence) and the *how much* (slot weighting).
 | Decomposition | ++ | +/- | +/- | - | ++ | ++ | - |
 | Ensembling | ++ | + (varied drafts) | + (verify) | +/- | + (verify) | + (options) | - |
 | Self-Criticism | + | + (form) | + (verify) | +/- | ++ (per-stage) | + | ++ (form) |
+| Loop emission (reward + trials) | ++ (tests) | -- | +/- (verify) | + (vote) | ++ | +/- | - |
 
 `++` strong add, `+` add, `+/-` situational, `-` avoid, `--` strongly avoid.
 
@@ -72,8 +74,9 @@ Instructions scaffolding.
 - Persona -- adds noise and risk with no recall benefit.
 - Speculative scaffolding -- this is a robust genre; keep the touch light.
 
-**High-stakes note**: legal-citation tasks hallucinate at ~13-21%, so name
-the external check (cite the source passage, require a verification step).
+**High-stakes note**: verifiable legal-citation questions hallucinate at
+58-88% (Dahl 2024), so name the external check (cite the source passage,
+require a verification step).
 
 **Slot weighting**: Context and verification-hook heavy; almost no Persona.
 
@@ -148,6 +151,12 @@ DoD; multi-deliverable -> add staged checkpoints and per-deliverable
 success criteria.  Do not deploy the multi-candidate merge below on a
 single-step prompt.
 
+**Placement (lost-in-the-middle).**  Recall is highest when relevant
+information sits at the beginning or end of the prompt and degrades in
+the middle, even in long-context models; place critical constraints and
+the deliverable statement at the very top or very bottom, and put long
+context above the query.
+
 **Multi-candidate merge (OPRO + EvoPrompt).**  For multi-step or higher,
 draft 2-3 diverse framings of the rewrite -- one constraint-first, one
 example-anchored, one terse-directive -- then crossover-merge the strongest
@@ -170,17 +179,82 @@ dev set and an eval loop.  This skill has neither, so it is an
 evidence-directed single-shot rewrite, not an optimizer run -- say so if
 the user asked to "optimize".
 
+**Four-quadrant persona.**  When a genre does warrant a persona, build it
+from Ken Wilber's Integral Theory -- one line per quadrant: *You
+think...* (analytical philosophy, mental orientation), *You
+behave...* (concrete execution habits), *You relate to/with...*
+(collaboration stance, expectations of rigor), *You participate...*
+(interaction with the surrounding system and tooling).  Quadrants carry
+behavioral framing only, never authority decoration; a one-line role
+beats an invented expert persona.
+
 **Ask-vs-assume economics (GATE).**  A sharp, well-placed question round
 routinely costs the user less than a wrong assumption propagating through a
 whole deliverable; asking is not pure overhead.
+
+## Model-family spectrum (era-stamped)
+
+Genre picks eligible techniques; the target model family filters them
+again.  Era-stamped guidance -- model families churn fast, so when this
+table conflicts with the vendor's current doc, the doc wins.
+
+| Family | Prompt carries | Strip | Source |
+|---|---|---|---|
+| **Non-reasoning** | full scaffold: procedure, genre CoT, few-shot, emitted loop | nothing | (default class) |
+| **Reasoning** (o-series, R1-class) | objective + verifiable reward; let native thinking search | CoT directives, few-shot blocks, system-prompt framing | OpenAI reasoning best practices; DeepSeek-R1 README |
+| **Self-scaffolding** (Ornith-class) | objective + reward + trust boundary | procedural orchestration and hand-designed harnesses; the model authors its own scaffold | Ornith-1.0/1.5 release pages |
+
+Family interacts with genre: a reasoning-family target in the reasoning
+genre drops CoT from the ADD list (the model searches natively) but
+keeps decomposition and the DoD; the same target in the creative genre
+only narrows persona depth.  When the family is unknown, it is a
+high-value interview slot or a stated assumption (default:
+non-reasoning).
+
+## Loop emission (reward + loop, never executed)
+
+When the target passes the **loopable-shape test**, the rewrite emits a
+reinforcement-learning-shaped test-time loop as instructions inside the
+output prompt.  The skill never executes anything.
+
+**Loopable-shape test** -- all four, checkable statically:
+
+1. **Gradable** -- a reward can be written (tests, constraints, binary
+   checks).  No rubric, no loop.
+2. **Cheap retrials** -- regeneration is reversible; no irreversible
+   side effects per trial.
+3. **Self-observable** -- the model can read its own candidate output.
+4. **Informative failures** -- a failed check points at what to fix.
+
+**Anatomy**, mapped to PICCO:
+
+- **Reward** = the DoD as a binary rubric [O].  For agent targets, add
+  the self-scaffolding decomposition: validity (verifiable), frontier
+  difficulty (challenging but learnable), novelty (non-redundant), and
+  a trust boundary -- the environment and verifier are immutable and
+  off-limits, touching them scores zero, and the sanctioned tool
+  surface is named.
+- **Trials, selection, stop** = N candidates or K revise rounds, argmax
+  or merge, budget-capped [Co].
+- **Memory** = a scratch list of failed approaches and why [C] -- the
+  Reflexion core.
+- **Loop scaffold** = the procedure block -- emitted only for
+  non-reasoning families.  Reasoning targets get the reward only;
+  self-scaffolding targets get reward plus boundary.
+
+Genre fit: strong for reasoning/code (tests are the reward) and
+agentic (per-stage pass/fail); classification via majority vote;
+extractive keeps external grounding as the reward and stays light;
+creative is a weak fit (best is unmeasurable -- varied drafts and pick
+only).
 
 ## Evidence key
 
 | Tag | Claim used |
 |---|---|
 | Let Me Speak Freely | Format restriction during reasoning degrades accuracy. |
-| Basil / Kim | Accuracy personas are neutral-to-harmful for correctness. |
-| CS4 | Heavy constraint front-loading harms creative coherence. |
+| Basil / Kim | Accuracy personas are neutral-to-harmful for correctness.  Substance re-confirmed (Zheng 2024, Wharton PSR4 2025); citation unlocated, re-source. |
+| CS4 | Heavy constraint front-loading harms creative coherence.  Unlocated; treat as unsourced. |
 | Peeperkorn | Temperature is a weak lever for creativity. |
 | Sprague | CoT gives near-zero recall gains without a symbolic cue. |
 | Liu | CoT on gestalt/exception classification drops up to -36 pts. |
@@ -192,6 +266,14 @@ whole deliverable; asking is not pure overhead.
 | EvoPrompt | Crossover-merge strongest clauses across candidates. |
 | Promptbreeder | Switch revision strategy rather than repeat one edit. |
 | ProTeGi | Specific grounded critique beats "make it better". |
-| GATE | A sharp question round often beats a wrong assumption. |
+| GATE | A sharp question round often beats a wrong assumption.  Citation unlocated; corroborated by ICLR 2025 turn-modeling and AskBench 2026. |
 | TELeR | Complexity level sets scaffold depth. |
-| (legal-cite) | High-stakes factual hallucinates ~13-21%; verify. |
+| (legal-cite) | Verifiable legal questions hallucinate at 58-88% (Dahl 2024); verify. |
+| Reflexion | Verbal-RL loop: generate, self-evaluate, keep failures in textual memory, retry. |
+| Self-Consistency | Majority vote over sampled reasoning paths is a consensus reward. |
+| Repeated sampling | Best-of-N with a verifier reranks; inference compute scales by sampling. |
+| PromptAgent | Monte Carlo tree search over prompts using error feedback. |
+| GEPA | Reflective prompt evolution beats policy-gradient RL with 35x fewer rollouts. |
+| OpenAI reasoning docs | Do not prompt reasoning models to think step-by-step. |
+| DeepSeek-R1 README | No system prompt, no few-shot for R1-class targets. |
+| Ornith 1.0/1.5 | Self-scaffolding family: the model authors its own scaffold; reward = validity x frontier x novelty. |

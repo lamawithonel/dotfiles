@@ -1,7 +1,8 @@
 ---
 name: improve-prompt
-description: Diagnoses and rewrites prompts or rough task briefs from any domain into clearer, better-scoped prompts.  Use when the user pastes a prompt to improve, says "improve this prompt", "make this prompt better", "rewrite this prompt", "fix/tighten/sharpen this prompt", asks "help me write a prompt for X", or hands over a rough task brief and asks for a ready-to-use prompt or spec before work begins.
+description: Diagnoses and rewrites prompts or rough task briefs from any domain into clearer, better-scoped prompts.  Use when the user pastes a prompt to improve, says "improve this prompt", "make this prompt better", "rewrite this prompt", "fix/tighten/sharpen this prompt", asks "help me write a prompt for X", or hands over a rough task brief and asks for a ready-to-use prompt or spec before work begins.  When an interactive question tool is available and gaps pass the ambiguity gate, runs a default-first interview round; pass --quick to skip questions and accept defaults.
 license: Apache-2.0
+argument-hint: "[--quick] [prompt]"
 ---
 
 # Improve Prompt
@@ -20,8 +21,11 @@ the skeleton.
 1. **Intake** -- capture the raw prompt/task verbatim; note any stated
    domain, audience, or constraints.
 2. **Classify** -- pick the genre (S2, 7-way) and complexity level
-   (single-step / multi-step / multi-deliverable).  Genre sets which
-   techniques are eligible; complexity sets how much scaffold to deploy.
+   (single-step / multi-step / multi-deliverable), and note the target
+   model family if evident (non-reasoning / reasoning / self-scaffolding;
+   unknown is itself an interview or assumption slot).  Genre sets which
+   techniques are eligible; complexity sets how much scaffold to deploy;
+   family filters both.
 3. **Diagnose** -- score against the 10-dim rubric (S1).  Name concrete
    flaws in the subject's own vocabulary ("the tolerance is unstated", not
    "add detail").  If the subject has a playbook under
@@ -29,15 +33,24 @@ the skeleton.
 4. **Ambiguity pass** (separate, explicit) -- enumerate gaps, classify each
    type, apply the missing-AND-divergent filters, then decide ask-or-assume
    (S3).  Do this as its own step; do not fold it into the rewrite.
-5. **If asking** -- emit 1-3 batched, instance-grounded questions and stop.
-   Otherwise continue.
-6. **Rewrite** -- apply the genre recipe plus universal fixes across the
-   PICCO slots, weighted per genre.  Size the effort to complexity: for a
-   single-step prompt, make one targeted rewrite (or a diff for a small
-   edit); for a multi-step or multi-deliverable prompt, draft 2-3 diverse
-   framings (constraint-first / example-anchored / terse-directive) and
-   merge the strongest clauses of each.  Order any exemplars or priority
-   lists worst-to-best, strongest LAST.
+5. **If asking** -- with an interactive question tool available, run the
+   interview (S4); without one, emit 1-3 batched, instance-grounded
+   questions and stop.  Otherwise continue.
+6. **Rewrite** -- subtract first: delete contradictions, duplicate
+   constraints, hedges, and dead ritual before adding anything; a
+   conflicting pair of clauses is worse than a missing slot.  Then apply
+   the genre recipe plus universal fixes across the PICCO slots, weighted
+   per genre and filtered by the target model family (S2).  Place
+   critical constraints and the deliverable statement at the very top or
+   very bottom, never buried mid-prompt.  Size the effort to complexity:
+   for a single-step prompt, make one targeted rewrite (or a diff for a
+   small edit); for a multi-step or multi-deliverable prompt, draft 2-3
+   diverse framings (constraint-first / example-anchored /
+   terse-directive) and merge the strongest clauses of each.  Order any
+   exemplars or priority lists worst-to-best, strongest LAST.  If the
+   target passes the
+   loopable-shape test, emit the reward spec plus the family-appropriate
+   loop scaffold (`references/genre-recipes.md`).
 7. **Self-check** -- re-score the result against the rubric DoD; confirm no
    clause silently degraded.  If a fix did not land, switch strategy (add a
    constraint vs. restructure vs. add an example) instead of repeating "make
@@ -51,8 +64,9 @@ Each maps to a PICCO slot.
 
 1. **Deliverable named** [I] -- exact artifact and its form are stated, not
    implied.
-2. **Success criteria / DoD** [O] -- a checkable "done and good" definition
-   exists (what makes output pass or fail).
+2. **Success criteria / DoD** [O] -- a checkable, verifiable "done and
+   good" definition exists (what makes output pass or fail); when a loop
+   is emitted, this is the reward function.
 3. **Scope fence** [Co] -- explicit in-bounds/out-of-bounds; states what
    NOT to do.
 4. **Context sufficiency** [C] -- required inputs are present; irrelevant
@@ -77,11 +91,11 @@ Full recipes and the transfer-evidence behind each cell live in
 
 | Genre | ADD | AVOID |
 |---|---|---|
-| **Reasoning/analytical** (code author + trace, math, logic, calc) | step-by-step CoT; decomposition; N attempts then reconcile; reason in prose, format last; for code, tests are the DoD | rigid mid-derivation JSON; persona-for-accuracy; excess exemplars |
+| **Reasoning/analytical** (code author + trace, math, logic, calc) | step-by-step CoT (non-reasoning targets only); decomposition; N attempts then reconcile; reason in prose, format last; for code, tests are the DoD; reward spec + loop scaffold when loopable | rigid mid-derivation JSON; persona-for-accuracy; excess exemplars |
 | **Generative/creative** (writing, ideation, voice) | few prioritized soft constraints (voice/theme/length); permission to diverge; ask for multiple varied drafts; persona for voice only | heavy constraint front-loading; CoT; majority-vote; "temperature = creativity" |
 | **Extractive/factual** (lookup, QA, summarize-from-source) | external grounding + explicit verification step for high-stakes; conventional formatting; source anchoring | CoT (unless a symbolic cue); persona; speculative scaffolding |
 | **Classification** (intent, label, triage) | strict front-loaded schema; 1-3 tight *balanced* exemplars; explicit label definitions | CoT on gestalt/exception-laden rules; too many or unbalanced shots; novel formatting |
-| **Agentic/tool-use** | strict tool-call schema; low-freedom exact procedure for fragile/ordered/irreversible steps; per-stage pass/fail; explicit verify checkpoints | open improvisation on destructive/ordered ops; trusting self-reported success |
+| **Agentic/tool-use** | strict tool-call schema; low-freedom exact procedure for fragile/ordered/irreversible steps; per-stage pass/fail; explicit verify checkpoints; reward spec + loop scaffold when loopable | open improvisation on destructive/ordered ops; trusting self-reported success |
 | **Planning/strategy** (roadmaps, tradeoffs) | decomposition into checkpointed stages; generate options + compare tradeoffs; sub-role lenses for multi-competency briefs | forced symbolic CoT with no verifiable substrate; over-rigid format; single-answer convergence |
 | **Conversational** (dialogue, assistant) | persona/register for voice; audience-depth calibration; unaided self-critique for FORM | heavy scaffolding; CoT on quick/intuitive turns; rigid schema |
 
@@ -100,9 +114,31 @@ apply only scope-fence + format + success-criteria; extra structure has
 near-zero marginal return there.
 
 **Persona is genre-conditional**: use it for style/register only, never as
-a correctness lever.  When precision matters, pair any persona with a
-plain-language-summary requirement (persona trades clarity for perceived
-depth).
+a correctness lever.  Keep it to a one-line role ("You are a helpful
+`<domain>` assistant") unless the genre is voice-heavy; never invent
+expertise personas or never-mistake clauses.  When precision matters,
+pair any persona with a plain-language-summary requirement (persona
+trades clarity for perceived depth).
+
+**Persona is not role**: a *persona* conditions how the model thinks and
+speaks (cognitive framing, voice); a *role* states the functional
+assignment and its scope of responsibility.  Most prompts need only
+one; when the prompt assigns work, give both, as separate elements.
+When a genre does warrant a persona, build it with the four-quadrant
+recipe in `references/genre-recipes.md`.
+
+**Target model family filters every genre choice**:
+
+| Family | Prompt carries | Strip |
+|---|---|---|
+| **Non-reasoning** | full scaffold: procedure, genre CoT, few-shot, emitted loop | nothing |
+| **Reasoning** (o-series, R1-class) | objective + verifiable reward | CoT directives, few-shot blocks, system-prompt framing |
+| **Self-scaffolding** (Ornith-class) | objective + reward + trust boundary | procedural orchestration; the model authors its own scaffold |
+
+Family guidance is era-stamped and decays fast; when it conflicts with
+the vendor's current doc, the doc wins.  Per-family detail lives in
+`references/genre-recipes.md`.  When the family is unknown, it is an
+interview slot or a stated assumption (default: non-reasoning).
 
 ## S3. Clarify vs. infer
 
@@ -142,20 +178,55 @@ this pass -- more context suppresses asking even when ambiguity remains.
 
 Templates and the ambiguity taxonomy live in `references/clarify-taxonomy.md`.
 
+## S4. Interview mode (interactive, default-first)
+
+When the S3 pass leaves gaps that pass the two-filter gate AND an
+interactive question tool is available AND the user did not pass
+`--quick`, replace the plain-text ask path with a tool-based interview:
+
+1. **Defaults first** -- derive a default value for every passing gap
+   from the genre's canonical values (and the subject playbook if
+   loaded).  A default is exactly what the inference path would place
+   in the Assumptions block.
+2. **Round 1** -- one `ask_user_question` (Pi) or `AskUserQuestion`
+   (Claude Code) call, at most 4 questions, highest-impact gap first.
+   Instance-grounded phrasing per S3; 2-4 options per question; the
+   default is the FIRST option, labeled "(Recommended)".  Selecting
+   the default equals skipping the question equals accepting the
+   default.  When the target model family is unknown, include the
+   model question -- it filters CoT, few-shot, persona depth, and loop
+   emission.
+3. **Round 2** -- only if a round-1 answer materially changes the
+   surviving gaps (re-run the S3 re-check) or the bare-brief exception
+   needs an artifact-scoping round.  Hard cap: 2 rounds, 8 questions
+   total, never more.
+4. **Collapse to inference** -- `--quick`, a non-interactive session,
+   question-tool failure, or user abandonment (Esc) accepts every
+   remaining default without asking.
+5. **Bookkeeping** -- answers are facts, not assumptions.  The
+   Assumptions block lists only defaults nobody confirmed, each marked
+   "(default)".
+
+Answers return inside the same turn, so the skill stays one-turn with
+no stop-and-wait.  The plain-text ask path keeps its 2-3 question cap
+and fires only when no interactive tool exists.
+
 ## Output contract
 
 **Default (inference path)** -- return, in order:
 
 1. **Improved prompt** -- the rewrite, ready to paste.  Primary deliverable.
 2. **Assumptions** -- itemized, falsifiable, individually overridable lines
-   ("Assuming: target = web, not native mobile"); omit entirely if nothing
-   was inferred.
+   ("Assuming: target = web, not native mobile"); mark unconfirmed
+   interview defaults "(default)"; omit entirely if nothing was inferred.
 3. **Rationale** -- 2-5 bullets, each naming a concrete flaw fixed (flaw ->
    fix, tied to a rubric dimension).  For small edits, show a diff instead.
 
-**Ask path** (S3 triggered) -- return the 1-3 batched, instance-grounded
-questions FIRST and nothing else; no rewrite yet.  After answers, resume
-at step 6 and return the default package.
+**Ask path** (S3 triggered, no interactive tool) -- return the 1-3
+batched, instance-grounded questions FIRST and nothing else; no rewrite
+yet.  After answers, resume at step 6 and return the default package.
+With an interactive tool, the interview (S4) runs instead and the
+rewrite completes in the same turn.
 
 **Honesty clause** -- if the user says "optimize", state that this is a
 single-shot, evidence-directed rewrite (grounded critique + best-last ordering +
@@ -169,7 +240,8 @@ a reasonable-sounding merge can score worse than either parent.
 ## Reference files (load on demand, one hop only)
 
 - Diagnosed genre -> `references/genre-recipes.md` (per-genre recipes,
-  technique-family lookup, transfer evidence, merge/ordering mechanics).
+  technique-family lookup, model-family spectrum, loop emission,
+  transfer evidence, merge/ordering mechanics).
 - Clarify step -> `references/clarify-taxonomy.md` (types, question templates,
   Assumptions-block format).
 - Diagnosed subject has a playbook -> `references/domains/<subject>.md`

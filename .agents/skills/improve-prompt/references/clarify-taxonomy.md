@@ -113,3 +113,41 @@ Assumptions (override any line):
 - Length budget = ~1 page; trimmed the background section to fit.
 - Output format = Markdown with H2 sections.
 ```
+
+## Tool-based interview (S4)
+
+An interactive question tool replaces the plain-text ask path when
+gaps passed the gate and `--quick` was not passed.  Friction economics
+change: a structured question with a preselected recommended default
+costs one keystroke, so the cap rises from 2-3 plain questions to 2
+rounds / 8 questions -- and no further; the skill stays a quick text
+transformation.
+
+Type-to-shape mapping (default FIRST, labeled "(Recommended)"):
+
+| Type | Options |
+|---|---|
+| SCOPE | narrow instance / default scope / broader instance |
+| REFERENCE | reading A / reading B (default reading first) |
+| CRITERION | minimal DoD / default DoD / strict DoD |
+| CONSTRAINT | typical value (default) / no limit / state your own |
+| Irreversible | safer alternative (default) / proceed |
+| Target model (family unknown) | family guess from context (default) / other family / not sure -- assume non-reasoning |
+
+Rules:
+
+- One gap, one question; 2-4 options; custom-typed answer overrides.
+- Esc / abandonment / `--quick` / non-interactive session = accept all
+  remaining defaults.
+- Answers are facts; only unconfirmed defaults are assumptions, each
+  marked "(default)".
+- Round 2 only for re-check survivors or bare-brief artifact scoping.
+
+Tool mapping:
+
+- Pi: `ask_user_question` -- up to 4 questions per call; fields:
+  question, header (<=16 chars), options (label <=60 chars +
+  description); multiSelect for genuinely multi-answer gaps.
+- Claude Code: `AskUserQuestion` -- same shape and semantics.
+- Other harnesses: any structured-question tool with a default-first
+  layout; otherwise plain-text questions (2-3 cap) or inference.
