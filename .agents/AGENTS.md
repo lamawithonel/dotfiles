@@ -123,6 +123,16 @@ vocabulary, and the worked template live in
   4. Contract Tests (API schemas & service boundaries)
   5. E2E Tests (Full system workflows)
 
+## Vulnerabilities & Security
+
+- **NEVER** infer or assume a CVE or other security report is valid.
+- **NEVER** investigate or research a CVE or security report without verifying
+  its applicability to the project and its dependencies first.
+- **ALWAYS** verify CVEs and security reports against the original source or
+  authoritative database before acting on them.
+- **ALWAYS** verify CVEs and security reports against the installed software
+  version before acting on them.
+
 ## Scope Containment & Modification Boundaries
 
 - **Convention & Policy Discovery**: Before introducing new patterns,
@@ -155,27 +165,36 @@ vocabulary, and the worked template live in
 
 ## Version Control & Workspace Directives
 
-1. **Conditional VCS Routing**: Route code mutations, diff analyses,
-   and task checkpoints through `vcs-workflow` ONLY when its
-   `scripts/detect_shape.sh` returns a workable shape (colocated,
-   jj-only, jj-workspace, or git-only) or when initializing VCS.
-   Never route to vcs-workflow -- or run ANY jj command, reads
-   included -- when the shape is `worktree-shadowed`; use plain git
-   there.
+1. **VCS Routing**: Run
+   `~/.agents/skills/vcs-workflow/scripts/detect_shape.sh` first, by
+   absolute path.  `colocated`, `jj-only`, and `jj-workspace` route
+   into `vcs-workflow` at the recorded level.  `git-only` routes into
+   onboarding: run `scripts/onboard.sh status`, ask the user once when
+   the repository is undecided (never in a headless session), respect
+   a recorded decline unless the user invokes the skill, and fall back
+   to plain git when onboarding skips (jj absent, or a linked git
+   worktree).  `worktree-shadowed` is a hard stop: plain git, no jj
+   command, reads included.  `none` is not applicable: a yadm-managed
+   home returns `none` and stays yadm.
 2. **Un-tracked Workspace Exemption**: Skip VCS workflows during early
    planning, brainstorming, research, or non-repository chat sessions.
 3. **History Integrity**: Within tracked repositories, enforce
    non-destructive workspace operations and never pollute commit
-   history with unverified intermediate states.  Exception: the
-   vcs-workflow preflight may write four allowlisted jj config keys at
-   `--repo` scope, announced in its receipt.
+   history with unverified intermediate states.  Two announced
+   exceptions: vcs-workflow onboarding creates a colocated `.jj` store
+   at the level the user chooses, recorded in the repository's
+   `.git/config`; and the vcs-workflow preflight writes the jj
+   `--repo` keys that level requires, announced in its receipt.
 4. **Commit Serialization**: Hand off to `git-commit` after
    verification gates pass.  `git-commit` is the codex -- the
    authority on atomicity criteria, selection doctrine, message
    structure, style, and trailers.  `vcs-workflow` prepares atomic
    revisions to that standard and supplies the jj-shape serialization
    mechanics (its `references/serialization.md`); gates run upstream,
-   judgment stays with the codex.
+   judgment stays with the codex.  `git-commit` uses
+   `references/serialization.md` in place of `git commit` when the
+   recorded level is `standard` or `full`, and plain `git commit` at
+   `oplog`.
 5. **Autonomy Ceiling**: The ceiling is the PR.  Pushing a branch and
    opening a PR may be automatic; merging to the default branch is a
    standing human gate.
@@ -197,6 +216,14 @@ vocabulary, and the worked template live in
    (the executor).  `caveman-commit` is a message-style layer only;
    when caveman mode is active, git-commit delegates prose style to it
    and retains validation, trailers, and serialization.
+9. **Isolation**: Isolate a subagent or background session in a jj
+   workspace under `~/.local/share/agents/jj-workspaces/<repo>/<name>`,
+   never a git worktree, and only at levels `standard` and `full`.
+   The `WorktreeCreate` and `WorktreeRemove` hooks make that the
+   default for `--worktree`, `isolation: "worktree"`, and background
+   sessions.  A nested git worktree is shadowed and hard-stopped, and
+   a sibling one cannot take a store.  Open a workspace in herdr as a
+   plain workspace.
 
 ## Tool Preferences
 
