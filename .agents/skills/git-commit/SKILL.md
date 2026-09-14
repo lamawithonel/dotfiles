@@ -141,10 +141,15 @@ Synthesize the analysis from your scratchpad into the final commit message struc
 - **Use Imperative Voice**: Write the description and body in the present tense and imperative mood ("add feature", not "added feature" or "adds feature").
 - **Apply Markdown Formatting**: Use rich Markdown inside the body (backticks for symbols/files, bullet lists for multi-part changes, and reference links where appropriate).
 - **Enforce Line Wrapping**: Wrap lines in the commit body at hard 72-character limits.
+- **Validate With Cocogitto**: Validate the draft with `cog verify --file "$MSG_FILE"` where `cog` is installed, and never skip it.
+- **Read the Repository's `cog.toml`**: Read the repository's `cog.toml` as its authority on types and scopes.
+- **Keep Release Tooling Out**: `cog check` validates a series, while `cog commit`, `cog bump`, and `cog changelog` are release tooling, not a path to a single commit.
 
 ### Step 4: Execute Commit & Verify Passing Build Gate
 
 Apply the generated message to the repository and handle pre-commit hook results:
+
+Check the level first: when `git config --get vcs-workflow.level` is `standard` or `full`, the `git commit` forms below do not apply -- serialize with `jj describe -r <rev> --stdin` per `~/.agents/skills/vcs-workflow/references/serialization.md`, which also carries the pre-serialization checklist.  At `oplog` or with no level, commit with git as below.
 
 ```bash
 # Standard single-line commit
