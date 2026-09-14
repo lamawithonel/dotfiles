@@ -17,18 +17,24 @@
 #               id for inspection via `jj --at-op`; repo state untouched
 #
 # Receipt line: ABSORB-OK op=<id> residual=<n> | ABSORB-BLOCKED ...
-# Exit: 0 ok, 1 blocked/failed, 2 usage, 3 worktree-shadowed, 5 shape.
+# Exit: 0 ok, 1 blocked/failed, 2 usage, 3 worktree-shadowed, 5 shape,
+# 6 level-blocked.
 
 set -o nounset
+
+SCRIPTDIR=$(dirname "$0")
+# shellcheck source=_lib.sh disable=SC1091
+. "$SCRIPTDIR/_lib.sh"
 
 CONFINE='mutable() & ~::remote_bookmarks()'
 DRY=0
 FROM=''
 INTO="$CONFINE"
 NPATHS=0
+PRIMARY=''
 
 _check_shape() {
-	_shape=$("$(dirname "$0")/detect_shape.sh")
+	_shape=$("$SCRIPTDIR/detect_shape.sh")
 	if [ "$?" -eq 3 ]; then
 		printf 'ABSORB-BLOCKED shape=worktree-shadowed\n'
 		exit 3
@@ -40,6 +46,25 @@ _check_shape() {
 			exit 5
 			;;
 	esac
+}
+
+# The level belongs to the primary root: a secondary workspace has no
+# git config of its own, so a read taken here would answer `full` for a
+# repo recorded oplog.
+_anchor_primary() {
+	PRIMARY=$(vcs_primary_root) || {
+		printf 'ABSORB-BLOCKED primary jj root unresolved\n'
+		exit 1
+	}
+}
+
+# At level oplog the pipeline stops at capture: absorb is not part of
+# that level.
+_check_level() {
+	if [ "$(vcs_level "$PRIMARY")" = 'oplog' ]; then
+		printf 'ABSORB-BLOCKED LEVEL-BLOCKED level=oplog\n'
+		exit 6
+	fi
 }
 
 _parse_args() {
@@ -105,6 +130,8 @@ _real_run() {
 
 main() {
 	_check_shape
+	_anchor_primary
+	_check_level
 	_parse_args "$@" || {
 		printf 'Usage: absorb_safe.sh [--dry-run] [--from REV] [--into REVSET] [PATHS...]\n' >&2
 		exit 2

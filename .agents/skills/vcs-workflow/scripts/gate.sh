@@ -27,11 +27,17 @@
 #     a ranged run aborts at the first failure and never reports on
 #     later revisions
 #
-# Receipt: gate JSON at <repo>/.local/state/agents/vcs/gate.json
+# Receipt: gate JSON at <primary-root>/.local/state/agents/vcs/gate.json
+# -- the PRIMARY root, never an ephemeral secondary workspace, because
+# promote.sh reads that receipt back and the two must agree.
 # Exit: 0 pass, 1 gate failure, 2 usage, 3 worktree-shadowed,
-#       4 CONFLICT-BLOCKED, 5 wrong shape.
+#       4 CONFLICT-BLOCKED, 5 wrong shape, 6 level-blocked.
 
 set -o nounset
+
+SCRIPTDIR=$(dirname "$0")
+# shellcheck source=_lib.sh disable=SC1091
+. "$SCRIPTDIR/_lib.sh"
 
 RED_TRAILER='Verification-Status: red-expected'
 RANGE='(trunk()::@) ~ root()'
@@ -48,6 +54,7 @@ EXIT=0
 RED_REVS=''
 RED_JSON=''
 STATE_DIR=''
+PRIMARY=''
 
 _usage() {
 	sed -n '6,13p' "$0" | sed 's/^# \{0,1\}//'
@@ -80,7 +87,7 @@ _parse_args() {
 }
 
 _check_shape() {
-	_shape=$("$(dirname "$0")/detect_shape.sh")
+	_shape=$("$SCRIPTDIR/detect_shape.sh")
 	if [ "$?" -eq 3 ]; then
 		printf 'GATE-FAIL shape=worktree-shadowed\n'
 		exit 3
@@ -92,6 +99,25 @@ _check_shape() {
 			exit 5
 			;;
 	esac
+}
+
+# The level and the receipt directory both belong to the primary root:
+# a secondary workspace has no git config of its own, and a receipt
+# written inside one dies with the workspace.
+_anchor_primary() {
+	PRIMARY=$(vcs_primary_root) || {
+		printf 'GATE-FAIL primary jj root unresolved\n'
+		exit 1
+	}
+}
+
+# At level oplog the pipeline stops at capture: gating is not part of
+# that level.
+_check_level() {
+	if [ "$(vcs_level "$PRIMARY")" = 'oplog' ]; then
+		printf 'GATE-FAIL LEVEL-BLOCKED level=oplog\n'
+		exit 6
+	fi
 }
 
 _check_conflicts() {
@@ -177,7 +203,9 @@ main() {
 		shift
 	done
 	_check_shape
-	STATE_DIR="$(jj root)/.local/state/agents/vcs"
+	_anchor_primary
+	_check_level
+	STATE_DIR=$(vcs_state_dir "$PRIMARY")
 	mkdir -p "$STATE_DIR"
 	_check_conflicts
 	_pick_mode_and_jobs

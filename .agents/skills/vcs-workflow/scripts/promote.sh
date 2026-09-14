@@ -6,9 +6,11 @@
 # Usage: promote.sh BOOKMARK [REV]     (REV defaults to @-)
 #
 # Ordered checks, each fail-silent without this script:
-#   1. gate receipt: <repo>/.local/state/agents/vcs/gate.json must
-#      exist with verdict=pass (verification happens BEFORE promotion,
-#      never after -- P-GATE-ORDER).
+#   1. gate receipt: <primary-root>/.local/state/agents/vcs/gate.json
+#      must exist with verdict=pass (verification happens BEFORE
+#      promotion, never after -- P-GATE-ORDER).  The PRIMARY root is
+#      where gate.sh writes it, so a run from a secondary workspace
+#      reads the same receipt the gate wrote.
 #   2. RED scan: no commit in trunk()..REV may carry the
 #      'Verification-Status: red-expected' trailer (durable red must be
 #      an xfail; the trailer is an intra-session checkpoint only).
@@ -22,11 +24,17 @@
 #
 # No --allow-conflicts, --allow-empty-description, or
 # --allow-private -- ever.  jj git push has no force flag to avoid.
-# Exit: 0 ok, 1 fail, 2 usage, 3 worktree-shadowed, 5 wrong shape.
+# Exit: 0 ok, 1 fail, 2 usage, 3 worktree-shadowed, 5 wrong shape,
+# 6 level-blocked.
 
 set -o nounset
 
+SCRIPTDIR=$(dirname "$0")
+# shellcheck source=_lib.sh disable=SC1091
+. "$SCRIPTDIR/_lib.sh"
+
 RED_TRAILER='Verification-Status: red-expected'
+PRIMARY=''
 
 _fail() {
 	printf 'PROMOTE-FAIL %s\n' "$*"
@@ -38,7 +46,7 @@ _revlist() {
 }
 
 _check_shape() {
-	_shape=$("$(dirname "$0")/detect_shape.sh")
+	_shape=$("$SCRIPTDIR/detect_shape.sh")
 	if [ "$?" -eq 3 ]; then
 		printf 'PROMOTE-FAIL shape=worktree-shadowed\n'
 		exit 3
@@ -52,8 +60,24 @@ _check_shape() {
 	esac
 }
 
+# The level and the gate receipt both belong to the primary root: a
+# secondary workspace has no git config of its own, and gate.sh wrote
+# the receipt where this resolves, not where the command happens to run.
+_anchor_primary() {
+	PRIMARY=$(vcs_primary_root) || _fail 'primary jj root unresolved'
+}
+
+# At level oplog the pipeline stops at capture: promotion is not part
+# of that level.
+_check_level() {
+	if [ "$(vcs_level "$PRIMARY")" = 'oplog' ]; then
+		printf 'PROMOTE-FAIL LEVEL-BLOCKED level=oplog\n'
+		exit 6
+	fi
+}
+
 _check_gate_receipt() {
-	_receipt="$(jj root)/.local/state/agents/vcs/gate.json"
+	_receipt="$(vcs_state_dir "$PRIMARY")/gate.json"
 	[ -f "$_receipt" ] || _fail "no gate receipt at $_receipt (run gate.sh first)"
 	_verdict=$(jq -r '.verdict' "$_receipt" 2> /dev/null) \
 		|| _fail "unreadable gate receipt $_receipt"
@@ -96,6 +120,8 @@ main() {
 	_bookmark=$1
 	_rev=${2:-@-}
 	_check_shape
+	_anchor_primary
+	_check_level
 	_check_gate_receipt
 	_check_range "$_rev"
 	jj bookmark set "$_bookmark" -r "$_rev" 2>&1 \

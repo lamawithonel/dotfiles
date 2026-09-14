@@ -14,11 +14,28 @@
 # with `git rev-parse --show-toplevel` is the shadow signature; a
 # secondary jj workspace has `.jj/repo` as a pointer FILE and no
 # `.git`; a `--no-colocate` primary has `.jj/repo` as a directory.
+# Both roots are resolved to PHYSICAL paths before the comparison, so a
+# symlinked repo root is not a false worktree-shadowed.
+#
+# When `jj` is not on PATH a note goes to stderr; stdout still carries
+# exactly one token, and the exit codes are unchanged.
 
 set -o nounset
 
+# Deliberately not _lib.sh's vcs_physical: a shape probe must always
+# emit one token, so an unresolvable path falls back to the input
+# instead of failing.  This is the one script that does not source the
+# lib, because it runs before anything else is known to work.
+_physical() {
+	(cd -P "$1" 2> /dev/null && pwd -P) || printf '%s\n' "$1"
+}
+
+command -v jj > /dev/null 2>&1 || printf 'detect_shape: jj not on PATH\n' >&2
+
 _git_top=$(git rev-parse --show-toplevel 2> /dev/null) || _git_top=''
 _jj_root=$(jj root 2> /dev/null) || _jj_root=''
+[ -z "$_git_top" ] || _git_top=$(_physical "$_git_top")
+[ -z "$_jj_root" ] || _jj_root=$(_physical "$_jj_root")
 
 if [ -n "$_jj_root" ] && [ -n "$_git_top" ] && [ "$_jj_root" != "$_git_top" ]; then
 	echo 'worktree-shadowed'
