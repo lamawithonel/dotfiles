@@ -39,6 +39,15 @@ jj describe -r <rev> --stdin < "$MSG_FILE"
 git commit -F "$MSG_FILE"
 ```
 
+Level decides before shape does.  At level `oplog` the serializing
+command is `git commit -F "$MSG_FILE"`, exactly as the codex documents
+it: the repository's own hooks fire, nothing jj-shaped reaches a
+reviewer, and jj imports the new commit on the next jj command, so
+capture and `jj undo` keep working.  At `standard` and `full` the
+serializing command is `jj describe --stdin`, per the shape block
+above.  The level is `git config --get vcs-workflow.level`; an absent
+key, or a jj-only shape with no git config to read, means `full`.
+
 Undo for a wrong description: `jj undo` (or
 `jj describe -r <rev> --stdin < corrected.txt`).
 
@@ -66,7 +75,12 @@ Undo for a wrong description: `jj undo` (or
 6. **Read `handoff.json`** (`references/receipts.md`) for the
    prepared stack, per-revision files, and scope hints -- the
    selection work already performed under the codex's criteria.
-   Judge it; refuse to serialize what fails the codex.
+   Judge it; refuse to serialize what fails the codex.  The receipt
+   exists only at `standard` and `full`: at `oplog`
+   `emit_handoff.sh` refuses with `LEVEL-BLOCKED` and exit 6 before
+   it writes anything, so serialize with `git commit -F` and read
+   nothing.  A `handoff.json` found in an `oplog` repository is a
+   leftover from a higher level and must not be read.
 
 ## Reserved trailer
 

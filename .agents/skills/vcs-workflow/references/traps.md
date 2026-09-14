@@ -7,11 +7,15 @@ failures (a real nonzero exit, a real exception) are not traps; they
 are just errors, and the caller already handles them.
 
 Entries 1-22 are the original catalogue, numbered as settled in the
-design decisions (`traps.md carries all 22 entries`).  Entries 23-27
-were found while building the scripts under `scripts/` and are new.
-Where a shipped script encodes the mitigation, the entry cites the
-exact file and line so a 3am reader can jump straight to the fix
-instead of trusting this prose.
+design decisions; entries 23-27 were found while building the scripts
+under `scripts/`.  The catalogue carries 21 live entries.  Where a
+shipped script encodes the mitigation, the entry cites the exact file
+and the line or claim name, so a 3am reader can jump straight to the
+fix instead of trusting this prose.
+
+Numbers are stable identifiers, not positions.  2, 3, 8, 15, 20, and
+21 retired with the ast-grep, difftastic, mise, and hunk-splitting
+tooling; those numbers are not reused.
 
 ## 1-22: the original catalogue
 
@@ -24,34 +28,21 @@ instead of trusting this prose.
    `returncode == 0`.  Encoded in `scripts/git_diff_safe.sh:36-42`,
    the single sanctioned entry point for hardened git reads.
 
-2. **ast-grep exit-code overloading.**  8 is a hard failure; 0 or 1
-   with empty stderr is success; 1 with non-empty stderr is a real
-   error; a benign zero-match result and a real file-not-found error
-   both return 1 and are otherwise indistinguishable.  Fix: parse
-   `--json`, never gate on the exit code alone.  No v1 script ships
-   this (the classifier that would call it is deferred to v2, section
-   8.2 of the design decisions); document it here for any ad hoc
-   `ast-grep` invocation in the meantime.
-
-3. **Nested-kind double-match.**  TypeScript's `export_statement` kind
-   wraps `function_declaration`, so a naive per-kind scan counts one
-   exported function twice.  Fix: dedupe matches on `(start, end)`
-   span, not on kind name.  Same v2-classifier caveat as #2 -- no v1
-   script encodes this yet.
-
 4. **`--ignore-errors` on `jj run`.**  Zeroes the exit code on a real
    failure and deletes the `Hint: Failed revision:` attribution the
    caller needs to find what broke.  Fix: never pass it.  Enforced by
-   omission in `scripts/gate.sh:124` and `:137` -- neither `jj run`
-   call carries the flag, and the script header names it explicitly
-   as a documented invariant (`gate.sh:19-20`).
+   omission in `scripts/gate.sh` -- neither of its two `jj run` calls
+   carries the flag, and the script header names it explicitly as a
+   documented invariant.
 
 5. **`description("text")` is glob-matched.**  A bare string in a
    `description()` revset filter is parsed as a `glob:` pattern and
    silently returns zero results against a message with no glob
    metacharacters that still doesn't match literally. Fix: use
-   `description(substring:"...")`.  Applied throughout
-   `scripts/gate.sh:106` and `scripts/promote.sh:66,69`.
+   `description(substring:"...")`.  Applied in every RED-trailer
+   lookup in `scripts/gate.sh` and `scripts/promote.sh`, and
+   re-checked live by the `revset-description-substring` claim in
+   `scripts/compat_probe.sh`.
 
 6. **Empty stdin silently wipes a description.**
    `printf '' | jj describe --stdin` clears the commit message with no
@@ -68,26 +59,22 @@ instead of trusting this prose.
    verify `jj config get user.name` / `user.email` resolve to real
    values before the first commit in a fresh clone.
 
-8. **difftastic's binary is named `difft`, not `difftastic`.**  jj's
-   builtin `difftastic` merge-tool preset invokes a binary literally
-   named `difftastic`, which fails with exit 1 "No such file or
-   directory" against every mainstream install (mise, cargo, brew, and
-   distro packages all name the binary `difft`).  Fix:
-   `merge-tools.difftastic.program = "difft"`.  Written by
-   `scripts/preflight.sh:87-88` as one of the four sanctioned `--repo`
-   config keys.
-
-9. **Worktree shadow.**  A harness-created nested worktree has no its
-   own `.jj/`, so jj walks up the filesystem and answers for the
+9. **Worktree shadow.**  A harness-created nested worktree has no
+   `.jj/` of its own, so jj walks up the filesystem and answers for the
    *parent* repo: it reports and can commit the parent's uncommitted
    files under the agent's message, while the worktree's own changes
    never appear.  A sibling (non-nested) worktree fails loudly instead
    (`Error: There is no jj repo in "."`), so the silent-danger mode is
-   specific to the nested case.  Fix: `scripts/detect_shape.sh:23-26`
-   compares `jj root` against `git rev-parse --show-toplevel`; a
+   specific to the nested case.  Fix: `scripts/detect_shape.sh`
+   compares `jj root` against `git rev-parse --show-toplevel`, both
+   resolved to physical paths so a symlinked root is not a false
+   positive; a
    mismatch is `worktree-shadowed`, exit 3, hard stop -- no jj command
-   may run, reads included.  Never pair this skill with worktree-based
-   subagent isolation.
+   may run, reads included.  Do not reach for a git worktree to
+   isolate a subagent; isolate with jj workspaces instead
+   (`references/isolation.md`).  A worktree cannot be converted out of
+   the trap either: `jj git init --colocate` refuses inside any linked
+   git worktree, loudly.
 
 10. **`core.quotePath` octal-escapes non-ASCII filenames.**  git's
     default `core.quotePath=true` renders a diff header as
@@ -134,22 +121,14 @@ instead of trusting this prose.
 
 14. **PyPI namesquats.**  `pip install jj` installs "Remote HTTP
     Mock", `pip install jujutsu` installs a `v0.0.1` impostor, and
-    `pip install cog` installs Replicate's ML tool -- none is the
-    jj/ast-grep toolchain.  Only `ast-grep-cli` is a legitimate pip
-    channel among these tools.  Fix: never `pip install jj` /
-    `jujutsu` / `cog`; this is forbidden vocabulary in `SKILL.md`.
-
-15. **`mise use` phones home even for an already-linked version.**  It
-    unconditionally probes `mise-versions.jdx.dev` then
-    `api.github.com`, 3 retries with backoff, on a machine where that
-    network path is exactly what's locked down -- non-fatal but pure
-    latency, and a surprise egress attempt on a host that shouldn't
-    make one.  `mise use --locked` separately hard-fails without a
-    pre-existing lockfile entry.  Fix: `mise link` (pure filesystem
-    symlink, zero network) plus `mise config set` (writes TOML
-    directly, also zero network).  Receipted live in
-    `scripts/bootstrap_work.sh:29-41`; applied at
-    `bootstrap_work.sh:236-241`.
+    `pip install cog` installs Replicate's ML tool -- none of the three
+    is the tool its name suggests, and each installs successfully, so
+    the tell is behavioural, not an error.  The `cog` this skill means
+    is cocogitto, the conventional-commit validator
+    (`references/serialization.md`); it comes from `mise` or `cargo`,
+    never from pip, and PyPI's `cog` is an unrelated project.  Fix:
+    never `pip install jj` / `jujutsu` / `cog`; this is forbidden
+    vocabulary in `SKILL.md`.
 
 16. **`reference-transaction` makes `jj git push`'s exit code lie.**
     It is the one git hook path that survives under jj authorship; a
@@ -157,9 +136,9 @@ instead of trusting this prose.
     while the commit had already landed on the remote -- a nonzero
     exit is not proof the push didn't happen.  Fix: on any push
     failure, re-query `remote_bookmarks()` before retrying rather than
-    assuming nothing changed.  Encoded in `scripts/promote.sh:82-88`,
-    which prints the re-query results to stderr on every push failure
-    before failing the script.
+    assuming nothing changed.  Encoded in `scripts/promote.sh`'s
+    `_push()`, which prints the re-query results to stderr on every
+    push failure before failing the script.
 
 17. **Absorb rename collateral, two signatures.**  Single-owner: the
     ancestor revision is silently emptied of the moved file's content,
@@ -175,8 +154,10 @@ instead of trusting this prose.
     -- the file an agent would naturally check to see which commit an
     exec step failed on -- does not exist for exec failures at all.
     Fix: read `HEAD`, or the last `pick` line in
-    `.git/rebase-merge/done`, instead.  Applies to the git-only
-    verification path; full recipe in `references/git-only.md`.
+    `.git/rebase-merge/done`, instead.  Applies to any
+    `git rebase --exec` run outside this skill -- a git-only
+    repository, a declined one, or a hand-run rebase in a converted
+    one; `gate.sh` never shells out to `git rebase`.
 
 19. **`jj diff --git` is not `git diff --git`.**  The two output
     formats diverge starting at byte 50 of a hunk: similarity-index
@@ -186,24 +167,6 @@ instead of trusting this prose.
     into a git-diff parser (or vice versa) fails silently on fields
     that merely look right.  Fix: pick one format per parser and test
     against real output from that exact command, not its sibling.
-
-20. **`sg` is deprecated.**  ast-grep 0.45.1 prints a deprecation
-    banner pointing at `ast-grep` on every invocation of the `sg`
-    alias -- noise at best, a broken pipe parse at worst if the banner
-    lands on stdout in an older build.  Fix: always invoke `ast-grep`.
-    `scripts/compat_probe.sh` and `scripts/bootstrap_work.sh:290` both
-    reference `sg` only as the deprecated-alias binary name to smoke
-    check, never as the command to run.
-
-21. **`git apply --unidiff-zero` fuzzy relocation.**  With zero context
-    lines, `git apply` relocates a hunk by fuzzy match against
-    surrounding content, which can mis-place it in a file with
-    duplicated nearby lines.  Verified correct against +1 and +4 line
-    drift; not proven safe in general.  Fix: `git diff --cached` after
-    every apply to confirm the hunk landed where intended.  Receipted
-    and cross-linked to this entry directly in
-    `scripts/git_only_hunks.awk:15-18`, which produces the hunks this
-    flag applies.
 
 22. **The named slop avoid-list.**  `agentic-jujutsu` (npm) and
     `agenticdevops/aof`'s "agentic-jujutsu" / "Verification & Quality
@@ -216,7 +179,7 @@ instead of trusting this prose.
 
 ## 23-27: found building the v1 scripts
 
-23. **`JJ_EDITOR` beats persisted `--repo` config.**  Actual jj 0.44.0
+23. **`JJ_EDITOR` beats persisted `--repo` config.**  jj's actual
     precedence, highest to lowest: (1) a command-line `--config` flag,
     (2) `$JJ_EDITOR`, (3) persisted `ui.editor` from any file scope
     including `--repo`, (4) `$EDITOR` or the built-in default.  A
@@ -228,9 +191,8 @@ instead of trusting this prose.
     only the `--repo` write and never checks the environment will hang
     or misbehave under a `JJ_EDITOR` an agent's harness happened to
     export.  Fix, belt and braces: persist `--repo` `ui.editor` and
-    `ui.diff-editor` = `:true` (`scripts/preflight.sh:85-86`), *and*
-    hard-fail if `JJ_EDITOR` is set to anything else
-    (`scripts/preflight.sh:51-53`), *and* pass
+    `ui.diff-editor` = `:true` in `scripts/preflight.sh`, *and*
+    hard-fail there if `JJ_EDITOR` is set to anything else, *and* pass
     `--config 'ui.editor=:true'` on every editor-invoking command
     line as a third belt.
 
@@ -240,9 +202,11 @@ instead of trusting this prose.
     the revisions it just gated with that state -- a test gate quietly
     becomes an auto-fixer that rewrites history nobody asked it to
     touch, with no error at all.  Fix: `--ignore-changes` on every
-    invocation, no exceptions.  Enforced in `scripts/gate.sh:124` and
-    `:137`, both call sites; the header documents it as a named
-    invariant at `gate.sh:16-18`.
+    invocation, no exceptions.  Enforced at both `jj run` call sites
+    in `scripts/gate.sh`, the ranged GATE call and the per-revision
+    REPORT loop; the script header documents it as a named invariant.
+    `scripts/compat_probe.sh`'s `run-ignore-changes` claim re-checks
+    that the flag still exists.
 
 25. **An absence claim can false-positive on help prose.**  Checking
     "does `jj git push --help` define no force flag" by grepping the
@@ -253,8 +217,9 @@ instead of trusting this prose.
     force flag that does not exist.  Fix: match flag *definition*
     lines only, line-anchored (`^[[:space:]]*(-f, )?--force`), never
     prose anywhere else in the help text.  Found and fixed while
-    building the `push-no-force-flag` absence claim in
-    `scripts/compat_probe.sh:130-138`.
+    building the `push-no-force-flag` claim, the one absence claim in
+    `scripts/compat_probe.sh`; grep for the claim name to read the
+    guard.
 
 26. **A vacuous absence claim when the tool itself is missing.**  The
     same absence check above has a second failure mode: if
@@ -265,8 +230,11 @@ instead of trusting this prose.
     the thing the check was meant to verify.  Fix: guard presence
     first; only evaluate the absence claim after confirming the
     underlying command actually produced output.  Implemented as the
-    `if ! jj git push --help >/dev/null 2>&1; then _fail ...` guard at
-    `scripts/compat_probe.sh:135`, ahead of the pattern match.
+    `if ! jj git push --help > /dev/null 2>&1; then _fail ...` guard
+    ahead of the pattern match in the `push-no-force-flag` claim.  The
+    same rule generalizes: when `jj` is absent, `compat_probe.sh`
+    fails every jj-dependent claim by name rather than letting any of
+    them pass unexamined.
 
 27. **`grep -qv PATTERN` as an absence check is an always-true trap on
     multi-line input.**  `grep -qv` succeeds (exit 0) the instant it
@@ -278,5 +246,5 @@ instead of trusting this prose.
     assert absence over multi-line output; assert presence with a
     positive, line-anchored `grep -q`/`grep -qE` and invert the shell
     conditional (`if ... ; then absent; else present; fi`) instead, as
-    `scripts/compat_probe.sh:130-138` does for entry 25 and 26's same
-    check.
+    the `push-no-force-flag` claim in `scripts/compat_probe.sh` does
+    for entry 25 and 26's same check.

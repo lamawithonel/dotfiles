@@ -16,7 +16,7 @@ gate.sh [--range REVSET] [--cheap] [--report] [--final-clean] \
 | Flag | Effect |
 | :-- | :-- |
 | `--range REVSET` | Revset to gate.  Default: `(trunk()::@) ~ root()`. |
-| `--cheap` | Sub-second command (lint, ast-grep, fast unit tests): `-j$(nproc)` unconditionally. |
+| `--cheap` | Sub-second command (lint, fast unit tests): `-j$(nproc)` unconditionally. |
 | `--report` | Force per-revision REPORT mode even with no RED trailer in range. |
 | `--final-clean` | Reproducibility-critical final gate only: adds `--clean`, discards every warm job slot.  Never part of the routine loop. |
 

@@ -32,9 +32,9 @@ path string to the primary's store, not a symlink.
 | :-- | :-- | :-- | :-- |
 | `colocated` | `$_jj_root` resolves, equals `$_git_top`, and `$_jj_root/.git` exists | 0 | Full pipeline.  Native `git diff`/`show`/`log` work through `scripts/git_diff_safe.sh` (invariant 17); the lazy-export mechanic below and the file-targeting git-command ban (invariant 19) apply only here, because this is the only shape with a live git index next to `.jj`. |
 | `jj-only` | `$_jj_root` resolves, no `.git` there, `.jj/repo` is a directory (not a file) | 0 | Full pipeline.  No live git working tree exists, so the file-targeting git-command ban and the lazy-export mechanic are moot -- there is nothing for them to hit. |
-| `jj-workspace` | `$_jj_root` resolves (the secondary's own directory, distinct from the primary's), `.jj/repo` there is a FILE | 0 | Full pipeline.  Preflight's `--repo`-scoped config resolves through the pointer file to the primary's `config-id`, so a workspace never needs its own preflight run -- only that the underlying store has had one (invariant 2). |
-| `git-only` | `$_jj_root` empty, `$_git_top` resolves | 0 | Reduced mode, not a peer: hunk-grain staging (`git_diff_safe.sh` + `git_only_hunks.awk` + `git apply --cached --unidiff-zero`), fixup accumulation with deferred autosquash, `git rebase --exec` per-revision verify.  No absorb equivalent, no oplog rollback tiers, no classifier partitioning.  Unattended/overnight runs are a no-go: an `rm -rf`'d worktree loses never-`git add`ed content completely, and `git add`ed content survives only as an anonymous, path-less, GC-eligible dangling blob.  Full recipe: `references/git-only.md`. |
-| `worktree-shadowed` | `$_jj_root` and `$_git_top` both resolve and **disagree** | 3 | Nothing for jj, reads included.  Plain git only.  Never pair this skill with worktree-based subagent isolation. |
+| `jj-workspace` | `$_jj_root` resolves (the secondary's own directory, distinct from the primary's), `.jj/repo` there is a FILE | 0 | Full pipeline, with **no `.git` here**: every jj operation reaches the shared repo, so `jj describe --stdin`, `jj absorb`, `gate.sh`, and `jj git push --bookmark` all work and a bookmark pushed here is the same bookmark everywhere.  `gh` reads the CWD's git remote and finds none, so every call needs `gh -R <owner>/<repo>` (and `--head <branch>`).  Preflight's `--repo`-scoped config resolves through the pointer file to the primary's `config-id`, so a workspace never needs its own preflight run -- only that the underlying store has had one (invariant 2).  There is no git config here either, so the level is read at the primary root -- follow `.jj/repo`, resolving a relative pointer against `<root>/.jj`, and the primary root is two directories above the store it names. |
+| `git-only` | `$_jj_root` empty, `$_git_top` resolves | 0 | No store yet, or one the user declined.  Route into onboarding: `scripts/onboard.sh status`, then the two questions when it reports `undecided` (`references/onboarding.md`).  Until a store exists the repo runs the plain-git fallback -- `git_diff_safe.sh` for reads, `git-commit` for every commit, `git rebase --exec` for per-revision verify, and no capture at all, so unattended runs are a no-go (`references/git-only.md`). |
+| `worktree-shadowed` | `$_jj_root` and `$_git_top` both resolve and **disagree** | 3 | Nothing for jj, reads included.  Plain git only; isolate with jj workspaces instead of worktrees. |
 | `none` | neither resolves | 2 | Skill does not apply. |
 
 ## Nested vs. sibling worktrees
@@ -44,9 +44,22 @@ own -- the shadow risk turns entirely on *where* that worktree sits
 relative to the parent's directory tree, and the two placements fail
 in opposite ways.
 
-**Nested** -- this harness's own `EnterWorktree`/`ExitWorktree` tools
-(also `--worktree`, `isolation:"worktree"`, background sessions) place
-the worktree inside the parent checkout's own directory tree.
+Neither placement is the answer: isolate with jj workspaces, which
+`scripts/workspace_hook.sh` makes the default for the three triggers
+that would otherwise cut a worktree -- `--worktree`, an agent declared
+`isolation: "worktree"`, and background sessions.  Registered on
+`WorktreeCreate` and `WorktreeRemove`, the hook answers each event
+with a workspace outside the checkout and never falls back to a git
+worktree (`references/isolation.md`).  The on-ramp is the other half
+of the rule: `jj git init --colocate` refuses inside ANY linked git
+worktree, nested or sibling, so a worktree can never take a store of
+its own and `onboard.sh` skips one with
+`ONBOARD-SKIP reason=linked-worktree`.
+
+**Nested** -- without the hooks, this harness's own
+`EnterWorktree`/`ExitWorktree` tools (also `--worktree`,
+`isolation: "worktree"`, background sessions) place the worktree
+inside the parent checkout's own directory tree.
 `git rev-parse --show-toplevel` is worktree-metadata-aware and
 correctly resolves to the nested worktree's own root; `jj root` is
 not -- it walks up the filesystem looking for the nearest `.jj`, finds
@@ -64,8 +77,8 @@ compounds it: `ExitWorktree` with `discard_changes: true` trusts a
 git-level dirty check that is correct, but an agent that instead
 trusts jj's report (wrong, because jj never saw this directory) and
 forces the discard destroys the work permanently -- jj recorded no
-operation for it, so there is nothing for `jj undo` to restore.  Never
-pair vcs-workflow with worktree-based subagent isolation; this is why.
+operation for it, so there is nothing for `jj undo` to restore.
+Isolate with jj workspaces instead; this is why.
 
 **Sibling** -- a plain `git worktree add ../foo` placed outside the
 parent's directory tree fails loud instead.  Walking up from inside it
