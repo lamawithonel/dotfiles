@@ -1,44 +1,73 @@
 # Receipts
 
-Four JSON schemas plus one non-JSON journal projection.  Every field
+Three JSON schemas plus one non-JSON journal projection.  Every field
 below is a shell exit code, a `jj log -T` projection, or a parsed JSON
 value -- never agent prose (P-RECEIPTS).  Field lists are read from
 the shipped scripts, not from the design-doc draft; every place the
 two disagree is called out explicitly, because the draft is not what
 runs.
 
+Who reads the handoff receipt: this skill's handoff step and the
+pre-serialization checklist in `serialization.md`.  `git-commit` does
+not -- it is the codex on commit craft and takes its input from the
+prepared revisions themselves, so nothing in the receipt is an
+instruction to it.
+
 Adjacent detail lives elsewhere and is not repeated here: the gate's
 flag matrix and `-j` warmth policy are in `verify.md`; the conflict
-revset and marker tokens are in `conflicts.md`; the bootstrap
-integrity ladder is in `bootstrap-locked.md`.
+revset and marker tokens are in `conflicts.md`; the conversion levels
+and the keys each one writes are in `onboarding.md` and
+`safety-net.md`.
 
-## vcs-handoff/1
+## vcs-handoff/2
 
-Path: `<repo>/.local/state/agents/vcs/handoff.json`
+Path: `<primary-root>/.local/state/agents/vcs/handoff.json`
 Emitted by: `scripts/emit_handoff.sh [--range REVSET]`
+
+The path is the PRIMARY workspace root, resolved through the
+`.jj/repo` pointer file when the script runs inside a secondary jj
+workspace -- an ephemeral workspace never gets a receipt of its own.
 
 | Exit | Meaning | Receipt written? |
 | :--- | :--- | :--- |
 | 0 | `HANDOFF-OK` -- ready | yes, full |
 | 1 | `HANDOFF-NOT-READY` -- fails[] non-empty | yes, full |
-| 1 | `HANDOFF-FAIL jq assembly failed` | **yes, but truncated to empty** |
+| 1 | `HANDOFF-FAIL jq assembly failed` | no -- previous receipt intact |
 | 2 | usage -- bad `--range` invocation | no |
 | 3 | `detect_shape.sh` returned `worktree-shadowed` | no |
+| 5 | `HANDOFF-FAIL shape=git-only` or `shape=none` | no |
+| 6 | `HANDOFF-FAIL LEVEL-BLOCKED level=oplog` | no |
 
 Exit 1 is overloaded between two unrelated failure modes.  Do not
 branch on the exit code alone -- grep the printed message prefix.
-The jq-assembly-failure path is rare but dangerous: the shell's `>`
-redirect truncates `handoff.json` before jq runs, so on that one path
-the previous good receipt is gone and the new one is zero bytes.  A
-reader that only checks "does the file exist" after this path gets a
-present-but-empty file, not a stale-but-valid one.
+The assembly path is atomic: jq writes `handoff.json.tmp` and the
+script `mv`s it into place only on success, removing the temp file
+otherwise.  A failed run therefore leaves the previous good receipt
+untouched -- stale, never truncated.  Check `probed_at`-style
+freshness against the run you care about rather than trusting
+existence alone.
 
-Field shape as shipped:
+Exit 5 is emitted immediately after `detect_shape.sh`, before
+preflight and before any jj command: a repository with no store has
+nothing to hand off, and `references/onboarding.md` covers converting
+it.
+
+Exit 6 is the level gate, checked after the shape and the workspace
+but before the state directory is created and before preflight runs.
+At `oplog` the pipeline stops at capture, so there is no prepared
+stack to describe, and the receipt directory itself would surface as
+an untracked path in a third-party checkout -- so nothing is written
+anywhere, not even the directory.  The level is read at the primary
+root, the same reader `preflight.sh`, `gate.sh`, `promote.sh`, and
+`absorb_safe.sh` use.
+
+Field shape as shipped, in written order:
 
 ```
-schema         "vcs-handoff/1"
-shape          colocated | jj-only | jj-workspace | git-only
-toolchain      {jj, ast_grep, difftastic, probe_verdict, probe_at}
+schema         "vcs-handoff/2"
+shape          colocated | jj-only | jj-workspace
+level          oplog | standard | full
+toolchain      {probe_verdict, probe_at}
 preflight      {ok, protected[], store_id, editor_guard}
 base           {revset, commit_id, op_id, fetched{ran, op_id}}
 stack[]        {change_id, commit_id, first_line, files[]}
@@ -46,18 +75,25 @@ gate           <verbatim contents of gate.json, or null>
 absorb         {ran, op_id, destinations[], residual, renames_blocked}
 partition      {grain, splits[], refused[]}
 conflicts[]
-message_hints  {scope, symbols[], symbols_source}
-ready, fails[], warns[]
+message_hints  {scope}
+workspace      {name, is_secondary, primary_root}
+repo           {root, origin_url}
+ready          true | false
+fails[]        subset of {preflight, gate, conflicts}
+warns[]        fetch-not-run, probe-<verdict>, probe-stale
 ```
 
 Field-by-field, what the script actually puts there:
 
-- `toolchain.jj`, `toolchain.ast_grep`, `toolchain.difftastic` are the
-  literal JSON `null` unconditionally in v1 -- nothing populates them.
-  Only `toolchain.probe_verdict` and `toolchain.probe_at` are real,
-  copied verbatim from `compat-probe.json`.  `probe_verdict` is
-  `"missing"` when that file does not exist and `"unreadable"` when
-  `jq` cannot parse it; otherwise it is whatever
+- `level` is `git config --get vcs-workflow.level` read at the
+  primary root; an unset or empty key reads as `"full"`, the same
+  default `preflight.sh` and `gate.sh` resolve to.  It records what
+  the repository was converted at, not what this run was asked for.
+- `toolchain` carries exactly two fields, both copied verbatim from
+  `compat-probe.json`: `probe_verdict` and `probe_at`.  There are no
+  version fields -- the probe asserts behaviour, not versions.
+  `probe_verdict` is `"missing"` when that file does not exist and
+  `"unreadable"` when `jq` cannot parse it; otherwise it is whatever
   `compat_probe.sh` last wrote (`"green"` or `"drift"`).
 - `preflight.ok` is `true` iff the fresh `preflight.sh` run this
   script triggers exits 0.  `preflight.protected[]` and
@@ -91,12 +127,18 @@ Field-by-field, what the script actually puts there:
   did not happen."
 - `conflicts[]` is real: `jj log -r 'conflicts() & (RANGE)'`
   change-ids, and it **does** honor `--range` (unlike `base.revset`).
-- `message_hints.scope` is a pure path computation: the common leading
-  path segment across every changed file in the stack, else the
-  shared file stem, else `""`.  `message_hints.symbols[]` is the
-  literal `[]` and `symbols_source` is the literal `"none"`,
-  always -- the read-only `ast-grep --json` scan the design doc
-  describes is not implemented in this script.
+- `message_hints` carries one field, `scope`: a pure path
+  computation, the common leading path segment across every changed
+  file in the stack, else the shared file stem, else `""`.  There is
+  no symbol list -- nothing in this skill parses source structure.
+- `workspace.name` is the working copy's own workspace name
+  (`default` in a single-workspace repo).  `workspace.is_secondary`
+  is `true` iff `<jj root>/.jj/repo` is a pointer FILE rather than a
+  directory, and `workspace.primary_root` is that pointer resolved to
+  a physical path -- the same value as `repo.root`.
+- `repo.origin_url` is `git config --get remote.origin.url` at the
+  primary root, or JSON `null` when there is no such remote.  A
+  `null` here is why `promote.sh` can have nothing to push to.
 - `ready` is `true` iff `preflight.ok` is true, `gate.verdict` (from
   the embedded `gate` object) is `"pass"`, and `conflicts[]` is
   empty.  `fails[]` is the subset of `{preflight, gate, conflicts}`
@@ -104,7 +146,9 @@ Field-by-field, what the script actually puts there:
 - `warns[]` always contains `fetch-not-run` (unconditional, per the
   `base.fetched.ran` note above), plus `probe-<verdict>` whenever
   `toolchain.probe_verdict` is not `"green"` -- so one of
-  `probe-drift`, `probe-missing`, or `probe-unreadable`.
+  `probe-drift`, `probe-missing`, or `probe-unreadable` -- plus
+  `probe-stale` whenever the probe receipt is missing or older than
+  seven days.
 
 ## vcs-gate/1
 
@@ -163,81 +207,54 @@ exit               see below -- meaning depends on mode
   RED-expected tolerance, `1` if any unmarked revision failed --
   never the underlying per-revision `jj run` exit code.
 
-## vcs-compat-probe/1
+## vcs-compat-probe/2
 
 Path: `~/.agents/.local/state/vcs-workflow/compat-probe.json`
 (host-level, not repo-level -- toolchain drift is a property of the
-machine).
+machine).  Written to a temp file and `mv`d into place.
 Emitted by: `scripts/compat_probe.sh` (no arguments).
 Exit: `0` when `verdict` is `"green"`, `1` when `"drift"`.  There is
 no usage-error path; the script takes no flags.
 
+A receipt that cannot be written is reported, never passed over.  When
+the state directory cannot be created the script prints
+`PROBE-FAIL receipt-dir` on stdout and exits 1; when the temp file
+cannot be written, or cannot be renamed into place, it removes the
+temp file, prints `PROBE-FAIL receipt-write` on stdout, and exits 1.
+Either way no `PROBE-GREEN` line is printed and any previous receipt
+is left exactly as it was -- so a `PROBE-FAIL` line means the claims
+may well have passed while their record did not land, and the verdict
+on disk is whatever the last successful run wrote.
+
 ```
-schema         "vcs-compat-probe/1"
+schema         "vcs-compat-probe/2"
 probed_at      UTC ISO-8601, `date -u +%Y-%m-%dT%H:%M:%SZ`
-tools          {jj, ast-grep, difftastic} -> raw first line of
-               `<bin> --version`
 claims         {passed: <int>, failed: [<claim-name>, ...]}
-pins_behind[]  "<owner/repo>:pinned=<X>,latest=<Y>"
 verdict        "green" | "drift"
-probe_version  "1"
 ```
 
-- `verdict` is `"drift"` iff `claims.failed[]` is non-empty.
-  `pins_behind[]` never affects `verdict` -- it is populated from
-  `gh release view` against the three GH-released repos (`jj-vcs/jj`,
-  `ast-grep/ast-grep`, `Wilfred/difftastic`) and is silently skipped
-  entirely when `gh` is absent.  Staleness is a choice; drift is a
-  defect (per the script's own header comment).
+Four fields, and no others: no tool versions, no pin comparison, no
+schema-version duplicate.  Every claim asserts behaviour -- a tool is
+present, or a command, flag, revset, or config key still works as
+documented -- because a pinned version number only ever produced
+false drift.
 
-**7-day staleness, D1.10 vs. shipped**: D1.10 specifies that
-`vcs-handoff/1`'s copy of `probe_verdict` carries "a staleness warning
-past 7 days."  **This is not implemented in `emit_handoff.sh`.**  The
-script copies `probe_at` into `toolchain.probe_at` verbatim and only
-ever warns on `probe_verdict != "green"` (see vcs-handoff/1 above); no
-code path compares `probe_at` against the current time.  A probe
-receipt that is 30 days old and still says `"green"` produces a
-silent, warning-free `ready=true`.  Check staleness yourself before
-trusting an old `"green"`:
-
-```sh
-_age=$(( $(date -u +%s) - $(date -u -d "$probe_at" +%s) ))
-[ "$_age" -lt 604800 ]   # 7 days, in seconds
-```
-
-## vcs-compat-recover/1
-
-Path: `~/.agents/.local/state/vcs-workflow/compat-recover.json`
-Emitted by: `scripts/gh_recover.sh [ARGS...]` (forwarded verbatim to
-`bootstrap_work.sh`, e.g. `--with-cocogitto`).
-Exit: `0` when `verdict` is `"recovered"`, `1` when `"not-recovered"`.
-
-```
-schema           "vcs-compat-recover/1"
-recovered_at     UTC ISO-8601
-bootstrap_exit   raw exit code of bootstrap_work.sh
-probe_exit       raw exit code of the closing compat_probe.sh re-run
-verdict          "recovered" | "not-recovered"
-```
-
-- `verdict` is `"recovered"` iff **both** `bootstrap_exit == 0` and
-  `probe_exit == 0`.
-- **This is much smaller than D1.5's draft schema.**  The draft lists
-  per-tool granularity -- `tool`, `pinned_version`,
-  `installed_version_before/after`, `probe_before{verdict, drift[]}`,
-  `source{owner_repo, tag, asset, browser_download_url}`,
-  `integrity{method, verified, sha256}`,
-  `install{staged_path, live_path, symlinks_updated[],
-  mise_network_used}`, `probe_after{verdict, drift[]}`,
-  `ready`, `fails[]`, `warns[]`.  None of that ships.  The shipped
-  receipt is the five fields above: two raw exit codes and a derived
-  verdict.  Per-tool install detail, if you need it, is only in
-  `bootstrap_work.sh`'s own stdout/stderr -- capture that separately.
-- `gh_recover.sh` does not snapshot the **prior** probe state before
-  running `bootstrap_work.sh`; it runs `compat_probe.sh` exactly once,
-  at the end, as the closing check.  There is no `probe_before` to
-  read.  If you need a before/after `claims.failed[]` diff, copy
-  `compat-probe.json` aside yourself before invoking `gh_recover.sh`.
+- `verdict` is `"drift"` iff `claims.failed[]` is non-empty, and the
+  stdout receipt says the same thing in one line:
+  `PROBE-GREEN passed=<N> failed=[] receipt=<path>`, or
+  `PROBE-DRIFT passed=<N> failed=[name name] receipt=<path>`.
+  Per-claim diagnostics (`probe: FAIL <name>`) go to stderr.
+- Every failure is named.  A missing tool fails its own presence
+  claim AND every claim that needed it, each by name, so a drift
+  report is a work list rather than a single opaque verdict.  The one
+  absence claim, `push-no-force-flag`, is guarded so it can never
+  pass vacuously when `jj` itself is gone (`references/traps.md` #25
+  and #26).
+- Staleness is separate from drift.  A green receipt older than seven
+  days still says `"green"`; `preflight.sh` reports `probe=stale` in
+  its receipt and `emit_handoff.sh` adds `probe-stale` to `warns[]`,
+  neither of which fails a run.  Re-run the probe rather than
+  reasoning about the age yourself.
 
 ## Journal projection (D1.6, invariant 25) -- not a JSON receipt
 
@@ -271,9 +288,9 @@ remote has already been updated**.  A nonzero `jj git push` exit is
 therefore never proof the remote is unchanged.
 
 This hazard is scoped to `promote.sh`'s push step alone.  `gate.sh`
-only runs `jj run` locally and never pushes; `emit_handoff.sh`,
-`compat_probe.sh`, and `gh_recover.sh` touch no remote either.  None
-of those four can hit this hook.
+only runs `jj run` locally and never pushes; `emit_handoff.sh` and
+`compat_probe.sh` touch no remote either.  None of the three can hit
+this hook.
 
 `promote.sh`'s `_push()` is where invariant 22 is enforced.  On any
 `jj git push` failure it does not retry blindly -- it re-queries the
