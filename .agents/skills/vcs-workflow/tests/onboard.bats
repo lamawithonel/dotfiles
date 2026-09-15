@@ -649,6 +649,19 @@ stub_jj_race() {
 	[ "$status" -eq 0 ]
 }
 
+@test "onboard precheck 8: an ignored fifo does not refuse" {
+	local d
+	d="$(fx_git_only_file r)"
+	mkdir -p "$d/.cache/tmp"
+	mkfifo "$d/.cache/tmp/pipe"
+	printf '.cache/\n' > "$d/.gitignore"
+	env -C "$d" git add .gitignore
+	env -C "$d" git commit -q -m ignore
+	run --separate-stderr ONBOARD "$d" apply --level full
+	[ "$status" -eq 0 ]
+	[[ "${lines[1]}" == ONBOARD-OK* ]]
+}
+
 @test "onboard precheck 9: .gitmodules refuses" {
 	local d
 	d="$(fx_git_only_file r)"

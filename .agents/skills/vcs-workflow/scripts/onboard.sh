@@ -288,9 +288,15 @@ _big_untracked() {
 		done
 }
 
+# jj honours the ignore rules when it snapshots, so an ignored node
+# (portage's fifos under .cache/, say) is not in its way.
 _odd_nodes() {
 	find "$ROOT" \( -name .git -o -name .jj \) -prune -o \
-		! -type d ! -type f ! -type l -print 2> /dev/null
+		! -type d ! -type f ! -type l -print 2> /dev/null \
+		| while IFS= read -r _p; do
+			git -C "$ROOT" check-ignore -q "$_p" 2> /dev/null && continue
+			printf '%s\n' "$_p"
+		done
 }
 
 # jj snapshots the whole working copy; a 1 MiB+ untracked file is
