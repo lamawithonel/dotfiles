@@ -107,5 +107,18 @@ route through `WorktreeCreate`, but its stdin JSON carries a `name`
 field and no `worktree_path`.  The hook accepts either; on neither it
 refuses with `reason=bad-input keys=[...]` listing what it received, so
 a future change to the tool's input shape is diagnosed from the
-receipt.  Where the session lands after that fix is the next thing to
-record here.
+receipt.  With that fix the session landed under the workspaces root
+with shape `jj-workspace`.
+
+## Sandbox: the shared store is outside the workspace
+
+Every snapshot from a workspace writes into the PRIMARY's `.jj` and
+`.git/objects`; that is the design, exactly as a git worktree writes
+into the shared `.git`.  Claude Code's sandbox allows those shared
+writes for git worktrees it created itself, but a hook-created jj
+workspace moves the session's write set to the workspace alone, so
+`jj status` there fails with "Read-only file system" on
+`<primary>/.git/objects` (measured 2026-09-15).  Until the sandbox's
+filesystem allow list covers the primary's store, jj commands inside a
+hook-created workspace run with the sandbox disabled, through the
+session's own permission gate.
