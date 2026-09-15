@@ -10,7 +10,7 @@ dependencies:
     - DietrichGebert/ponytail
     - JuliusBrussee/caveman
     - anthropics/skills/skills/skill-creator
-    - mattpocock/skills/skills/productivity/writing-great-skills
+    - mattpocock/skills/skills/productivity/writing-for-agents
     - microsoft/playwright-cli/skills/playwright-cli
     - modular/skills/mojo-python-interop
     - modular/skills/mojo-syntax
