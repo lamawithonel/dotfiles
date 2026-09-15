@@ -48,9 +48,9 @@ node = "lts"
 "pipx:apm-cli" = "latest"
 "pipx:graphifyy" = "latest"
 "pipx:headroom-ai" = { version = "latest", extras = "all,vector" }
+"pipx:hf" = "latest"
 "pipx:pyright" = "latest"
 "pipx:radon" = { version = "latest", extras = "toml" }
-"pipx:serena-agent" = "latest"
 ast-grep = "latest"
 aws-cli = { version = "latest", symlink_bins = "true" }
 bat = "latest"

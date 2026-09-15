@@ -23,13 +23,6 @@ dependencies:
       transport: streamable-http
       url: https://mcp.deepwiki.com/mcp
 
-    # GitMCP -- Free hosted MCP endpoint for any GitHub repo, no setup needed
-    # https://gitmcp.io
-    - name: gitmcp
-      registry: false
-      transport: streamable-http
-      url: https://gitmcp.io/docs
-
     # Context7 -- Hosted service providing up-to-date library and API docs
     # https://context7.com/dashboard
     - name: context7
@@ -51,17 +44,6 @@ dependencies:
         PAPER_SEARCH_MCP_IEEE_API_KEY: '${PAPER_SEARCH_MCP_IEEE_API_KEY}'
         PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: '${PAPER_SEARCH_MCP_UNPAYWALL_EMAIL}'
         PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: '${PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY}'
-
-    # Serena -- Semantic tools
-    # https://github.com/oraios/serena
-    - name: serena
-      registry: false
-      transport: stdio
-      command: serena
-      args:
-        - start-mcp-server
-        - --context=ide
-        - --project-from-cwd
 
     # Hugging Face -- Repository tools
     # https://huggingface.co/mcp
