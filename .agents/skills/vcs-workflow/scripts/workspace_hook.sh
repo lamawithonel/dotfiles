@@ -217,17 +217,36 @@ _remove() {
 	printf 'WORKSPACE-REMOVE-OK name=%s dir=%s\n' "$_name" "$_dir" >&2
 }
 
+# The documented input carries worktree_path; the mid-session
+# EnterWorktree tool sends `name` and no path (measured 2026-09-15).
+# Either names the workspace.
+_name_from_input() {
+	_p=$(_field worktree_path)
+	if [ -n "$_p" ]; then
+		basename "$_p"
+	else
+		_field name
+	fi
+}
+
+_bad_input() {
+	_keys=$(printf '%s' "$JSON" | jq -r 'keys | join(" ")' 2> /dev/null)
+	printf 'WORKSPACE-HOOK-FAIL reason=bad-input keys=[%s]\n' "$_keys" >&2
+	exit 2
+}
+
 main() {
 	JSON=$(cat)
 	_event=$(_field hook_event_name)
 	_path=$(_field worktree_path)
 	_cwd=$(_field cwd)
-	[ -n "$_path" ] || _fail bad-input 2
+	_name=$(_name_from_input)
+	[ -n "$_name" ] || _bad_input
 	[ -n "$_cwd" ] || _cwd=$PWD
 	case "$_event" in
-		WorktreeCreate) _create "$_cwd" "$(basename "$_path")" ;;
-		WorktreeRemove) _remove "$_cwd" "$_path" ;;
-		*) _fail bad-input 2 ;;
+		WorktreeCreate) _create "$_cwd" "$_name" ;;
+		WorktreeRemove) _remove "$_cwd" "${_path:-$_name}" ;;
+		*) _bad_input ;;
 	esac
 }
 

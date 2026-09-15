@@ -100,10 +100,12 @@ directory that is already gone still gets the forget, reported as
 `state=absent`.  With the primary gone there is nothing to capture
 into: the hook warns, skips both jj steps, and deletes.
 
-## Open: mid-session EnterWorktree
+## Mid-session EnterWorktree
 
-Whether the `EnterWorktree` tool routes through `WorktreeCreate` is
-unverified.  Test: in a scratch colocated repo with a project-local
-`.claude/settings.json` registering the hook, call `EnterWorktree` and
-record here where the session lands.  Landing inside the repo means it
-produces the shadowed shape: do not use it, spawn the isolated session.
+Measured 2026-09-15 in gentoo-overlay: the `EnterWorktree` tool does
+route through `WorktreeCreate`, but its stdin JSON carries a `name`
+field and no `worktree_path`.  The hook accepts either; on neither it
+refuses with `reason=bad-input keys=[...]` listing what it received, so
+a future change to the tool's input shape is diagnosed from the
+receipt.  Where the session lands after that fix is the next thing to
+record here.

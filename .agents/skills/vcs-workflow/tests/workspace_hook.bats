@@ -16,6 +16,48 @@ hook() {
 	EOF
 }
 
+# hook_named EVENT CWD NAME -- the shape the mid-session EnterWorktree
+# tool sends (measured 2026-09-15): a `name` field and no worktree_path.
+hook_named() {
+	run --separate-stderr sh "$SCRIPTS/workspace_hook.sh" <<- EOF
+		{"session_id":"s1","hook_event_name":"$1","cwd":"$2","name":"$3"}
+	EOF
+}
+
+@test "workspace_hook: create accepts a name field with no worktree_path" {
+	local d dir
+	d="$(fx_colocated r)"
+	hook_named WorktreeCreate "$d" feat-n
+	[ "$status" -eq 0 ]
+	[ "${#lines[@]}" -eq 1 ]
+	dir="$output"
+	[ -d "$dir/.jj" ]
+	[[ "$dir" == */feat-n ]]
+}
+
+@test "workspace_hook: remove accepts a name field with no worktree_path" {
+	local d dir
+	d="$(fx_colocated r)"
+	hook_named WorktreeCreate "$d" feat-n
+	dir="$output"
+	hook_named WorktreeRemove "$d" feat-n
+	[ "$status" -eq 0 ]
+	[ ! -e "$dir" ]
+	run env -C "$d" jj workspace list
+	[[ "$output" != *'feat-n:'* ]]
+}
+
+@test "workspace_hook: input with neither field names the keys it got" {
+	local d
+	d="$(fx_colocated r)"
+	run --separate-stderr sh "$SCRIPTS/workspace_hook.sh" <<- EOF
+		{"session_id":"s1","hook_event_name":"WorktreeCreate","cwd":"$d","foo":1}
+	EOF
+	[ "$status" -eq 2 ]
+	[[ "$stderr" == *'reason=bad-input'* ]]
+	[[ "$stderr" == *'keys='*foo* ]]
+}
+
 @test "workspace_hook: create prints one jj-workspace directory under the root" {
 	local d dir
 	d="$(fx_colocated r)"
