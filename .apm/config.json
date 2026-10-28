@@ -1,1 +1,14 @@
-{"default_client": "minimal"}
+{
+  "default_client": "minimal",
+  "executables": {
+    "allow": {},
+    "deny": {
+      "dietrichgebert/ponytail#9cc65d0": {
+        "hooks": true
+      },
+      "juliusbrussee/caveman#3.2.0": {
+        "hooks": true
+      }
+    }
+  }
+}
