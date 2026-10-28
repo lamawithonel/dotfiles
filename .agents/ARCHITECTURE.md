@@ -15,7 +15,7 @@ behavioral determinism:
 +-----------------------------------------------------------------------------------+
 | Layer 1: Harness Bootstrap                                                        |
 |   - Claude Code: ~/.claude/CLAUDE.md (entrypoint, minimal routing pointers)       |
-|   - Pi: ~/.pi/agent/settings.json & runtime environment configuration             |
+|   - Pi: ~/.agents/AGENTS.md & ~/.pi/agent/settings.json (runtime config)          |
 +-----------------------------------------------------------------------------------+
                                        ↓
 +-----------------------------------------------------------------------------------+
@@ -27,12 +27,13 @@ behavioral determinism:
 +-----------------------------------------------------------------------------------+
 | Layer 3: On-Demand Agent Skills (Single Source of Truth)                          |
 |   - ~/.agents/skills/* (code-rules, boilerplate, license-compliance, etc.)        |
-|   - Harness skill directories are symlinks into ~/.agents/skills/                 |
+|   - Harness skill directories (e.g. ~/.claude/skills) symlink to ~/.agents/skills |
 +-----------------------------------------------------------------------------------+
                                        ↓
 +-----------------------------------------------------------------------------------+
 | Layer 4: Path-Gated Language Rules (Single Source of Truth)                       |
 |   - ~/.agents/rules/*.md (rust.md, mojo.md, go.md, python.md, zig.md, etc.)       |
+|   - Harness rule directories (~/.claude/rules, ~/.pi/rules) symlink here          |
 |   - Loaded reactively when matching file patterns enter the session context       |
 +-----------------------------------------------------------------------------------+
                                        ↓
@@ -56,8 +57,11 @@ files:
 - **Bootstrap**: Reads `~/.claude/CLAUDE.md` at session start.
 - **Skill Resolution**: Discovers skills in `~/.claude/skills/`, which symlinks
   directly to `~/.agents/skills/`.
-- **Rule Path-Gating**: Reads `.claude/rules/**/*.md` and `~/.claude/rules/*.md`.
-  Files specify YAML frontmatter with `paths:` glob lists:
+- **Agent Resolution**: Discovers agents in `~/.claude/agents/`, which symlinks
+  directly to `~/.agents/agents/`.
+- **Rule Path-Gating**: Reads `.claude/rules/**/*.md` and `~/.claude/rules/*.md`,
+  where `~/.claude/rules` symlinks to `~/.agents/rules`.  Files specify YAML
+  frontmatter with `paths:` glob lists:
   ```yaml
   ---
   paths:
@@ -74,7 +78,9 @@ files:
   `~/.pi/agent/settings.json`.
 - **Skill Resolution**: Dynamically loads registered skills from global and
   project skill catalogs.
-- **Rule Injection**: Uses `@quandev104/pi-rules` reading `.pi/rules/**/*.md`:
+- **Rule Injection**: Uses `@quandev104/pi-rules` reading `.pi/rules/**/*.md`
+  and global rules through the tracked `~/.pi/rules` symlink into
+  `~/.agents/rules`:
   ```yaml
   ---
   paths:
@@ -88,6 +94,15 @@ files:
   - Supports write guards (`--pi-rules-write-guard`) preventing file writes
     until matching rules have been acknowledged.
 
+### C. Other Harness Contracts (Codex and Hermes)
+
+- **Codex**: Discovers agents via `~/.codex/agents`, which symlinks directly
+  to `~/.agents/agents/`.  Codex also serves as a target platform for Agent
+  Package Manager (APM) asset deployment.
+- **Hermes**: The Hermes harness directory `~/.hermes/` is completely
+  untracked by Yet Another Dotfiles Manager (yadm) and manages its own local
+  caches, state, and provider configuration.
+
 ---
 
 ## 3. Dual-Layer Rule Ingestion (Belt & Suspenders)
@@ -98,7 +113,8 @@ uses a dual-layer strategy:
 
 1. **The Belt (Proactive / Pre-Planning Skill)**:
    - When a user asks to plan, architect, or write code in a language, the
-     `/skill:code-rules` skill triggers **on Turn 1**.
+     code-rules skill (invoked via `/skill:code-rules` in Pi or via the Skill
+     tool in Claude Code) triggers **on Turn 1**.
    - It reads `~/.agents/rules/<lang>.md` *before* the first plan token is
      generated.
 2. **The Suspenders (Reactive / Path-Gating Safety Net)**:
@@ -115,11 +131,47 @@ uses a dual-layer strategy:
   directives, and style guide pointers.
 - `AGENTS.local.md`: Uncommitted, host-local overrides taking strict precedence.
 - `ARCHITECTURE.md`: This document.
-- `models.json` & `benchmarks.json`: Model router scoring and pricing registry.
-- `rules/`: Authoritative language specifications (`rust.md`, `mojo.md`,
-  `go.md`, `python.md`, `zig.md`, `typescript.md`, `javascript.md`, `shell.md`).
+- `agents/`: Authoritative agent definitions, shared across harnesses via
+  symlinks.
+- `model-benchmarks.json`: Unified model registry containing benchmark scores,
+  pricing, and capability matrices.  Auto-refreshed via
+  `skills/model-router/scripts/refresh-benchmarks.py` and evaluated at runtime
+  by `skills/model-router/scripts/score.py`.
+- `rules/`: Authoritative path-gated language and formatting specifications
+  (`rules/*.md`, including `rust.md`, `python.md`, `shell.md`, `comments.md`,
+  and others).  Also holds an untracked `.pi/` directory of Pi extension
+  configs (`pi-rules`, `remote-pi`), reached through the `~/.pi/rules`
+  symlink.
 - `skills/`: Authoritative skill definitions conforming to the Agent Skills
   Specification.
+
+### Settings Pipeline & Shared Runtime Configuration
+- Declarative settings are tracked in yadm under
+  `~/.config/agents/claude/portable.json` and
+  `~/.config/agents/pi/portable.json`.
+- The `~/.local/bin/harness-settings-apply` utility reconciles these declarative
+  files using Request for Comments (RFC) 7386 JSON Merge Patch semantics into
+  the live, untracked `~/.claude/settings.json` and `~/.pi/agent/settings.json`
+  configuration files.
+- The script automatically derives `~/.srt-settings.json` from the `.sandbox`
+  stanza of Claude settings (stripping `autoAllowBashIfSandboxed`), which Pi
+  consumes through the tracked symlink `~/.pi/agent/sandbox.json`.
+- `~/.pi/agent/settings.json` and `~/.pi/agent/models.json` are shared files.
+  The local model generator (`llama-swap-generate`) writes the model entries
+  in both; `harness-settings-apply` also writes `settings.json`.  Both stay
+  untracked by yadm because their contents are host-specific.
+
+### Third-Party Package Management (APM)
+- `~/.apm/apm.yml` (yadm-tracked) defines package dependencies across targets
+  `agent-skills`, `claude`, and `codex` (such as `ponytail`, `caveman`, and
+  `skill-creator`).
+- APM installs upstream skills and agents directly into `~/.agents/skills/` and
+  `~/.agents/agents/`.  These installed packages are untracked by yadm and get
+  overwritten during `apm update`.  Hand-authored skills and agents in those
+  directories remain yadm-tracked.
+- Third-party package lifecycle hooks are blocked by a user-scope deny rule in
+  the yadm-tracked `~/.apm/config.json` because hooks require
+  `CLAUDE_PLUGIN_ROOT`.
 
 ### `~/.config/boilerplate/` (User Scaffolding Registry)
 - `AGENTS.md`: Instruction document governing template usage and extension.
@@ -135,23 +187,30 @@ uses a dual-layer strategy:
 
 ## 5. Core Architectural Invariants
 
-1. **Rust / Mojo Center of Gravity with Polyglot Harmony**: Rust is the
+1. **Portability by Plain File Copy**: The configuration must function on
+   locked-down hosts that disallow Claude Code plugins and all public
+   marketplaces (including the official Anthropic marketplace).  All
+   capabilities must operate when files are copied directly into
+   `~/.agents/skills/`, `~/.agents/rules/`, and `~/.agents/agents/` along with
+   tracked settings sources.  No runtime component may depend on plugins,
+   remote marketplaces, or `CLAUDE_PLUGIN_ROOT`.
+2. **Rust / Mojo Center of Gravity with Polyglot Harmony**: Rust is the
    primary target for production systems and tooling; Mojo for high-performance
    scripting and compute.  All other languages follow Rust-isomorphic patterns
    (ADTs, explicit error values, RAII lifecycles, parse-don't-validate) where
    naturally aligned, without imposing foreign dogmatism.
-2. **Two-Tier Static Battery Discipline**:
+3. **Two-Tier Static Battery Discipline**:
    - *Tier 1 (Turn-by-Turn)*: Fast, zero-friction native compiler/linter checks
      (`cargo check/clippy`, `tsc` + `eslint`, `ruff` + `pyright`, `gofmt`).
    - *Tier 2 (Pre-Commit / Milestone)*: Heavy project-wide graph and dead-code
      audits (`knip`, `depcruise`, `cargo audit`, `bats-core`).
-3. **Scope Containment**: Diff-bounded verification restricts fixes strictly
+4. **Scope Containment**: Diff-bounded verification restricts fixes strictly
    to the active changeset (zero unsolicited churn on legacy code).
-4. **Universal XDG Default (v0.8)**: All CLI tools, backend daemons, and scripts
+5. **Universal XDG Default (v0.8)**: All CLI tools, backend daemons, and scripts
    on all operating systems default to XDG Base Directory paths.  Exceptions
    are strictly for native OS GUI application bundles (Win32/64 native apps,
    macOS `.app` bundles, mobile OS containers).
-5. **Plain Language Standards**: All operational instructions follow direct,
+6. **Plain Language Standards**: All operational instructions follow direct,
    controlled technical English (ASD-STE100 principles) to ensure predictable
    LLM execution.
 
@@ -179,7 +238,7 @@ The context and runtime system strictly distinguishes between **Policy**
 
 ### A. Policy Hierarchy (Top-Down Governance)
 - **Authority**: System / enterprise policy and compile-time hardened constraints
-  set the baseline floor.  User-level host governance (`AGENTS.local.md` →
+  set the baseline floor.  User-level host governance (`AGENTS.local.md` ->
   `AGENTS.md`) and project policies can tighten constraints but **cannot** relax
   or disable upstream security or compliance rules.
 - **Baked Policy Pattern**: In security-hardened or read-only deployments,
