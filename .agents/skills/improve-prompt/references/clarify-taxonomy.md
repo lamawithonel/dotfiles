@@ -151,3 +151,25 @@ Tool mapping:
 - Claude Code: `AskUserQuestion` -- same shape and semantics.
 - Other harnesses: any structured-question tool with a default-first
   layout; otherwise plain-text questions (2-3 cap) or inference.
+
+## Delegation and VCS slot questions (S5)
+
+Load `references/delegation-and-vcs.md` for the slots.  Ask only when the
+S5 flag is set, the gap passes the two-filter gate, and no probe filled
+it.  Default first.  Commit policy and the push and PR ceiling are
+stakes-override slots (ASK, or flag the assumption conspicuously).
+
+| Slot | Type | Question template | Options (default first) |
+| --- | --- | --- | --- |
+| Position | REFERENCE | "Is {agent} a worker dispatched for {package}, a coordinator your orchestrator commissions, or an independent session you start?" | worker (Recommended) / coordinator / independent session |
+| Supervisor | REFERENCE | "Who does {position} report to: {requester} or a named orchestrator?" | requester (Recommended) / named orchestrator |
+| Milestones | CRITERION | "Should {agent} report at checkpoints (for example {milestone}), or only at its receipt?" | receipt only (Recommended) / named milestones |
+| Model and effort | CONSTRAINT | "`score.py` picks {model} at {effort} for {band}; use it?" | probed pick (Recommended) / one band up / name a model |
+| Isolation | CONSTRAINT | "Work in a jj workspace, or in place in {repo}?" | per level: workspace at standard or full, else in place (Recommended) / in place |
+| Commit policy | CONSTRAINT | "Should {agent} commit {change} (atomic commits via `git-commit` after the gates pass), or leave it uncommitted for you?" | leave uncommitted (Recommended) / atomic commits |
+| Push and PR ceiling | CONSTRAINT | "May {agent} push {branch} or open a PR on {repo}?  A PR needs your approval first." | no push, no PR (Recommended) / push a branch / draft a PR for approval |
+| Level and onboarding | CONSTRAINT | "{repo} is git-only with no recorded jj decision: should the target ask about converting, or use plain git?" | plain git, report ONBOARD-PENDING (Recommended) / ask the onboarding questions |
+
+Skip a question the probe already answered; list that slot in the
+Assumptions block as "(probed)".  A slot written as an instruction to the
+target is "(instructed)".

@@ -25,7 +25,11 @@ the skeleton.
    model family if evident (non-reasoning / reasoning / self-scaffolding;
    unknown is itself an interview or assumption slot).  Genre sets which
    techniques are eligible; complexity sets how much scaffold to deploy;
-   family filters both.
+   family filters both.  Also set two flags: **agent-directed** (the
+   target assigns work to an agent: a commission, a worker brief, a prompt
+   for a new session, or a prompt that will delegate) and
+   **repo-touching** (the work reads or changes a repository).  Neither
+   flag set: skip S5 entirely.
 3. **Diagnose** -- score against the 10-dim rubric (S1).  Name concrete
    flaws in the subject's own vocabulary ("the tolerance is unstated", not
    "add detail").  If the subject has a playbook under
@@ -36,7 +40,8 @@ the skeleton.
 5. **If asking** -- with an interactive question tool available, run the
    interview (S4); without one, emit 1-3 batched, instance-grounded
    questions and stop.  Otherwise continue.
-6. **Rewrite** -- subtract first: delete contradictions, duplicate
+6. **Rewrite** -- with a flag set, fill the S5 slots first (probe, else
+   instruct).  Subtract first: delete contradictions, duplicate
    constraints, hedges, and dead ritual before adding anything; a
    conflicting pair of clauses is worse than a missing slot.  Then apply
    the genre recipe plus universal fixes across the PICCO slots, weighted
@@ -158,6 +163,10 @@ answering anyway.  Per gap, in order:
    compliance threshold, a legal term), **ASK**, or emit the assumption
    conspicuously flagged, not buried in the list.
 
+Gaps from the S5 slots follow the same gate.  Commit policy and the
+push and PR ceiling fall under the stakes override: ask, or flag the
+assumption conspicuously.
+
 **Cap**: 2-3 questions maximum, in ONE batched round, never serial.  The
 first question is near-free; friction rises steeply after, so reserve slots
 for the highest-value gaps.  A short, sharp round usually costs the user
@@ -196,6 +205,8 @@ interactive question tool is available AND the user did not pass
    default.  When the target model family is unknown, include the
    model question -- it filters CoT, few-shot, persona depth, and loop
    emission.
+   S5 slot gaps count against the same caps; question templates are in
+   `references/clarify-taxonomy.md`.
 3. **Round 2** -- only if a round-1 answer materially changes the
    surviving gaps (re-run the S3 re-check) or the bare-brief exception
    needs an artifact-scoping round.  Hard cap: 2 rounds, 8 questions
@@ -211,7 +222,41 @@ Answers return inside the same turn, so the skill stays one-turn with
 no stop-and-wait.  The plain-text ask path keeps its 2-3 question cap
 and fires only when no interactive tool exists.
 
+## S5. Delegation and VCS slots (only when a flag is set)
+
+Detail, probe commands, fallback text, and the tag mapping live in
+`references/delegation-and-vcs.md`; the rules themselves live in
+`~/.agents/AGENTS.md`, `~/.agents/ROLES.md`, and the `model-router` and
+`vcs-workflow` skills.  Point to them; never restate them in the rewrite.
+
+- **Agent-directed** -- fill: position (class plus domain, or "works for
+  the user directly"), supervisor, milestones and receipt, who the agent
+  may message, and model and effort.  Take model and effort from
+  `score.py`, and derive the target model family from the pick instead of
+  asking.  When the target will delegate, the prompt tells it to load
+  `model-router`, split the work into a work breakdown structure under
+  the 100% rule, name model and effort on every dispatch, and put the
+  worker guards in every worker brief.
+- **Repo-touching** -- fill four slots: isolation (jj workspace at
+  levels standard and full, never a git worktree), commit policy (atomic
+  commits through `git-commit` after verification gates pass, or leave
+  changes uncommitted), push and PR ceiling (PRs and issues need user
+  approval, never merge, public-repo quiet hours), and level and
+  onboarding (shape, level, and what to do in an undecided git-only
+  repo).
+- **Probe, else instruct** -- when the target runs on this host and the
+  repo path is known, run the read-only probes and offer the results as
+  interview defaults.  Otherwise write instructions that tell the target
+  to run them at start.  Mark each slot "(probed)" or "(instructed)" in
+  the Assumptions block.
+
 ## Output contract
+
+**Agent-directed targets** -- the improved prompt is a brief in the
+`brief.md` XML contract (persona, role, context, goal, task_list,
+constraints, return), with the `<subagent_task>` envelope when the target
+runs through a CLI shell-out.  PICCO still drives the diagnosis;
+`references/delegation-and-vcs.md` maps its slots to the tags.
 
 **Default (inference path)** -- return, in order:
 
@@ -248,5 +293,8 @@ a reasonable-sounding merge can score worse than either parent.
   (subject vocabulary and defaults).  None ship by default;
   `references/domains/README.md` is maintainer documentation for adding one,
   not loaded during a run.
+- Agent-directed or repo-touching flag set -> `references/delegation-and-vcs.md`
+  (slot definitions, probes, instruct fallback, PICCO-to-brief mapping,
+  source documents).
 - Target is itself a skill or agent prompt -> `references/skill-authoring.md`
   (frontmatter contract, DoD gate).
