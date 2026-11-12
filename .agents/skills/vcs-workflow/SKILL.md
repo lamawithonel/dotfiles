@@ -245,6 +245,12 @@ pushing a branch is automatic; merging to the default branch is a
 human gate.  A nonzero push exit is not proof the remote is unchanged
 -- the script re-queries `remote_bookmarks()` and says so.
 
+Committing straight onto a branch without `promote.sh`: run
+`jj config set --repo experimental-advance-branches.enabled-branches
+'["glob:*"]'` once so `jj commit` and `jj describe` + `jj new` carry
+the bookmark at `@-` forward (jj 0.45), then `git switch <branch>` in
+a colocated repo, because jj never reattaches git HEAD.
+
 Bookmark names are descriptive: `feat/<topic>`, `fix/<topic>`,
 `chore/<topic>`.  PR lifecycle: promote a clean, atomic series before
 first submission; during active review, changes land as NEW commits
