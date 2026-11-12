@@ -104,9 +104,12 @@ user started it, and it may hold other top-level sessions too.
 
 | Agent | Placement | Name |
 | --- | --- | --- |
+| Orchestrator | the tab the user started it in | workspace `<domain>`, tab `orchestrator` |
 | Coordinator | its own new tab in its orchestrator's current workspace | tab `<domain>-co` |
 | Discrete worker (`pi`, `claude`, and others) | a pane in a worker tab in its dispatcher's workspace | tab `<domain>[-<group>]-workers-<n>`, after the dispatcher's domain |
 
+- When the user declares an orchestrator, it relabels its own tab
+  `orchestrator` and its workspace `<domain>`.  It never moves either.
 - Add a worker as a new pane in a matching worker tab that holds fewer
   than 8 worker panes.  Open a new tab when the tab is full, and for
   each set of related workers.
@@ -119,8 +122,9 @@ user started it, and it may hold other top-level sessions too.
 
 Give each session a name `ListAgents` can address uniquely: an
 orchestrator `<domain>-orchestrator`, and a coordinator `<domain>-co`,
-matching its tab.  When two sessions share a name, address one as
-`name [ref]`.
+matching its tab.  An orchestrator's tab is always `orchestrator`; its
+workspace label carries the domain.  When two sessions share a name,
+address one as `name [ref]`.
 
 ## Effort defaults
 
