@@ -15,9 +15,9 @@ underlying channel:
    names, and system facts that the worker cannot discover easily.
    Provide file paths rather than inline file dumps; the worker can read
    the filesystem directly.
-3. **Constraints:** The binding invariants (`<constraints>` block: turn
-   ceiling, circuit breaker, and boundary escape) along with task-specific
-   limits.
+3. **Constraints:** The worker guards (`<constraints priority="MUST">`
+   block: turn budget, stall watchdog, scope limit, and receipt
+   contract) along with task-specific limits.
 4. **Return:** The expected receipt structure and one concrete, runnable
    verification command (such as a test suite, linter, or compiler check)
    that the worker must execute before concluding.
@@ -29,14 +29,14 @@ brief using structured Extensible Markup Language (XML) tags:
 
 ```xml
 <persona name="Mr. Robot">
-You think...          # (Interior-Individual)
-You behave...         # (Exterior-Individual)
-You relate to/with... # (Interior-Collective)
-You participate...    # (Exterior-Collective)
+- You think...          # (Interior-Individual)
+- You behave...         # (Exterior-Individual)
+- You relate to/with... # (Interior-Collective)
+- You participate...    # (Exterior-Collective)
 </persona>
 
 <role name="Technical Specialist">
-You are an expert developer assigned to a bounded refactoring task.
+You are a {{role description}} assigned to {{brief task description}}.
 </role>
 
 <context>
@@ -44,29 +44,53 @@ Target file: /home/lucas/project/src/core.py
 Repository branch: feature/cleanup
 </context>
 
-<the_ask>
-Refactor the parsing loop to eliminate redundant dictionary allocations.
-Provide runnable unit test coverage.
-  <example_group>
-    <example>short example...</example>
-    <example>single-line example...</example>
-    <example>
-      longer
-      multi-line
-      text
-    </example>
-  </example_group>
-</the_ask>
+<goal>
+Goal description.
+</goal>
 
-<constraints>
-- Cease execution and return immediately if turn count reaches 12.
-- Stop and alter strategy if 3 consecutive turns yield no state change.
-- Halt and return a subsystem map if changes span >3 distinct modules.
+<task_list>
+  <task name="task-1">
+    <summary>Task description goes here.</summary>
+    <details>
+    Detailed instructions, including any relevant context, constraints, and
+    specific steps to follow.
+    </details>
+    <example_group>
+      <example>short example...</example>
+      <example>single-line example...</example>
+      <example>
+        longer
+        multi-line
+        text
+
+        An example group or standalone example can be used anywhere.
+      </example>
+    </example_group>
+    <acceptance_criteria>
+      <criterion>Task-specific criterion 1.</criterion>
+      <criterion>Task-specific criterion 2.</criterion>
+    </acceptance_criteria>
+  </task>
+  <task name="task-2">
+  ...
+  </task>
+</task_list>
+
+<constraints priority="MUST">
+- TURN BUDGET: Return immediately if the turn count reaches 12.
+- STALL WATCHDOG: Stop if 3 consecutive turns yield no state change.
+- SCOPE LIMIT: If changes span >3 decoupled subsystems, halt, escalate,
+  and return a decomposition (a proposed work breakdown structure).
+- RECEIPT CONTRACT: Return only the receipt below, with file:line
+  references.
 </constraints>
 
 <return>
 Return only a structured receipt containing:
-- Status: SUCCESS | BLOCKED
+- Status: SUCCESS | BLOCKED | PARTIAL | REFUSED (<category>)
+  - PARTIAL: some items were declined on policy grounds; list them.
+  - REFUSED (<category>): all was declined; category is `cyber`,
+    `bio`, `medical`, or other; list the declined items.
 - Verification command and exit code
 - Modified files with line references (file:line)
 - Summary of architectural decisions
@@ -75,6 +99,9 @@ Return only a structured receipt containing:
   </template>
 </return>
 ```
+
+Name the worker's model and effort at dispatch, never in the brief
+alone.  On `REFUSED` or `PARTIAL`, follow `refusals.md`.
 
 ## External CLI Envelope
 

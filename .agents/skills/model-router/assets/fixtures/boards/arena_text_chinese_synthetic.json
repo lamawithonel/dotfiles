@@ -1,0 +1,120 @@
+{
+ "features": [],
+ "rows": [
+  {
+   "row_idx": 0,
+   "row": {
+    "model_name": "claude-opus-5-5 (High)",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1568,
+    "rating_lower": 1550,
+    "rating_upper": 1586,
+    "variance": 1.0,
+    "vote_count": 5200,
+    "rank": 1.0,
+    "category": "chinese",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 1,
+   "row": {
+    "model_name": "gemini-4-argon",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1581,
+    "rating_lower": 1565,
+    "rating_upper": 1597,
+    "variance": 1.0,
+    "vote_count": 3100,
+    "rank": 2.0,
+    "category": "chinese",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 2,
+   "row": {
+    "model_name": "claude-sonnet-5-5 (xHigh)",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1537,
+    "rating_lower": 1519,
+    "rating_upper": 1555,
+    "variance": 1.0,
+    "vote_count": 900,
+    "rank": 3.0,
+    "category": "chinese",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 3,
+   "row": {
+    "model_name": "claude-fable-5-1 (Max)",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1560,
+    "rating_lower": 1540,
+    "rating_upper": 1580,
+    "variance": 1.0,
+    "vote_count": 178,
+    "rank": 4.0,
+    "category": "chinese",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 4,
+   "row": {
+    "model_name": "claude-haiku-5-5 (High)",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1462,
+    "rating_lower": 1443,
+    "rating_upper": 1481,
+    "variance": 1.0,
+    "vote_count": 700,
+    "rank": 5.0,
+    "category": "chinese",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 5,
+   "row": {
+    "model_name": "qwen3.8-max-0902",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1542,
+    "rating_lower": 1530,
+    "rating_upper": 1554,
+    "variance": 1.0,
+    "vote_count": 2000,
+    "rank": 6.0,
+    "category": "chinese",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 6,
+   "row": {
+    "model_name": "stray-model",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1000.0,
+    "rating_lower": 990.0,
+    "rating_upper": 1010.0,
+    "variance": 1.0,
+    "vote_count": 10,
+    "rank": 7.0,
+    "category": "french",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  }
+ ],
+ "num_rows_total": 7,
+ "num_rows_per_page": 100,
+ "partial": false
+}

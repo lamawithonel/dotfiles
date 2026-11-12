@@ -1,0 +1,205 @@
+{
+ "tier": "free",
+ "intelligence_index_version": 5,
+ "pagination": {
+  "page": 1,
+  "page_size": 200,
+  "total_pages": 2,
+  "has_more": true
+ },
+ "data": [
+  {
+   "id": "268525e2-f873-4178-bc07-e6a0ee1f002d",
+   "name": "Claude Sonnet 5.5 (High, Default Fallback)",
+   "slug": "claude-sonnet-5-5-high",
+   "release_date": "2026-09-28",
+   "model_creator": {
+    "id": "f0aa413f-e8ae-4fcd-9c48-0e049f4f3128",
+    "name": "Anthropic"
+   },
+   "evaluations": {
+    "artificial_analysis_intelligence_index": 41.5,
+    "artificial_analysis_coding_index": null,
+    "artificial_analysis_agentic_index": null,
+    "artificial_analysis_finance_and_accounting_index": 44.5,
+    "artificial_analysis_strategy_and_ops_index": 51.2,
+    "artificial_analysis_legal_index": 44.1,
+    "artificial_analysis_healthcare_and_medical_index": 43.9,
+    "artificial_analysis_engineering_index": 46.2,
+    "artificial_analysis_economics_index": 44.6
+   },
+   "artificial_analysis_intelligence_index_cost": {
+    "total_cost": 1268.3,
+    "cost_per_task": {
+     "total_cost": 1.6361
+    }
+   },
+   "pricing": {
+    "price_1m_input_tokens": 2,
+    "price_1m_output_tokens": 10,
+    "price_1m_cache_hit_tokens": 0.1,
+    "price_1m_cache_write_tokens": 2.5
+   }
+  },
+  {
+   "id": "042e8a37-fcd0-40f4-8f41-99215fb68eda",
+   "name": "Claude Sonnet 5.5 (Medium, Default Fallback)",
+   "slug": "claude-sonnet-5-5-medium",
+   "release_date": "2026-09-28",
+   "model_creator": {
+    "id": "f0aa413f-e8ae-4fcd-9c48-0e049f4f3128",
+    "name": "Anthropic"
+   },
+   "evaluations": {
+    "artificial_analysis_intelligence_index": 30.8,
+    "artificial_analysis_coding_index": null,
+    "artificial_analysis_agentic_index": null,
+    "artificial_analysis_finance_and_accounting_index": 40.7,
+    "artificial_analysis_strategy_and_ops_index": 46.7,
+    "artificial_analysis_legal_index": 38.8,
+    "artificial_analysis_healthcare_and_medical_index": 40.2,
+    "artificial_analysis_engineering_index": 37.3,
+    "artificial_analysis_economics_index": 39.2
+   },
+   "artificial_analysis_intelligence_index_cost": {
+    "total_cost": 679.16,
+    "cost_per_task": {
+     "total_cost": 0.7807
+    }
+   },
+   "pricing": {
+    "price_1m_input_tokens": 2,
+    "price_1m_output_tokens": 10,
+    "price_1m_cache_hit_tokens": 0.1,
+    "price_1m_cache_write_tokens": 2.5
+   }
+  },
+  {
+   "id": "2f339a97-9a0d-499a-9cb5-e0db665bfa25",
+   "name": "GPT-6 Astra (Max)",
+   "slug": "gpt-6-astra",
+   "release_date": "2026-09-03",
+   "model_creator": {
+    "id": "e67e56e3-15cd-43db-b679-da4660a69f41",
+    "name": "OpenAI"
+   },
+   "evaluations": {
+    "artificial_analysis_intelligence_index": 56.9,
+    "artificial_analysis_coding_index": null,
+    "artificial_analysis_agentic_index": null,
+    "artificial_analysis_finance_and_accounting_index": 57.4,
+    "artificial_analysis_strategy_and_ops_index": 58,
+    "artificial_analysis_legal_index": 55.6,
+    "artificial_analysis_healthcare_and_medical_index": 53.7,
+    "artificial_analysis_engineering_index": 61.8,
+    "artificial_analysis_economics_index": 57.2
+   },
+   "artificial_analysis_intelligence_index_cost": {
+    "total_cost": 5661.18,
+    "cost_per_task": {
+     "total_cost": 6.2447
+    }
+   },
+   "pricing": {
+    "price_1m_input_tokens": 10,
+    "price_1m_output_tokens": 50,
+    "price_1m_cache_hit_tokens": 1,
+    "price_1m_cache_write_tokens": 12.5
+   }
+  },
+  {
+   "id": "1f541ef3-913f-4eb2-9d07-0e93c7a9a5e3",
+   "name": "GPT-6 Astra (Xhigh)",
+   "slug": "gpt-6-astra-xhigh",
+   "release_date": "2026-09-03",
+   "model_creator": {
+    "id": "e67e56e3-15cd-43db-b679-da4660a69f41",
+    "name": "OpenAI"
+   },
+   "evaluations": {
+    "artificial_analysis_intelligence_index": 55.3,
+    "artificial_analysis_coding_index": null,
+    "artificial_analysis_agentic_index": null,
+    "artificial_analysis_finance_and_accounting_index": 56.8,
+    "artificial_analysis_strategy_and_ops_index": 57.9,
+    "artificial_analysis_legal_index": 55.7,
+    "artificial_analysis_healthcare_and_medical_index": 52.7,
+    "artificial_analysis_engineering_index": 60.4,
+    "artificial_analysis_economics_index": 56.8
+   },
+   "artificial_analysis_intelligence_index_cost": {
+    "total_cost": 3746.22,
+    "cost_per_task": {
+     "total_cost": 3.6589
+    }
+   },
+   "pricing": {
+    "price_1m_input_tokens": 10,
+    "price_1m_output_tokens": 50,
+    "price_1m_cache_hit_tokens": 1,
+    "price_1m_cache_write_tokens": 12.5
+   }
+  },
+  {
+   "id": "19496b81-9f41-4214-a77a-1df803b3c5ae",
+   "name": "GLM-5.3-Flash",
+   "slug": "glm-5-3-flash",
+   "release_date": "2026-08-26",
+   "model_creator": {
+    "id": "67437eb6-7dc1-4e93-befd-22c8b8ec2065",
+    "name": "Z AI"
+   },
+   "evaluations": {
+    "artificial_analysis_intelligence_index": 27.8,
+    "artificial_analysis_coding_index": null,
+    "artificial_analysis_agentic_index": null,
+    "artificial_analysis_finance_and_accounting_index": 38.8,
+    "artificial_analysis_strategy_and_ops_index": 44.5,
+    "artificial_analysis_legal_index": 34.8,
+    "artificial_analysis_healthcare_and_medical_index": 36.6,
+    "artificial_analysis_engineering_index": 34.5,
+    "artificial_analysis_economics_index": 35.3
+   },
+   "artificial_analysis_intelligence_index_cost": {
+    "total_cost": 377.94,
+    "cost_per_task": {
+     "total_cost": 0.5833
+    }
+   },
+   "pricing": {
+    "price_1m_input_tokens": 0.15,
+    "price_1m_output_tokens": 0.5,
+    "price_1m_cache_hit_tokens": 0.03,
+    "price_1m_cache_write_tokens": null
+   }
+  },
+  {
+   "id": "0081ab31-d10a-44a0-a10d-eee5533fec65",
+   "name": "GLM-4.5V (Non-reasoning)",
+   "slug": "glm-4-5v",
+   "release_date": "2025-08-11",
+   "model_creator": {
+    "id": "67437eb6-7dc1-4e93-befd-22c8b8ec2065",
+    "name": "Z AI"
+   },
+   "evaluations": {
+    "artificial_analysis_intelligence_index": null,
+    "artificial_analysis_coding_index": null,
+    "artificial_analysis_agentic_index": null,
+    "artificial_analysis_finance_and_accounting_index": null,
+    "artificial_analysis_strategy_and_ops_index": null,
+    "artificial_analysis_legal_index": null,
+    "artificial_analysis_healthcare_and_medical_index": null,
+    "artificial_analysis_engineering_index": null,
+    "artificial_analysis_economics_index": null
+   },
+   "artificial_analysis_intelligence_index_cost": null,
+   "pricing": {
+    "price_1m_input_tokens": 0.6,
+    "price_1m_output_tokens": 1.8,
+    "price_1m_cache_hit_tokens": 0.11,
+    "price_1m_cache_write_tokens": null
+   }
+  }
+ ]
+}

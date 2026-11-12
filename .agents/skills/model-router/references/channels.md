@@ -17,6 +17,31 @@ they maintain tracking, user attribution, and structured return values.
 
 ---
 
+## 0. Channel Rule v2
+
+1. **Same harness:** use the in-process tool.  In Claude Code, use
+   `Workflow` for short-lived workers and `Agent` for long-lived ones
+   you will message again.  In Pi, use `subagent`.
+2. **Other harness:** where `HERDR_ENV=1`, run the worker in a Herdr
+   pane in a worker tab in the dispatcher's workspace; tab names and
+   pane limits are in `~/.agents/ROLES.md`.  Pass model and effort as
+   the CLI's own flags after `--`; Herdr has none.
+3. **No Herdr:** shell out and disclose the untracked process.
+4. **Every Pi command ends in `< /dev/null`.**  Always pass `--model`
+   and `--thinking`.
+5. **No Pi repository edits yet.**  Pi now loads
+   `~/.pi/agent/AGENTS.md`, but it has no per-call approval gate and
+   no confinement.  Until it has both, Pi workers do not edit
+   repositories.  Use the pick's `fallback` for edits when it is set;
+   when it is null (a `pi-zdr` session), report the work to the
+   supervisor.  A brief cannot stand in for the missing gate.
+6. **Return path:** Herdr returns terminal text.  The brief names a
+   receipt file; the dispatcher reads it, then closes the pane.  A
+   failed worker's pane stays open.
+7. **Bedrock-only host:** `Agent` only; assume no Pi and no Herdr.
+
+---
+
 ## 1. Native In-Process Delegation (Canonical)
 
 In-process tools execute within the active harness session.  They return
@@ -27,8 +52,8 @@ task list.
 
 - `Agent`: Dispatches a single child worker in an isolated context
   window.
-  - `model`: Set to the `model_param` string returned by `score.py
-    --pick` (e.g. `"opus"`, `"sonnet"`).
+  - `model` and `effort`: Always set both, from `model_param` and
+    `effort` in `score.py --pick` (e.g. `"opus"`, `"high"`).
   - `subagent_type`: Selects an execution preset (`general-purpose`,
     `Explore`, `Plan`).
   - `isolation: "worktree"`: Allocates a dedicated Git worktree.  Use
@@ -52,9 +77,8 @@ task list.
     `runs.run()`, `runs.all()`, or `runs.lanes()`.
   - Isolation: Set `isolation: "worktree"` to assign an isolated Git
     worktree.
-  - Model override: Set `model` to the OpenRouter or local reference
-    returned by `score.py --pick` (e.g.
-    `"openrouter/google/gemini-3.8-flash"`).
+  - Model override: Always set `model` to the `model_ref` from
+    `score.py --pick`, and set the thinking level to its `effort` (the exact `--thinking` level).
 - `subagent_supervisor`: Serves as the inbound and outbound backchannel
   for active children.  Use actions `reply`, `send`, `pending`, and
   `status` to answer child inquiries without interrupting the parent turn.
@@ -131,12 +155,13 @@ command -v claude
 
 1. **Write the brief to a payload file:**
    Do not embed multi-line prompt text directly into the command string.
-   Write the payload to a file and supply it via `$(cat payload.md)`.
+   Write the payload to an absolute session-temp path and pass it with
+   `--payload PATH`; the command reads it via `$(cat PATH)`.
 2. **Use ephemeral session flags:**
    Include `--no-session` for `pi` to prevent cluttering session databases.
 3. **Execute authoritative commands:**
-   Copy the `execution.<harness>.command` string verbatim from
-   `~/.agents/model-benchmarks.json`.
+   Copy the `pick.command` string from `score.py --pick` verbatim.  It
+   ends in `< /dev/null`; keep that.
 4. **Disclose the shell-out:**
    Because shell-outs execute out-of-band, the coordinator must report in
    its output that it invoked an external CLI fallback and state the

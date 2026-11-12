@@ -24,9 +24,10 @@ python3 $S/refresh-benchmarks.py --probe
    existing values.  A transient feed failure preserves previous
    benchmark numbers and records an error status.  A null value is
    written only where data was never present.
-2. **Schema validation gate:** New registry output is validated against
-   `schema/model-benchmarks.schema.json` before writing.  If validation
-   fails, the current file is left untouched.
+2. **Validation gate:** New registry output passes `registry.validate`
+   before writing; it is the gate (the JSON Schema file is
+   documentation).  If validation fails, the current file is left
+   untouched.
 3. **Atomic persistence:** Updates write to a temporary file before an
    atomic rename operation, maintaining a `.bak` copy of the previous
    generation.
@@ -37,14 +38,15 @@ python3 $S/refresh-benchmarks.py --probe
 
 | Phase | Target | Source | Fallback on Failure |
 | --- | --- | --- | --- |
-| 1. Pi Roster | Host capabilities | `~/.pi/agent/settings.json` | Marks `channels.pi=false` if missing; retains known models with `enabled: false` |
-| 2. Claude Probe | Host capabilities | `claude -p --model <alias>` candidate probes | Marks `channels.claude-code=false` if missing; retains previous probe results |
+| 1. Pi Roster | Host capabilities | `~/.pi/agent/settings.json` | Marks `hosts.<h>.harnesses.pi.healthy` false if missing; retains known models with `enabled: false` |
+| 2. Claude Probe | Host capabilities | `claude -p --model <alias>` candidate probes | Marks `hosts.<h>.harnesses.claude-code.healthy` false if missing; retains previous probe results |
 | 3. OpenRouter API | Global models | `GET /api/v1/models` | Retains prior pricing and context limits; sets feed `status: "failed"` |
-| 4. AA API v2 | Benchmark indices | `GET /api/v2/data/llms/models` (`AA_API_KEY`) | Retains prior indices; logs authentication or network error |
-| 5. AA Omniscience | Hallucination rates | Next.js flight payload from evaluations page | Retains prior metrics; zero matched entries triggers failure status |
-| 6. Public Leaderboards | Coding and design ELO | DeepSWE, EQ-Bench, and Design Arena endpoints | Preserves historical scores on parse failure or schema change |
-| 7. Overrides | Custom settings | `overrides` section of registry | Applied to match keys, notes, and constraints |
-| 8. Validation | Integrity check | JSON schema verification and structural invariant validation | Exits with error code if invalid; registry remains untouched |
+| 3a. Key prices | Prices this key pays | `~/.pi/agent/models-store.json` `openrouter.models[].cost` (local read, no network) | Retains prior prices; row minimum 72 |
+| 4. AA free API v2 | AAI, index cost, domains | `GET /api/v2/language/models/free?page=N` (`x-api-key` header from `AA_API_KEY`; never in a URL or log) | Retains prior indices; row minimum 600 |
+| 5. AA pages | Narrow fields | One GET per evaluation page: `tb4`, `lcr`, Cyber Index, HealthBench, AA-3D Elo with interval.  Nothing else is kept | Retains prior values; per-page row minimum |
+| 6. Boards | Arena (Hugging Face datasets-server `/rows`), Design Arena, EQ-Bench | `scripts/boards.py` parsers | Preserves scores on parse failure; per-board row minimum |
+| 7. Overrides | Custom settings | `overrides` section of registry | Applied before phase 1 (not after the feeds), to match keys, notes, and constraints |
+| 8. Validation | Integrity check | `registry.validate` (structure, unknown keys, invariants) | Exits with error code if invalid; registry remains untouched |
 | 9. Write | Registry update | Atomic filesystem replace | Writes new file and updates `.bak` backup |
 
 Candidates for the Claude probe represent the union of the host's existing
@@ -65,12 +67,11 @@ patched per key in `overrides.<id>.match`:
 | --- | --- |
 | `openrouter` | `vendor/tail` |
 | `aa_slug` | `tail` with periods (`.`) replaced by hyphens (`-`) |
-| `deepswe` | `[tail, dashed]` |
-| `eqbench` | `[vendor/tail, tail, dashed]` |
-| `designarena` | `[tail, dashed]` |
+| `board` | `[vendor/tail, tail, dashed]` |
 
-Feeds match case-insensitively against these candidate lists; the first
-match wins.  The log line per feed emits matched counts, and
+Board feeds (Arena, Design Arena, EQ-Bench) match case-insensitively
+against the `board` list; when several rows match, the highest score
+wins.  The log line per feed emits matched counts, and
 `sources.<feed>.matched` stores the count to ensure silent match misses
 remain visible.
 
@@ -83,25 +84,54 @@ remain visible.
   tokens.  The sentinel value `-1` marks routing aliases (such as
   `openrouter/auto`) and is skipped.  Variant suffixes (`:batch`, `-fast`)
   represent distinct model IDs and are never averaged.
-- **Artificial Analysis API v2:** Requires `AA_API_KEY` (free tier allows
-  1,000 requests daily).  Provides `artificial_analysis_intelligence_index`,
-  `artificial_analysis_coding_index`, and `terminalbench_v2_1` (fraction,
-  stored multiplied by 100 as `terminal_bench`).  Variants with `-low`,
-  `-high`, or `-non-reasoning` represent separate slugs and match only
-  when explicitly named in overrides.
-- **AA Omniscience:** Ingested from Next.js flight data on the evaluations
-  page.  Stored as `aa_omniscience = N` and `aa_factuality = 1 - r` (where
-  $r$ is the hallucination rate) so all metrics remain higher-is-better.
-- **DeepSWE v1.1:** Parsed from server-rendered HTML tables.  Each cell
-  evaluates across lines: `model`, `[`, `effort`, `]`, `pct`, `%`.  The
-  "Best" table precedes all-efforts listings, and the first match is
-  selected.
-- **EQ-Bench 4:** Extracted from JavaScript data payloads by stripping the
-  `const EQBENCH4_DATA = ` declaration and trailing semicolons to parse
-  ELO rankings.
-- **Design Arena:** Queried via `POST /api/leaderboard` with payload
-  `{"arenaType":"models","category":"website"}` (HTTP GET returns status
-  405).  Score changes under 10 points are ignored to prevent ELO churn.
+- **Key prices and source rank:** The `openrouter_key` feed rereads
+  Pi's models store, which holds the price this OpenRouter key pays
+  (`source: "openrouter-key"`).  A price source overwrites only a source
+  of equal or lower rank: `openrouter-key` beats `openrouter`, which
+  beats every other feed, whichever feed runs last.  A change line shows
+  both prices and sources, and numbers compare numerically.
+- **HTTP retry:** Every fetch retries HTTP 5xx, timeouts, and connection
+  errors after 2, 4, and 8 seconds.  HTTP 429 is also retried, up to 5
+  times.  It waits exactly the `Retry-After` value (integer seconds or
+  an HTTP date), or else backs off 5, 10, 20, 40, and 80 seconds, each
+  times a random 0.5 to 1.5.  A wait that would end past the deadline
+  is never taken, and with no deadline a `Retry-After` over 120 seconds
+  raises.  No other 4xx is retried.
+- **AA free API v2:** Writes per-variant `aai`, `index_cost_usd`,
+  `domains`, and `aa_pricing`.  Effort comes from the slug or name
+  suffix (`-high`, `(Xhigh)`).  The old `aa_api` feed is `retired`.
+- **AA pages and Omniscience:** Narrow field reads only; drop page
+  bytes after parsing.
+- **Boards:** Pure parsers in `scripts/boards.py`, each with a row
+  minimum.  Arena pages datasets-server `/rows` 100 rows at a time, in
+  order, 1 second apart, with one fetch per config per run (`text` and
+  `webdev`); the parsers filter by category.  A board feed that runs
+  past 600 seconds fails and keeps its old values.  Before paging, one
+  GET of the Hub dataset API
+  (`https://huggingface.co/api/datasets/lmarena-ai/leaderboard-dataset`)
+  reads the `sha`.  A config is cached in
+  `${XDG_CACHE_HOME:-~/.cache}/agents/model-router/arena-<config>.json`
+  as `{"sha": ..., "pages": [...]}`, written atomically and only after a
+  full paging.  When the Hub `sha` equals the cached one, the cached
+  pages are used, nothing is paged, and one log line names the
+  unchanged revision.  A failed Hub check, or a missing or corrupt
+  cache, pages as usual.  An optional `HF_TOKEN` environment variable
+  is sent as `Authorization: Bearer` to `huggingface.co` and its
+  subdomains only, never follows a redirect, and is skipped with a
+  warning if it holds control characters.  `redact()` scrubs it from
+  feed errors.  Arena language boards feed `arena_lang_mean` and
+  `arena_european_mean`.  A missing board stays null.
+- **Row minimums:** Every parser raises `FeedMinRowsError`
+  (`MinRowsError` in `boards.py`) below its row minimum, set near 60%
+  of today's row count.  `apply_feed` then records
+  `status: failed` and keeps old values.
+- **DeepSWE:** Retired.  Values are kept and never used.
+- **Fable:** An override matches `anthropic/claude-fable-5-1[1m]` to
+  OpenRouter `anthropic/claude-fable-5.1`.
+- **Pi roster:** `pi-zdr` is `enabledModels` intersected with
+  `~/.pi/agent/models-store.json` `openrouter.models[].id`; a store
+  older than 7 days warns.  Strip a `:<thinking>` suffix; skip
+  `openrouter/auto`.
 
 ---
 

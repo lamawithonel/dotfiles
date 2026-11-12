@@ -10,12 +10,13 @@ command -v pi > /dev/null 2>&1 || {
 	exit 77
 }
 
-MODEL="${DELEGATE_TEST_PI_MODEL:-openrouter/z-ai/glm-5.2}"
+MODEL="${DELEGATE_TEST_PI_MODEL:-openrouter/z-ai/glm-5.3-flash}"
+THINKING="${DELEGATE_TEST_PI_THINKING:-low}"
 TIMEOUT="${DELEGATE_TEST_TIMEOUT:-90}"
 SENTINEL='PI-ROUNDTRIP-OK'
 
-out="$(timeout "${TIMEOUT}" pi --model "${MODEL}" \
-	-p "Reply with exactly: ${SENTINEL}" --no-session 2>&1)"
+out="$(timeout "${TIMEOUT}" pi --model "${MODEL}" --thinking "${THINKING}" \
+	-p "Reply with exactly: ${SENTINEL}" --no-session < /dev/null 2>&1)"
 rc=$?
 
 case "${out}" in

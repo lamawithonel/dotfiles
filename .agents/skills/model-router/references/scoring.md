@@ -1,150 +1,154 @@
-# Scoring: Registry Layout, Policy, and Degradation
+# Scoring: Bands, Value, Tags, and Profiles
 
-This reference defines the mathematical scoring policy and selection
-rules executed by `scripts/score.py --pick`.  All routing decisions must
-read `~/.agents/model-benchmarks.json`; do not select models from memory.
+`scripts/score.py --pick` reads `~/.agents/model-benchmarks.json`
+(registry schema 4).  Never select a model from memory.
 
----
+## 1. Registry sections
 
-## 1. Registry Architecture
-
-The registry file `~/.agents/model-benchmarks.json` conforms to JSON Schema
-Draft 2020-12 via `schema/model-benchmarks.schema.json`.
-
-| Section | Managed By | Scope and Purpose |
+| Section | Owner | Content |
 | --- | --- | --- |
-| `models` | Automated script | Benchmark indices, pricing, context window, and `last_seen` timestamps |
-| `hosts.<h>` | Automated script | Host-local capabilities: enabled status, channel mappings, and CLI execution commands |
-| `sources` | Automated script | Status (`ok`, `failed`, `skipped`), retrieval timestamp, and error logs per feed |
-| `overrides` | User / Administrator | Manual overrides: `tier_4_only`, `track_only`, feed match patches, and custom constraints |
+| `policy` | Hand | Band floors and anchors, `mythos` list, tags, roles, mix, harnesses, profiles |
+| `overrides` | Hand | `match`, `placements`, `pi_thinking`, `vendor`, `track_only`, `notes` |
+| `models` | Refresh | Variants with AAI (Artificial Analysis Intelligence Index v5), index cost, boards, pricing |
+| `hosts.<h>` | Refresh | Harness health, Pi roster, Bedrock aliases, `default_profile` |
+| `sources` | Refresh | Per-feed status, `as_of`, row counts, floors |
 
-### Invariant Checks
+An unknown host uses `hosts["*"]` (Claude Code only, Claude models only)
+and warns.  Source warnings cover the core feeds (`aa_free`,
+`openrouter`, `pi_roster`, `claude_roster`) and the feeds behind the
+requested tag, language, or role.  A source that is neither `ok` nor
+`retired` warns, as does one older than `stale_days` (14) or missing
+from `sources` while a requested board needs it.  Values from a source
+older than `age_out_days` (90) are ignored, with a warning.
 
-1. **Schema compliance:** `score.py` validates the registry against
-   `schema/model-benchmarks.schema.json`.
-2. **Host registration:** The registry must contain an entry for the
-   current short hostname under `hosts`.
-3. **Data currency:** If a feed status is not `ok` or the `as_of` date is
-   older than 14 days, `score.py` emits a warning but proceeds with
-   routing.
-4. **Benchmark age-out:** Benchmark values not refreshed within 90 days
-   are treated as `null`.
-5. **Channel eligibility:** If a channel is disabled in `hosts.<h>.channels`,
-   models native to that channel cannot be selected automatically.
+## 2. Bands
 
----
+A variant is a (model, effort) pair.  Each variant is banded on its own
+AAI at the `high`-effort floors: `bulk` 20.9, `haiku` 28.4, `sonnet`
+39.4, `opus` 49.2.  Below 20.9 is unbanded.  `mythos` is a named list,
+not a floor, and its models never enter an automatic pick.  Estimated
+placements carry a confidence level; low or medium confidence on a pick
+warns.
 
-## 2. Classification Systems and Weight Profiles
+## 3. Ranking
 
-### Task Classification
+The feasible set is the profile's variants that meet the band floor;
+every pick is the best value within it.
 
-- **`general` system:** Default system for software development, technical
-  reasoning, analysis, and documentation.
-- **`design` system:** Specialized ladder for visual layout, styling,
-  user interface (UI) and user experience (UX) aesthetics, and front-end
-  design.
+Cost per variant: a harness billed on a `subscription` costs 0 (zero
+marginal cost).  A metered
+harness costs the index cost, repriced to the channel's price:
+`index_cost x C(channel) / C(aa_pricing)`, with
+`C = 0.75 x input + 0.25 x output`.  The tag cost ceiling below
+compares on one basis: AA's index cost for a subscription variant, and
+the repriced cost for a metered one.
 
-### General Benchmark Profiles
+A subscription variant with no AA index cost gets an estimate, marked
+as estimated, instead of ranking last.  Let `tokens(m, e) =
+index_cost(m, e) / C(m)`, with `C` from the model's `aa_pricing`, else
+its `pricing`.  If the model has a measured effort, take the nearest
+one as `e_ref` (the lower effort on a tie) and scale
+`tokens(m, e_ref)` by the median of `tokens(e) / tokens(e_ref)` over
+the registry models that have both efforts.  Otherwise, or when no model
+has both, use the median `tokens(e)` over models.  The estimate is
+tokens x `C(m)`.  Metered variants are never estimated.  With nothing
+to estimate from, the variant ranks last as before.  A pick whose cost
+is estimated warns, as does an estimated untagged pick behind a ceiling.
 
-Select exactly one profile to determine the scoring weights:
+- **Untagged:** rank the band by value `V = AAI / cost`.  Zero-cost
+  subscription variants rank first, lowest index cost first among
+  them.  A variant with no index cost ranks after valued ones, with a
+  warning.
+- **Tagged:** first apply the cost ceiling (below), then take the
+  competitive set: every variant whose tag score is within the tag's
+  margin of the best of the capped pool (`ci`: intervals overlap;
+  number: score >= best - margin; `multilingual` and `european` use the
+  number 10, because their mean boards have no interval).  Equal values
+  go to the higher score on the tag's `tiebreak` board.  Rank that set
+  by `V`.  If the untagged pick has no score on the board, return it
+  and warn that the tag was not applied.
+- **Tag cost ceiling:** `TAG_COST_CEILING` in `score.py` is 1.5.  Before
+  any tag narrows the pool, drop every variant costing more than 1.5
+  times the untagged pick (the first variant by rank).  It covers the
+  whole chain: the role's `rank_on` tag, `--tag`, and `--lang`.  An
+  untagged pick with no cost sets no ceiling and warns.  A cost of 0
+  admits only cost-0 variants.  A variant with no cost does not pass
+  the ceiling.  When the ceiling changes the pick, a warning names the
+  tag, the variant that would have won, and its cost multiple, as in
+  "tag writing would pick anthropic/claude-opus-5.5 low at 8.1x the
+  untagged pick's cost; capped at 1.5x".  The constant lives in code,
+  not in registry policy, because `swap.sh update` never writes policy.
+- **Language group:** applied after the specialty tag, the same way,
+  on the language board.
+- **`--role`:** sets the band from `policy.roles` and takes the
+  competitive set on `long-horizon` before ranking by `V`.
 
-| Profile | Target Tasks | Benchmark Weights |
-| --- | --- | --- |
-| `coding` | Defect fixes, refactoring, feature implementation, unit testing | `aa_coding` (0.35), `deep_swe` (0.25), `terminal_bench` (0.15), `aa_omniscience` (0.15), `aa_factuality` (0.10) |
-| `reasoning` | Architecture, root-cause analysis, planning, mathematical logic | `aa_intelligence` (0.50), `aa_omniscience` (0.20), `aa_factuality` (0.15), `deep_swe` (0.15) |
-| `style` | Technical writing, documentation, code naming, formatting | `design_arena` (0.45), `eq_bench` (0.25), `aa_factuality` (0.15), `aa_intelligence` (0.15) |
+## 4. Empty band
 
-### Benchmark Fields and Metric Scales
+Step up one band at a time with a warning.  Never step into `mythos`.
+If nothing is left and the profile's `empty_band` is `degrade`, `pick`
+is null and `degrade` holds the best variant of the highest non-empty band
+below the request (today in `pi-zdr`: GLM 5.3 at `max`).
 
-All benchmark values evaluate such that higher numbers represent superior
-performance:
+## 5. Profiles
 
-| Metric Field | Source Feed | Units and Scaling |
-| --- | --- | --- |
-| `aa_intelligence` | `aa_api` | Index points |
-| `aa_coding` | `aa_api` | Index points |
-| `terminal_bench` | `aa_api` | Percentage (`terminalbench_v2_1 * 100`) |
-| `aa_omniscience` | `aa_omniscience` | Index points |
-| `aa_factuality` | `aa_omniscience` | Normalized scale 0.0 to 1.0 (`1 - hallucinationRate`) |
-| `deep_swe` | `deep_swe` | Percentage |
-| `eq_bench` | `eq_bench` | ELO rating |
-| `design_arena` | `design_arena` | ELO rating |
+Fixed at session start, so a session's profile never changes (strong
+tranquility, in the Bell-LaPadula sense).  First hit wins: `--profile`,
+`MODEL_ROUTER_PROFILE`, `MODEL_ROUTER_HARNESS=pi` or `PI_CODING_AGENT`
+(`pi-zdr`), `CLAUDE_CODE_USE_BEDROCK=1`, `CLAUDECODE`, the host's
+default.  The innermost harness wins: Pi under Claude Code inherits
+both markers.  Each profile names its `primary` harness, which decides
+the in-process channel and `fallback`.
 
----
+| Profile | Runs |
+| --- | --- |
+| `claude-code` | Subscription Claude at zero marginal cost, plus the zero-data-retention (ZDR) set through Pi |
+| `claude-code-bedrock` | Metered Claude; aliases resolve through `bedrock_aliases` |
+| `pi-zdr` | Pi `enabledModels` cut to the key's list; empty band degrades |
+| `pi-permissive` | Placeholder: `pi-zdr` without the key filter |
 
-## 3. Mathematical Scoring Model
+## 6. Effort and channel in the output
 
-The scoring engine calculates composite quality and cost metrics across
-eligible candidates:
+`banded_effort` is the variant's measured effort.  `effort` is what to
+dispatch: `--effort` if given (`off` through `max`; else exit 2); for a
+Claude Code pick, the role effort (workers `medium`), capped to stay in
+the band with a warning; for a Pi pick, the exact `--thinking` level
+sent, after the `overrides.pi_thinking` remap (DeepSeek V4.1 Flash 0910:
+`max` sends `high`) and the `single` rule.  A Pi thinking level absent
+from the model's `pi_levels` skips the variant.  `mix_band` is the
+pick's band (the degrade's band for a degrade), not the band of the
+dispatched effort.  `score.py --mix` measures the target mix from the
+log-dispatch hook's log: each logged dispatch counts in its variant's
+band at the higher of the effort sent and `high`.  The Pi `command`
+quotes every value and reads the brief from `--payload PATH` (default
+`payload.md`).  Exit codes: 0 pick or degrade, 2 usage or registry
+error, 3 neither.
 
-1. **Comparability verification:** If a model's benchmark version
-   differs from the feed's `primary_version`, that benchmark is treated as
-   `null`.
-2. **Min-max normalization:** For each benchmark $b$ across candidates
-   with valid scores:
-   $$\text{norm}(m, b) = \frac{\text{value}(m, b) - \min(b)}{\max(b) - \min(b)}$$
-3. **Quality composite ($Q$):** Computed as the weighted mean of non-null
-   normalized scores:
-   $$Q(m) = \frac{\sum w_b \cdot \text{norm}(m, b)}{\sum w_b}$$
-4. **Blended cost ($C$):** Models a 3:1 input-to-output token ratio
-   (expressed in USD per million tokens):
-   $$C(m) = 0.75 \cdot \text{prompt\_cost} + 0.25 \cdot \text{completion\_cost}$$
-5. **Value index ($V$):** Used for Tier 2 optimization:
-   $$V(m) = \frac{Q(m)}{C(m) + 0.05}$$
+### Inline work: token-share.py
 
----
+`--mix` counts dispatches from the hook log.  `scripts/token-share.py`
+shows tokens spent inline by each session, including Workflow agents
+and work the log cannot see.  It reads usage fields only (model,
+timestamp, token counts, session names), never message content.
 
-## 4. Tier Selection Logic
+    token-share.py [--days N] [--session PREFIX] [--json]
 
-### General System
+Transcripts under `~/.claude/projects` are grouped by role (from the
+session name: orchestrator, coordinator, pane-worker, else
+independent; plus subagent and scheduled) and by model family.  The
+table gives messages, output tokens, input plus cache tokens, and the
+percent of output.
 
-- **Tier 1 (High-Volume / Low-Context):** Eligible if $Q \ge 0.40$.  Select
-  the candidate with minimum cost $C$.  Ties resolve in favor of higher
-  $Q$.
-- **Tier 2 (Systems Integration):** Eligible if $Q \ge 0.60$.  Select the
-  candidate with maximum value index $V$.
-- **Tier 3 (High Abstraction):** Select the candidate with maximum
-  quality $Q$.  Candidates within 0.02 of the top $Q$ favor lower cost
-  $C$; candidates within 0.05 favor a higher count of non-null benchmarks.
-- **Tier 4 (Frontier):** Select the candidate with maximum quality $Q$
-  with `tier_4_only` models enabled.  Cost is not evaluated.
+## 7. Maintenance
 
-### Design System (Pareto Frontier)
+- `score.py` runs `registry.validate` on load; a registry content error
+  exits 2 with one line.  `validate` is the gate; it rejects unknown
+  keys in `page`, `domains`, and board entries.  The JSON Schema file
+  is documentation.
 
-The design system evaluates candidates with valid `design_arena` ELO scores
-and blended cost $C$:
-
-- Candidates are plotted along the Pareto frontier (minimizing cost,
-  maximizing ELO) in ascending cost order.
-- The frontier sequence is mapped across four rungs:
-  - **Rung 1:** Most economical model on the Pareto frontier.
-  - **Rungs 2 and 3:** Intermediate models balancing cost and visual
-    performance.
-  - **Rung 4:** Highest-performing model on the Pareto frontier.
-
----
-
-## 5. Hard Constraints
-
-- **`tier_4_only` constraint:** Models flagged with `tier_4_only` in
-  `overrides` are excluded from Tiers 1 through 3 and the design ladder.
-  They are eligible only at Tier 4 or via explicit user directive.
-- **`track_only` constraint:** Models benchmarked for research comparison
-  only; excluded from automatic dispatch.
-- **Context window limits:** Models whose context window is smaller than
-  the estimated task context are disqualified.
-
----
-
-## 6. Maintenance Procedures
-
-- **Model ingestion:** New models in Pi appear automatically on the next
-  refresh.  To add a new Claude model, configure
-  `overrides.<anthropic/id>.probe: true` or populate the CLI picker cache.
-- **Feed match patching:** If a model is active but does not link to feed
-  data, add an entry to `overrides.<id>.match.<feed>`.
-- **Validation test suite:** Run unit tests after modifying scoring logic:
-  `python3 -m unittest discover -s ~/.agents/skills/model-router/scripts/tests`
-- **Schema versioning:** When changing registry layout, increment
-  `schema_version` concurrently in `schema/model-benchmarks.schema.json`,
-  `scripts/refresh-benchmarks.py`, and this document.
+- Tests: `python3 -m unittest discover -s
+  ~/.agents/skills/model-router/scripts/tests`
+- A model that fails to link to a feed: add
+  `overrides.<id>.match.<feed>`.
+- Layout change: raise `schema_version` in the schema, in
+  `refresh-benchmarks.py`, and here together.

@@ -1,0 +1,2 @@
+{"type":"agent-name","agentName":"docs-lead"}
+{"type":"assistant","timestamp":"2026-11-11T13:00:00.000Z","message":{"id":"m2","model":"claude-opus-4-7","content":[{"type":"text","text":"SECRET-CONTENT"}],"usage":{"input_tokens":5,"output_tokens":50,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}

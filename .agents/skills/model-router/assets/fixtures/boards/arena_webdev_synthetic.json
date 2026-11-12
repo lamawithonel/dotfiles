@@ -1,0 +1,104 @@
+{
+ "features": [],
+ "rows": [
+  {
+   "row_idx": 0,
+   "row": {
+    "model_name": "claude-opus-5-5",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1818,
+    "rating_lower": 1806,
+    "rating_upper": 1830,
+    "variance": 1.0,
+    "vote_count": 800,
+    "rank": 1.0,
+    "category": "webdev",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 1,
+   "row": {
+    "model_name": "claude-sonnet-5-5 (xhigh)",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1773,
+    "rating_lower": 1760,
+    "rating_upper": 1786,
+    "variance": 1.0,
+    "vote_count": 500,
+    "rank": 2.0,
+    "category": "webdev",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 2,
+   "row": {
+    "model_name": "deepseek-v4.1-flash-1017",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1664,
+    "rating_lower": 1657,
+    "rating_upper": 1671,
+    "variance": 1.0,
+    "vote_count": 900,
+    "rank": 3.0,
+    "category": "webdev",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 3,
+   "row": {
+    "model_name": "claude-haiku-5-5",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1595,
+    "rating_lower": 1586,
+    "rating_upper": 1604,
+    "variance": 1.0,
+    "vote_count": 600,
+    "rank": 4.0,
+    "category": "webdev",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 4,
+   "row": {
+    "model_name": "claude-opus-5-5",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1500.0,
+    "rating_lower": 1806,
+    "rating_upper": 1830,
+    "variance": 1.0,
+    "vote_count": 800,
+    "rank": 1.0,
+    "category": "overall",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  },
+  {
+   "row_idx": 5,
+   "row": {
+    "model_name": "claude-sonnet-5-5 (xhigh)",
+    "organization": "x",
+    "license": "prop",
+    "rating": 1500.0,
+    "rating_lower": 1760,
+    "rating_upper": 1786,
+    "variance": 1.0,
+    "vote_count": 500,
+    "rank": 2.0,
+    "category": "overall",
+    "leaderboard_publish_date": "2026-11-08"
+   }
+  }
+ ],
+ "num_rows_total": 6,
+ "num_rows_per_page": 100,
+ "partial": false
+}

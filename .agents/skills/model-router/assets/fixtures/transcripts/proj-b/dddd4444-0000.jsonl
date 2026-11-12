@@ -1,0 +1,2 @@
+this is not json "assistant"
+{"type":"assistant","timestamp":"2026-11-11T16:00:00.000Z","message":{"id":"m5","model":"claude-sonnet-4-6","content":[{"type":"text","text":"SECRET-CONTENT"}],"usage":{"input_tokens":1,"output_tokens":10,"cache_creation_input_tokens":0,"cache_read_input_tokens":0}}}

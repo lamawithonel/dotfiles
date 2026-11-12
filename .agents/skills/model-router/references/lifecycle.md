@@ -22,6 +22,7 @@ stop launching new tasks immediately.
 | Detached background child | Yes (until process termination) | Notification on completion or reconnect via `SendMessage` / `subagent_supervisor` |
 | Multi-step workflow | Yes | Re-launch using `resumeFromRunId`; unchanged stages return cached results |
 | Claude teammate | **No** | In-process teammates do not survive `/resume`; intermediate work must be recorded in the project journal |
+| Herdr pane worker | Yes (pane stays open) | Read the receipt file the brief names; a failed worker's pane stays open |
 | External CLI shell-out | Yes (if executed as background daemon) | Adopt via process ID and journal logs; payload file serves as the input record |
 | Shared task list | Yes | Persisted locally across session restarts per `cleanupPeriodDays` |
 

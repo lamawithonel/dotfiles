@@ -1,0 +1,21 @@
+{
+ "success": true,
+ "data": [
+  {
+   "modelId": "Claude-Opus-5-5",
+   "elo": 1402
+  },
+  {
+   "modelId": "glm-5-3-flash",
+   "elo": 1609
+  },
+  {
+   "modelId": "nullelo",
+   "elo": null
+  },
+  {
+   "modelId": "kimi-k3",
+   "elo": 1356
+  }
+ ]
+}

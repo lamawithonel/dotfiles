@@ -80,7 +80,7 @@ FILTER="${1:-}"
 
 [ -n "${TESTS_DIR}" ] || _die 'no tests/ directory beside this script'
 
-for case_file in "${TESTS_DIR}"/*; do
+for case_file in "${TESTS_DIR}"/[0-9][0-9]-*; do
 	[ -f "${case_file}" ] || continue
 
 	name="${case_file##*/}"
