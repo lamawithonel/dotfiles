@@ -84,7 +84,7 @@
         "checked_at": "2026-11-09T15:41:48Z",
         "count": 121
       },
-      "probed_at": "2026-11-12T06:22:03Z",
+      "probed_at": "2026-11-12T06:33:38Z",
       "probed_with": {
         "claude": "2.1.322 (Claude Code)",
         "pi": "1.5.1"
@@ -5866,5 +5866,5 @@
       "url": "file://~/.pi/agent/{settings,models-store}.json"
     }
   },
-  "updated_at": "2026-11-12T06:22:03Z"
+  "updated_at": "2026-11-12T06:33:38Z"
 }
