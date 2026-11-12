@@ -9,6 +9,18 @@
     "CLAUDE_CODE_SUBAGENT_MODEL": "sonnet"
   },
   "hooks": {
+    "PreToolUse": [
+      {
+        "hooks": [
+          {
+            "command": "/home/lucas/.claude/hooks/require-agent-model.sh",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Agent"
+      }
+    ],
     "PostToolUse": [
       {
         "hooks": [
@@ -20,6 +32,16 @@
           }
         ],
         "matcher": "Write|Edit|MultiEdit"
+      },
+      {
+        "hooks": [
+          {
+            "command": "/home/lucas/.claude/hooks/log-dispatch.py",
+            "timeout": 10,
+            "type": "command"
+          }
+        ],
+        "matcher": "Agent|Bash"
       }
     ]
   },
