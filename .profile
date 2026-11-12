@@ -64,20 +64,12 @@ _running_macOS() {
 # }}}
 
 # {{{ Public functions (not unset)
-rngstring() {
-	_length="${1:-16}"
-	_charset="${2:-A-Za-z0-9@%+\\/\'\!\#\$\^\?:.\(\)\{\}\[\]\~_.-}"
-
-	# if '--help' or '-h' are one of the arguments in $@, print usage
-	case "$*" in
-		*--help* | -h*)
-			echo "Usage: rngstring [length] [tr-style-charset]"
-			return 0
-			;;
-	esac
-
-	LANG=C LC_ALL=C tr -cd "$_charset" < /dev/urandom | fold -w "$_length" | head -n 1
-}
+# Defined in .config/shell/functions.sh so rc.d/15-functions.sh can
+# restore them in shells that inherited __PROFILE_SOURCED but never ran
+# this file.  XDG_CONFIG_HOME is not set yet, so use its default here.
+# shellcheck source=.config/shell/functions.sh
+# shellcheck disable=SC1091
+[ -f "${XDG_CONFIG_HOME:-${HOME}/.config}/shell/functions.sh" ] && . "${XDG_CONFIG_HOME:-${HOME}/.config}/shell/functions.sh"
 # }}}
 
 # {{{ Set a secure `umask(2)`

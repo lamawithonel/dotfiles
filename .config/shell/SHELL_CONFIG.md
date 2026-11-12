@@ -24,6 +24,8 @@ the home directory (`.profile`, `.bash_profile`, `.bashrc`, `.zshenv`,
    point).
 2. It sources `.profile` if `__PROFILE_SOURCED` is not already set.
    `.profile`:
+   - Sources `.config/shell/functions.sh` (public functions such as
+     `rngstring()`).
    - Sets a secure `umask`.
    - Defines the XDG base directories (`XDG_BIN_HOME`,
      `XDG_CACHE_HOME`, `XDG_CONFIG_HOME`, `XDG_DATA_HOME`,
@@ -99,6 +101,7 @@ and Zsh:
 | --- | --- |
 | `05-regex-patterns.sh` | Exports POSIX ERE fragments (`REGEX_IPv4_ADDRESS`, `REGEX_IPv4_SUBNET`, `REGEX_HOSTNAME_LABEL`, `REGEX_FQDN`) for use in scripts. |
 | `10-shell-settings.sh` | History size/file settings and interactive shell options for Bash (`shopt`) and Zsh (`setopt`), including history file locations under `BASH_CACHE_HOME`/`ZSH_CACHE_HOME`. |
+| `15-functions.sh` | Re-sources `.config/shell/functions.sh` only if `rngstring()` is missing (same inherited-`__PROFILE_SOURCED` case as `20-path.sh`). |
 | `20-path.sh` | Re-defines `_ensure_path_contains()` only if it is missing (covers shells that inherited the `__PROFILE_SOURCED` guard as an exported variable but never actually ran `.profile`), enables Zsh's built-in `PATH` deduplication (`typeset -U PATH path`), and, when `/opt/homebrew/bin/brew` is executable, adds `/opt/homebrew/bin` and `/opt/homebrew/sbin` to `PATH` -- the brew binary itself is checked rather than `/opt/homebrew/etc/paths`, which only the less-common `.pkg` installer creates and the standard curl-based installer used on virtually every fresh Apple Silicon Mac does not. Intel Homebrew's default `/usr/local` prefix is not checked. |
 | `30-tools.sh` | Tool integrations: eagerly runs `mise activate`, `fnox activate`, and `pitchfork activate`.  All three are eager for the same reason: each activation installs prompt and/or directory-change hooks that real usage depends on, and a lazy wrapper would silently skip those hooks in any shell where the tool is never invoked directly.  This eagerness has a measured warm-shell startup-time cost; run `bin/bench-shell-startup` for current numbers.  Completions for fnox/pitchfork live in `70-completions.sh`, not here. |
 | `35-gpg-ssh.sh` | Sets `GPG_TTY` and (on non-macOS) `SSH_AUTH_SOCK` from `gpgconf`, when `gpg-agent` is available. |
@@ -155,6 +158,20 @@ POSIX-compatible function for adding a directory to `PATH`:
 This file is sourced once by `.profile`; `rc.d/20-path.sh` only
 re-sources it defensively if the function is not already defined in
 the current shell.
+
+## `.config/shell/functions.sh`
+
+The single canonical home of public, POSIX-compatible shell functions
+meant to be available in every interactive shell:
+
+- `rngstring [length] [tr-style-charset]` prints a random string
+  (default length 16).  `.profile` also calls it to suffix a fallback
+  `XDG_RUNTIME_DIR`.
+
+This file is sourced once by `.profile`, before anything that calls
+these functions; `rc.d/15-functions.sh` only re-sources it
+defensively if `rngstring()` is not already defined in the current
+shell.
 
 ## `.config/shell/completion-tools.conf`
 
@@ -272,6 +289,7 @@ bash -n .profile
 bash -n .bash_profile
 bash -n .bashrc
 bash -n .config/shell/path.sh
+bash -n .config/shell/functions.sh
 for f in .config/shell/rc.d/*.sh; do bash -n "$f"; done
 
 # Syntax-check the Zsh entry points (if zsh is installed).
