@@ -10,7 +10,7 @@ idiomatic_version_file_enable_tools = ["rust"]
 "regex:^http://(.*)" = "https://$1"
 
 [tools]
-aube = "latest"
+"github:aubepkg/aube" = "latest"
 dotnet = "latest"
 # Install Rust with rust-analyzer and its dependency rust-src for LSP support
 rust = { version = "latest", profile = "default", components = "rust-src,rust-analyzer" }
@@ -24,6 +24,7 @@ node = "lts"
 "cargo:cargo-deny" = "latest"
 "cargo:cargo-machete" = "latest"
 "cargo:git-delta" = "latest"
+"cargo:https://github.com/huggingface/hf-hub.git" = { crate = "hfrs", version = "latest", locked = true }
 "cargo:jinja-lsp" = "latest"
 "cargo:kani-verifier" = { version = "latest", locked = true }
 "cargo:mdterm" = "latest"
@@ -77,6 +78,7 @@ neovim = "latest"
 pkl = "latest"
 pitchfork = "latest"
 ruff = "latest"
+rumdl = "latest"
 shellcheck = "latest"
 shfmt = "latest"
 taplo = "latest"
