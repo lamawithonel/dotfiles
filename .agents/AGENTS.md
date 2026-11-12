@@ -54,7 +54,11 @@ interface (CLI) shell-outs.
   launching any child agent.  The skill determines whether to perform
   work inline or delegate, governs channel selection, and selects models.
 - **Model selection:** Never select a model identifier from memory or
-  hardcode model rankings.  Always query `scripts/score.py --pick`.
+  hardcode model rankings.  Query `scripts/score.py --pick` with a
+  band (`--band bulk|haiku|sonnet|opus`) or a role (`--role`), plus an
+  optional specialty tag and language group.  Every dispatch names its
+  model and effort, in every harness.  `mythos` models run only when
+  the user names them.
 - **Standing Workflow opt-in:** I opt in, for all coordinators, to
   multi-agent orchestration with the `Workflow` tool: a coordinator
   may run `Workflow` for short-lived Claude workers without asking me
@@ -230,10 +234,10 @@ vocabulary, and the worked template live in
 5. **Autonomy Ceiling**: The ceiling is the PR.  Pushing a branch and
    opening a PR may be automatic; merging to the default branch is a
    standing human gate.
-6. **Vocabulary**: "tier" is reserved for model-access tiers
-   (`~/.agents/model-benchmarks.json`) and license tiers; VCS skills use
-   role nouns (staging layer, serializer) and pipeline step names, never
-   Tier-N.
+6. **Vocabulary**: "tier" is reserved for license tiers, and "band" for
+   model quality bands (`~/.agents/model-benchmarks.json`); VCS skills
+   use role nouns (staging layer, serializer) and pipeline step names,
+   never Tier-N.
 7. **Hookless Snapshot Guard**: before any file-targeting
    `git checkout`, `git restore`, `git stash`, `git clean`, or
    `git reset` in a colocated jj repo, run a jj snapshot (`jj status`

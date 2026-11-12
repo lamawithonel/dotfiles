@@ -23,11 +23,12 @@ The delegation rules in `~/.agents/AGENTS.md` apply in full.  The
 `model-router` skill MUST be loaded before invoking `Agent`, `Workflow`,
 or shell-outs.  Claude Code specifics:
 
-- Set `Agent.model` strictly to the `model_param` returned by
-  `score.py --pick`.  Never use the tool default when the tier is known.
-- Dispatch models flagged `tier_4_only` in `overrides` only at Tier 4 or
-  by explicit user directive.  Do not allow workflows to default agents
-  to a `tier_4_only` model.
+- Every `Agent` and `Workflow` agent call names `model` and `effort`.
+  Set `model` to the `model_param` that `score.py --pick` returns, or to
+  the model the user named.  Never omit it: an omitted model inherits
+  the session's model.
+- Never dispatch a `mythos`-band model unless the user names it.  Never
+  let a workflow default its agents to one.
 - When `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1` is enabled, passing `name`
   to `Agent` spawns a teammate whose output does not return to the caller.
   Omit `name` whenever the caller requires the tool result.
