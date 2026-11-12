@@ -10,7 +10,6 @@ take precedence over global instructions.
 Perform these actions if they have not yet been performed unless the user
 requests otherwise:
 
-- Use the `/caveman` skill
 - Use the `/ponytail` skill
 - Create a session temporary directory at session start or if the session
   was resumed-- either `$TMPDIR/<session-id>` or `/tmp/<session-id>` if
