@@ -98,8 +98,6 @@ Messages along the tree are vertical; all others are lateral.
 Use Herdr when it is available (`HERDR_ENV=1`).  Without it, discrete
 workers run as plain shell-outs.
 
-| Agent | Placement | Name |
-| --- | --- | --- |
 The user places independent sessions and orchestrators; agents never
 create Herdr workspaces.  An orchestrator's workspace is wherever the
 user started it, and it may hold other top-level sessions too.
