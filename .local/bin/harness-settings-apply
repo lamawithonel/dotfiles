@@ -122,8 +122,12 @@ _reconcile_one() {
 
 	mkdir -p "$(dirname "${_target}")"
 	_staged="$(mktemp "${_target}.XXXXXX")"
-	cp "${_merged}" "${_staged}"
-	mv "${_staged}" "${_target}"
+	if ! { cp "${_merged}" "${_staged}" && mv "${_staged}" "${_target}"; }; then
+		rm -f "${_staged}"
+		printf '%s: %s: write failed: %s\n' \
+			"$PROG" "${_tool}" "${_target}" >&2
+		return 1
+	fi
 	printf '%s: %s: applied\n' "$PROG" "${_tool}"
 }
 
@@ -140,7 +144,18 @@ main() {
 
 	_rc=0
 	for _t in "$@"; do
-		_reconcile_one "${_t}" "${_mode}" || _rc=1
+		# A function called on the left of `||` runs with errexit off,
+		# so a failed step would fall through to "applied".  Run each
+		# tool in a subshell outside any AND-OR list instead: errexit
+		# stays on inside it, and the first failed step stops that tool.
+		set +o errexit
+		(
+			set -o errexit
+			_reconcile_one "${_t}" "${_mode}"
+		)
+		_status="$?"
+		set -o errexit
+		[ "${_status}" -eq 0 ] || _rc=1
 	done
 	return "${_rc}"
 }
