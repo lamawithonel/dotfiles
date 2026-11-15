@@ -7,9 +7,10 @@ targets:
   - codex
 dependencies:
   apm:
-    - DietrichGebert/ponytail
-    - JuliusBrussee/caveman
     - anthropics/skills/skills/skill-creator
+    - mattpocock/skills/skills/productivity/grill-me
+    - mattpocock/skills/skills/productivity/grilling
+    - mattpocock/skills/skills/productivity/teach
     - mattpocock/skills/skills/productivity/writing-for-agents
     - microsoft/playwright-cli/skills/playwright-cli
     - modular/skills/mojo-python-interop
