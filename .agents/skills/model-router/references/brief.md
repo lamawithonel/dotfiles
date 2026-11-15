@@ -16,8 +16,8 @@ underlying channel:
    Provide file paths rather than inline file dumps; the worker can read
    the filesystem directly.
 3. **Constraints:** The worker guards (`<constraints priority="MUST">`
-   block: turn budget, stall watchdog, scope limit, and receipt
-   contract) along with task-specific limits.
+   block: stall watchdog, scope limit, and receipt contract) along
+   with task-specific limits.
 4. **Return:** The expected receipt structure and one concrete, runnable
    verification command (such as a test suite, linter, or compiler check)
    that the worker must execute before concluding.
@@ -77,7 +77,6 @@ Goal description.
 </task_list>
 
 <constraints priority="MUST">
-- TURN BUDGET: Return immediately if the turn count reaches 12.
 - STALL WATCHDOG: Stop if 3 consecutive turns yield no state change.
 - SCOPE LIMIT: If changes span >3 decoupled subsystems, halt, escalate,
   and return a decomposition (a proposed work breakdown structure).
@@ -102,6 +101,21 @@ Return only a structured receipt containing:
 
 Name the worker's model and effort at dispatch, never in the brief
 alone.  On `REFUSED` or `PARTIAL`, follow `refusals.md`.
+
+### Quotes From Sources
+
+A brief for a worker that reads sources adds this line to its
+constraints:
+
+```xml
+- RAW QUOTES: Quote only from raw text: the file itself, `pdftotext`
+  output, a raw download, or `gh api`.  Never quote from WebFetch's
+  summarized rendering.  Mark any quote you could not read raw as
+  second-hand in the receipt.
+```
+
+WebFetch returns a model's summary of the page, not the page, so a
+quote taken from it can be a paraphrase.
 
 ## External CLI Envelope
 

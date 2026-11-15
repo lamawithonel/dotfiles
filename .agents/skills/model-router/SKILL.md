@@ -32,11 +32,9 @@ Orchestrators and coordinators keep triage, decomposition,
 integration, and receipt review; everything else is a work package.
 An orchestrator hands context-heavy work to coordinators.
 
-<constraints priority="MUST">
-INLINE BUDGET: After 15 tool calls on one work package with no
-dispatch, the session MUST stop, write the work breakdown, and
-dispatch the rest.  It pairs with the TURN BUDGET in section 8.
-</constraints>
+The INLINE BUDGET in `~/.agents/AGENTS.md` (Role Classes) binds every
+orchestrator and coordinator.  An independent session that dispatches
+follows it too.
 
 To delegate, split the task into a work breakdown structure and
 dispatch one worker per work package.  Apply the 100% rule: the work
@@ -71,6 +69,8 @@ Choose the lowest band that gets it right the first time.
   `scripts/token-share.py [--session ID] [--days N]` shows the tokens
   each session spent by model, including inline work, which the
   dispatch log cannot see.
+- A package that is read-only, touches three files or fewer, and has
+  an answer the dispatcher can check goes to `haiku`.
 
 ## 3. Pick
 
@@ -162,10 +162,9 @@ still null, stop and report; never pick a vendor by hand.  Steps:
 ## 8. Worker guards
 
 <constraints priority="MUST">
-1. TURN BUDGET: The dispatcher MUST abort worker execution if cumulative turns reach 12.
-2. STALL WATCHDOG: The worker MUST terminate if 3 consecutive turns yield zero state progress.
-3. SCOPE LIMIT: The worker MUST halt, escalate, and return a decomposition (a proposed work breakdown structure) if changes span >3 decoupled subsystems.
-4. RECEIPT CONTRACT: The worker MUST suppress verbose streams and return only actionable conclusions with file:line references.
+1. STALL WATCHDOG: The worker MUST terminate if 3 consecutive turns yield zero state progress.
+2. SCOPE LIMIT: The worker MUST halt, escalate, and return a decomposition (a proposed work breakdown structure) if changes span >3 decoupled subsystems.
+3. RECEIPT CONTRACT: The worker MUST suppress verbose streams and return only actionable conclusions with file:line references.
 </constraints>
 
 State these in every worker brief.  Brief format: `references/brief.md`.
