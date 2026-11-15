@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Sole writer of the model-router registry (~/.agents/model-benchmarks.json), schema v4.
+"""Sole writer of the model-selection registry (~/.agents/model-benchmarks.json), schema v4.
 
 Phases, each independently failable (a failed fetch keeps old values):
 
@@ -57,7 +57,7 @@ DEFAULT_REGISTRY: Final = os.path.expanduser("~/.agents/model-benchmarks.json")
 PI_SETTINGS: Final = os.path.expanduser("~/.pi/agent/settings.json")
 PI_STORE: Final = os.path.expanduser("~/.pi/agent/models-store.json")
 CLAUDE_CACHE: Final = os.path.expanduser("~/.claude.json")
-UA: Final = "Mozilla/5.0 (X11; Linux x86_64) model-router/4"
+UA: Final = "Mozilla/5.0 (X11; Linux x86_64) model-selection/4"
 TIMEOUT: Final = 45
 KEY_SOURCE: Final = "openrouter-key"
 # A price source only overwrites one of equal or lower rank; unlisted rank 0.
@@ -1045,7 +1045,7 @@ def hf_headers(url: str, token: str | None) -> dict[str, str]:
 def cache_dir() -> str:
     """Arena page cache directory; reads the environment at call time."""
     base = os.environ.get("XDG_CACHE_HOME") or os.path.expanduser("~/.cache")
-    return os.path.join(base, "agents", "model-router")
+    return os.path.join(base, "agents", "model-selection")
 
 
 def arena_config(url: str) -> str:
@@ -1462,7 +1462,7 @@ def notify(summary: str, body: str) -> None:
     env.setdefault("DBUS_SESSION_BUS_ADDRESS", f"unix:path=/run/user/{os.getuid()}/bus")
     try:
         subprocess.run(
-            ["notify-send", "-a", "model-router", summary, body],
+            ["notify-send", "-a", "model-selection", summary, body],
             env=env,
             check=False,
             timeout=10,
@@ -1569,7 +1569,9 @@ def build_parser() -> argparse.ArgumentParser:
     )
     ap.add_argument(
         "--host",
-        default=os.environ.get("MODEL_ROUTER_HOST", socket.gethostname().split(".")[0]),
+        default=os.environ.get(
+            "MODEL_SELECTION_HOST", socket.gethostname().split(".")[0]
+        ),
     )
     ap.add_argument("--dry-run", action="store_true")
     ap.add_argument(

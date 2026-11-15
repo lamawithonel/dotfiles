@@ -16,7 +16,7 @@ class FindHook(unittest.TestCase):
         self.addCleanup(tmp.cleanup)
         root = Path(tmp.name)
         self.staging, self.home, self.override = (
-            root / "staging" / "hooks",
+            root / ".claude" / "hooks",
             root / "home",
             root / "override",
         )
@@ -47,8 +47,14 @@ class FindHook(unittest.TestCase):
         want = self.put(self.override)
         self.assertEqual(self.find(env), want)
 
-    def test_default_staging_dir_is_the_staging_hooks(self) -> None:
-        if not (STAGING_HOOKS.parent / "swap.sh").is_file():
+    def test_default_staging_dir_is_the_staged_claude_hooks(self) -> None:
+        if not (
+            STAGING_HOOKS.parents[1]
+            / ".agents"
+            / "skills"
+            / "model-selection"
+            / "SKILL.md"
+        ).is_file():
             self.skipTest("not running from the staging tree")
         self.assertTrue((STAGING_HOOKS / "log-dispatch.py").is_file())
 

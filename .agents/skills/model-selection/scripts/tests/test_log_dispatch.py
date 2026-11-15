@@ -2,7 +2,7 @@
 """Behavior tests for hooks/log-dispatch.py.
 
 Each case runs the hook as a subprocess with the log path set by
-MODEL_ROUTER_DISPATCH_LOG, then reads back the lines it appended.
+MODEL_SELECTION_DISPATCH_LOG, then reads back the lines it appended.
 """
 
 import json
@@ -23,7 +23,7 @@ HOOK = find_hook("log-dispatch.py")
 def setUpModule() -> None:
     if HOOK is None:
         raise unittest.SkipTest(
-            "log-dispatch.py not found in staging/hooks or ~/.claude/hooks"
+            "log-dispatch.py not found in the staged .claude/hooks or ~/.claude/hooks"
         )
 
 
@@ -40,7 +40,7 @@ class LogDispatchTests(unittest.TestCase):
         self.log = Path(tmp.name) / "state" / "dispatches.jsonl"
 
     def run_hook(self, payload: str) -> subprocess.CompletedProcess[str]:
-        env = {**os.environ, "MODEL_ROUTER_DISPATCH_LOG": str(self.log)}
+        env = {**os.environ, "MODEL_SELECTION_DISPATCH_LOG": str(self.log)}
         return subprocess.run(
             [sys.executable, str(HOOK)],
             input=payload,

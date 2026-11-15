@@ -2,15 +2,15 @@
 
 Effort names do not transfer across vendors.  `high` on one vendor is
 not `high` on another; the band table is the only comparison.  Every
-dispatch names its effort (see SKILL.md section 4).
+dispatch names its effort (see SKILL.md, "Name the model and effort").
 
 ## 1. Dispatcher rules
 
 `score.py` returns the best-value variant of the band at whatever
 effort it was measured (`banded_effort`: `single`, `low`, up to `max`).
-For a Claude Code pick, `effort` is the role effort (orchestrators
-`xhigh`, coordinators `high`, workers `medium`; see
-`~/.agents/ROLES.md`).  It may lower a pick but never lifts it out of its band,
+For a Claude Code pick, `effort` is the role effort (executives
+`xhigh`, coordinators `high`, workers `medium`; see the `roles`
+skill).  It may lower a pick but never lifts it out of its band,
 except in the top floor band; a warning says when that cap applies.
 For a Pi pick, `effort` is the exact `--thinking` level the command
 sends.  Change a default only with a one-line reason.
@@ -23,7 +23,7 @@ sends.  Change a default only with a one-line reason.
 3. On a quality failure, raise effort to `high` first.  Above `high`,
    change band.  Opus at `high` beats Sonnet at `xhigh` on score and
    cost.  The change counts toward the higher band's share of the mix.
-4. Orchestrators run `xhigh`.
+4. Executives run `xhigh`.
 5. Never use `max` as a Claude role default.  Use it on a user
    directive or for a final adversarial review.  A Pi pick may come
    back at `max` when that is the variant measured best in the band.

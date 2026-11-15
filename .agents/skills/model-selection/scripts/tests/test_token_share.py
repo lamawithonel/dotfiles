@@ -5,6 +5,7 @@ Fixtures under assets/fixtures/transcripts/ mimic ~/.claude/projects.
 The fixed --now keeps the window deterministic.
 """
 
+import importlib.util
 import json
 import subprocess
 import sys
@@ -36,6 +37,12 @@ def run(*args: str) -> subprocess.CompletedProcess[str]:
     )
 
 
+spec = importlib.util.spec_from_file_location("token_share", SCRIPT)
+assert spec and spec.loader
+token_share = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(token_share)
+
+
 def report(*args: str) -> dict[str, Any]:
     proc = run("--json", *args)
     assert proc.returncode == 0, proc.stderr
@@ -44,17 +51,17 @@ def report(*args: str) -> dict[str, Any]:
 
 class TokenShareTests(unittest.TestCase):
     def test_duplicate_message_ids_counted_once(self) -> None:
-        opus = report()["by_role"]["orchestrator"]["opus"]
+        opus = report()["by_role"]["executive"]["opus"]
         self.assertEqual(opus["messages"], 1)
         self.assertEqual(opus["output"], 100)
         self.assertEqual(opus["input_cache"], 60)
 
     def test_records_outside_window_ignored(self) -> None:
-        self.assertEqual(report()["by_role"]["orchestrator"]["opus"]["output"], 100)
+        self.assertEqual(report()["by_role"]["executive"]["opus"]["output"], 100)
 
     def test_days_widens_window(self) -> None:
         self.assertEqual(
-            report("--days", "30")["by_role"]["orchestrator"]["opus"]["output"], 1099
+            report("--days", "30")["by_role"]["executive"]["opus"]["output"], 1099
         )
 
     def test_roles(self) -> None:
@@ -62,7 +69,23 @@ class TokenShareTests(unittest.TestCase):
         self.assertEqual(roles["coordinator"]["opus"]["output"], 50)
         self.assertEqual(roles["subagent"]["haiku"]["output"], 40)
         self.assertEqual(roles["scheduled"]["haiku"]["output"], 7)
-        self.assertEqual(roles["independent"]["sonnet"]["output"], 210)
+        self.assertEqual(roles["standalone"]["sonnet"]["output"], 210)
+
+    def test_session_names_map_to_classes(self) -> None:
+        cases = {
+            "agents-config-executive": "executive",
+            "agents-config-orchestrator": "executive",
+            "model-selection-co": "coordinator",
+            "agents-config-consultant-2": "consultant",
+            "agents-config-security-consultant": "consultant",
+            "jiv-workers-1": "standalone",
+            "docs-worker-3": "pane-worker",
+            "scratch": "standalone",
+        }
+        for name, role in cases.items():
+            with self.subTest(name=name):
+                path = Path("/p/proj/s.jsonl")
+                self.assertEqual(token_share.session_role(path, [name]), role)
 
     def test_workflow_agents_count_as_subagents_of_their_session(self) -> None:
         # Workflow runs nest under subagents/workflows/<run id>/.
@@ -74,7 +97,7 @@ class TokenShareTests(unittest.TestCase):
 
     def test_session_prefix_filter(self) -> None:
         data = report("--session", "aaaa1111")
-        self.assertEqual(sorted(data["by_role"]), ["orchestrator", "subagent"])
+        self.assertEqual(sorted(data["by_role"]), ["executive", "subagent"])
 
     def test_content_never_printed(self) -> None:
         for flag in ("--json", "--days"):
@@ -86,7 +109,7 @@ class TokenShareTests(unittest.TestCase):
     def test_table_has_percent_of_output(self) -> None:
         proc = run()
         self.assertEqual(proc.returncode, 0)
-        self.assertIn("orchestrator", proc.stdout)
+        self.assertIn("executive", proc.stdout)
         self.assertIn("%", proc.stdout)
 
     def test_malformed_line_warns_and_continues(self) -> None:

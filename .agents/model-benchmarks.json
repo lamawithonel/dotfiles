@@ -84,7 +84,7 @@
         "checked_at": "2026-11-14T16:50:54Z",
         "count": 128
       },
-      "probed_at": "2026-11-15T05:00:06Z",
+      "probed_at": "2026-11-15T17:00:06Z",
       "probed_with": {
         "claude": "2.1.323 (Claude Code)",
         "pi": "1.5.2"
@@ -5412,7 +5412,7 @@
     }
   },
   "notes": [
-    "Unified model-router registry.  Written by skills/model-router/scripts/refresh-benchmarks.py; edit only the overrides block by hand.  Schema: skills/model-router/schema/model-benchmarks.schema.json.",
+    "Unified model-selection registry.  Written by skills/model-selection/scripts/refresh-benchmarks.py; edit only the overrides block by hand.  Schema: skills/model-selection/schema/model-benchmarks.schema.json.",
     "2026-09-06: schema v3 replaces ~/.agents/models.json + benchmarks.json.  Rosters per host under hosts.<hostname>; benchmarks global; overrides hand-owned.",
     "2026-11-09: schema v4 migrated from v3 by tools/migrate.py.  Variants are (model, effort) pairs banded on AAI v5; policy and overrides are hand-owned.  gpt-6-astra-pro has no AA row yet."
   ],
@@ -5667,12 +5667,7 @@
         "effort": "high",
         "rank_on": "long-horizon"
       },
-      "lead": {
-        "band": "opus",
-        "effort": "high",
-        "rank_on": "long-horizon"
-      },
-      "orchestrator": {
+      "executive": {
         "band": "opus",
         "effort": "xhigh",
         "rank_on": "long-horizon"
@@ -6037,7 +6032,7 @@
       "matched": 29,
       "name": "openrouter",
       "row_minimum": 275,
-      "rows": 462,
+      "rows": 459,
       "status": "ok",
       "url": "https://openrouter.ai/api/v1/models"
     },
@@ -6065,5 +6060,5 @@
       "url": "file://~/.pi/agent/{settings,models-store}.json"
     }
   },
-  "updated_at": "2026-11-15T05:00:06Z"
+  "updated_at": "2026-11-15T17:00:06Z"
 }

@@ -59,13 +59,13 @@ class NoLogTests(MixCase):
         res = self.call("--mix", env={"XDG_STATE_HOME": state})
         self.assertEqual(res.code, 3)
         self.assertIn(
-            os.path.join(state, "agents", "model-router", "dispatches.jsonl"),
+            os.path.join(state, "agents", "model-selection", "dispatches.jsonl"),
             res.err,
         )
 
     def test_log_path_env_override(self) -> None:
         self.write_log(_rec("sonnet", "medium"))
-        res = self.call("--mix", env={"MODEL_ROUTER_DISPATCH_LOG": self.log})
+        res = self.call("--mix", env={"MODEL_SELECTION_DISPATCH_LOG": self.log})
         self.assertEqual(res.code, 0)
         self.assertEqual(res.data["dispatches"], 1)
 

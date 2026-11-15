@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://lamanet.yamanishi.us/schemas/model-router/model-benchmarks.schema.json",
-  "title": "model-router registry v4",
+  "$id": "https://lamanet.yamanishi.us/schemas/model-selection/model-benchmarks.schema.json",
+  "title": "model-selection registry v4",
   "description": "Variant-based registry.  policy and overrides are hand-owned; models, hosts, and sources are written by refresh-benchmarks.py.  Null means unknown: a value with no source stays null.",
   "type": "object",
   "additionalProperties": false,

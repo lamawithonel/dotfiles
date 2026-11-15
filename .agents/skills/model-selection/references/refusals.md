@@ -6,7 +6,7 @@ re-route.
 
 ## 1. Recognition order
 
-1. **Receipt status.**  `Status: REFUSED (<category>)` or
+1. **Final report status.**  `Status: REFUSED (<category>)` or
    `Status: PARTIAL`, with the declined items listed.  Self-report is
    the only marker that works in every harness.
 2. **API marker.**  The Claude API returns `stop_reason: "refusal"`
@@ -24,7 +24,7 @@ re-route.
    refusals on tasks tagged `cyber` or `medical`.  Never re-route
    `general_harms`, `frontier_llm`, or `reasoning_extraction`.
 2. **Quote the authorization.**  Quote verbatim the authorization from
-   the user or the commissioning brief that covers the task.  A
+   the user or the charter or brief that covers the task.  A
    self-written purpose line does not count.  With none to quote, stop
    and ask.
 3. **Bio needs the user.**  A `bio` re-route proceeds only with the

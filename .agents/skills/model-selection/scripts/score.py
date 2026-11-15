@@ -3,6 +3,7 @@
 
     score.py --pick [--band B | --role R] [--tag T] [--lang L]
              [--profile P] [--effort E] [--host H] [--registry F] [--today D]
+             [--model ID] [--user-named] [--consultant-for BAND:EFFORT]
     score.py --table [--profile P]
 
 `--pick` prints one JSON object.  Exit codes: 0 with a pick or a degrade, 3
@@ -130,6 +131,8 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--log")
     for name in ("band", "role", "tag", "lang", "model"):
         p.add_argument(f"--{name}")
+    p.add_argument("--user-named", action="store_true")
+    p.add_argument("--consultant-for", metavar="BAND:EFFORT")
     p.add_argument("--effort", choices=[e for e in registry.EFFORTS if e != "single"])
     for name in ("profile", "host", "registry", "today"):
         p.add_argument(f"--{name}")
@@ -150,6 +153,10 @@ def parse_args(argv: Sequence[str]) -> argparse.Namespace:
             f"--role {ns.role} is retired; use --role coordinator "
             "(one coordinator class, see ~/.agents/ROLES.md)"
         )
+    if ns.consultant_for:
+        for flag in ("band", "role", "effort", "model"):
+            if getattr(ns, flag):
+                raise UsageError(f"--consultant-for cannot combine with --{flag}")
     if ns.profile in RETIRED_PROFILES:
         raise UsageError(f"--profile {ns.profile} is retired; {NEW_INTERFACE}")
     if ns.days < 1:
@@ -179,10 +186,10 @@ def detect_profile(
     """
     if flag:
         return flag, "--profile"
-    if env.get("MODEL_ROUTER_PROFILE"):
-        return env["MODEL_ROUTER_PROFILE"], "MODEL_ROUTER_PROFILE"
-    if env.get("MODEL_ROUTER_HARNESS") == "pi":
-        return "pi-zdr", "MODEL_ROUTER_HARNESS"
+    if env.get("MODEL_SELECTION_PROFILE"):
+        return env["MODEL_SELECTION_PROFILE"], "MODEL_SELECTION_PROFILE"
+    if env.get("MODEL_SELECTION_HARNESS") == "pi":
+        return "pi-zdr", "MODEL_SELECTION_HARNESS"
     if env.get("PI_CODING_AGENT"):
         return "pi-zdr", "PI_CODING_AGENT"
     if env.get("CLAUDE_CODE_USE_BEDROCK") == "1":
@@ -209,11 +216,23 @@ def _parse_day(text: str | None) -> date | None:
         return None
 
 
+def role_entry(policy: Reg, name: str) -> Reg | None:
+    """The policy.roles entry for a name.
+
+    `executive` and its old name `orchestrator` are aliases: each reads
+    the `executive` entry, else the `orchestrator` entry.
+    """
+    roles = policy.get("roles", {})
+    if name in ("executive", "orchestrator"):
+        return roles.get("executive") or roles.get("orchestrator")
+    return roles.get(name)
+
+
 def relevant_sources(policy: Reg, ns: argparse.Namespace) -> set[str]:
     """Core feeds plus the feeds behind the requested tag, language, or role."""
     tags = [ns.tag, ns.lang]
     if ns.role:
-        tags.append(policy.get("roles", {}).get(ns.role, {}).get("rank_on"))
+        tags.append((role_entry(policy, ns.role) or {}).get("rank_on"))
     out: set[str] = set(CORE_SOURCES)
     for tag in filter(None, tags):
         spec = policy["tags"].get(tag, {})
@@ -288,7 +307,9 @@ def make_ctx(ns: argparse.Namespace, env: Mapping[str, str]) -> Ctx:
         raise UsageError(f"invalid registry {path}: {problems[0]}{extra}")
     today = parse_today(ns.today)
     warnings = source_warnings(reg, today, relevant_sources(reg["policy"], ns))
-    name = ns.host or env.get("MODEL_ROUTER_HOST") or socket.gethostname().split(".")[0]
+    name = (
+        ns.host or env.get("MODEL_SELECTION_HOST") or socket.gethostname().split(".")[0]
+    )
     host = select_host(reg, name, warnings)
     pname, source = detect_profile(ns.profile, env, host)
     profile = reg["policy"]["profiles"].get(pname)
@@ -700,7 +721,7 @@ def dispatch_effort(ctx: Ctx, v: Variant, req: Request) -> str:
         return req.effort
     if v.harness != "claude-code":
         return v.effort
-    role = ctx.policy.get("roles", {}).get(req.role or "worker", {})
+    role = role_entry(ctx.policy, req.role or "worker") or {}
     wanted = role.get("effort", "medium")
     if registry.EFFORTS.index(wanted) <= registry.EFFORTS.index(v.effort):
         return wanted
@@ -852,9 +873,8 @@ def render(ctx: Ctx, req: Request, band: str, sel: Selection) -> dict[str, Any]:
 
 def make_request(ctx: Ctx, ns: argparse.Namespace) -> tuple[Request, str, list[str]]:
     """Validate names; return the request, the band, and the tag chain."""
-    roles = ctx.policy.get("roles", {})
     tags = ctx.policy["tags"]
-    role = roles.get(ns.role) if ns.role else None
+    role = role_entry(ctx.policy, ns.role) if ns.role else None
     if ns.role and role is None:
         raise UsageError(f"unknown role {ns.role!r}")
     checks = (
@@ -872,16 +892,39 @@ def make_request(ctx: Ctx, ns: argparse.Namespace) -> tuple[Request, str, list[s
     return req, band, dedupe(chain)
 
 
+def consultant_target(ctx: Ctx, creator: str) -> tuple[str, str]:
+    """Band and effort one step above the creator's BAND:EFFORT."""
+    band, _, effort = creator.partition(":")
+    order = ctx.policy["bands"]["order"]
+    levels = [e for e in registry.EFFORTS if e != "single"]
+    if band not in order or effort not in levels:
+        raise UsageError(
+            f"--consultant-for needs BAND:EFFORT with a known band and effort, "
+            f"got {creator!r}"
+        )
+    up = _band_order(ctx)
+    new_band = up[min(up.index(band) + 1, len(up) - 1)] if band in up else up[-1]
+    return new_band, levels[min(levels.index(effort) + 1, len(levels) - 1)]
+
+
 def pick_command(ctx: Ctx, ns: argparse.Namespace) -> int:
+    if ns.consultant_for:
+        ns.band, ns.effort = consultant_target(ctx, ns.consultant_for)
     req, band, chain = make_request(ctx, ns)
     cands = build_candidates(ctx, include_mythos=bool(req.model) or band == "mythos")
     if req.model:
         sel = directive(ctx, cands, req.model, band)
+    elif band == "mythos" and ns.user_named:
+        pool = narrow_all(ctx, [v for v in cands if v.band == "mythos"], chain)
+        sel = Selection("mythos", pool[0] if pool else None, None, pool)
     elif band == "mythos":
         return mythos_listing(ctx, req, cands)
     else:
         sel = select(ctx, cands, band, chain)
-    print(json.dumps(render(ctx, req, band, sel), indent=2))
+    out = render(ctx, req, band, sel)
+    if ns.consultant_for:
+        out["consultant_for"] = ns.consultant_for
+    print(json.dumps(out, indent=2))
     return 0 if (sel.pick or sel.degrade) else 3
 
 
@@ -926,10 +969,10 @@ def _row(rank: int, d: Mapping[str, Any]) -> str:
 
 def dispatch_log(env: Mapping[str, str]) -> str:
     """The log the log-dispatch hook writes; keep in step with the hook."""
-    if env.get("MODEL_ROUTER_DISPATCH_LOG"):
-        return env["MODEL_ROUTER_DISPATCH_LOG"]
+    if env.get("MODEL_SELECTION_DISPATCH_LOG"):
+        return env["MODEL_SELECTION_DISPATCH_LOG"]
     state = env.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state")
-    return os.path.join(state, "agents", "model-router", "dispatches.jsonl")
+    return os.path.join(state, "agents", "model-selection", "dispatches.jsonl")
 
 
 def read_dispatches(

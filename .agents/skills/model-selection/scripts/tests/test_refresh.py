@@ -1034,7 +1034,7 @@ class Env(unittest.TestCase):
         os.environ.pop("HF_TOKEN", None)
 
     def cache_file(self, config: str = "text") -> Path:
-        return Path(self.cache) / "agents" / "model-router" / f"arena-{config}.json"
+        return Path(self.cache) / "agents" / "model-selection" / f"arena-{config}.json"
 
 
 class ArenaBase(Env):
@@ -1219,12 +1219,12 @@ class ArenaRevision(ArenaBase):
 
     def test_cache_dir_reads_the_environment_at_call_time(self):
         with mock.patch.dict(os.environ, {"XDG_CACHE_HOME": "/x/y"}):
-            self.assertEqual(refresh.cache_dir(), "/x/y/agents/model-router")
+            self.assertEqual(refresh.cache_dir(), "/x/y/agents/model-selection")
         with mock.patch.dict(os.environ):
             os.environ.pop("XDG_CACHE_HOME")
             self.assertEqual(
                 refresh.cache_dir(),
-                os.path.expanduser("~/.cache/agents/model-router"),
+                os.path.expanduser("~/.cache/agents/model-selection"),
             )
 
     def test_cached_pages_still_make_the_feed_ok(self):

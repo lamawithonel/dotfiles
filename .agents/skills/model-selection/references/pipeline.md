@@ -5,7 +5,7 @@ writer of `~/.agents/model-benchmarks.json`.  It can be executed manually
 or invoked as a scheduled service (such as a 6-hourly pitchfork daemon).
 
 ```sh
-S=~/.agents/skills/model-router/scripts
+S=~/.agents/skills/model-selection/scripts
 # Preview pending changes without modifying the registry
 python3 $S/refresh-benchmarks.py --dry-run
 
@@ -110,7 +110,7 @@ remain visible.
   GET of the Hub dataset API
   (`https://huggingface.co/api/datasets/lmarena-ai/leaderboard-dataset`)
   reads the `sha`.  A config is cached in
-  `${XDG_CACHE_HOME:-~/.cache}/agents/model-router/arena-<config>.json`
+  `${XDG_CACHE_HOME:-~/.cache}/agents/model-selection/arena-<config>.json`
   as `{"sha": ..., "pages": [...]}`, written atomically and only after a
   full paging.  When the Hub `sha` equals the cached one, the cached
   pages are used, nothing is paged, and one log line names the
@@ -144,7 +144,7 @@ and fixed indentation minimize version control diffs.
 
 A host without external network egress refreshes local rosters and CLI
 probes while utilizing synced benchmark indices.  Use the environment
-variable `MODEL_ROUTER_HOST` to override the hostname and
+variable `MODEL_SELECTION_HOST` to override the hostname and
 `MODEL_BENCHMARKS` to override the registry file path.
 
 ---

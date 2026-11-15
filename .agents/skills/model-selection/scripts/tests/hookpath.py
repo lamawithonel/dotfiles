@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
 """Locate an installed hook for the hook tests, in the staging or live layout.
 
-Staging keeps hooks beside the skill (staging/hooks); a live install
-keeps them in ~/.claude/hooks.  MODEL_ROUTER_HOOK_DIR, when set, is the
-only place searched.
+The staging tree mirrors $HOME, so its hooks sit in R/.claude/hooks; a
+live install keeps them in ~/.claude/hooks.  MODEL_SELECTION_HOOK_DIR, when
+set, is the only place searched.
 """
 
 import os
@@ -11,8 +11,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Final
 
-ENV_VAR: Final = "MODEL_ROUTER_HOOK_DIR"
-STAGING_HOOKS: Final = Path(__file__).resolve().parents[4] / "hooks"
+ENV_VAR: Final = "MODEL_SELECTION_HOOK_DIR"
+STAGING_HOOKS: Final = Path(__file__).resolve().parents[5] / ".claude" / "hooks"
 
 
 def find_hook(

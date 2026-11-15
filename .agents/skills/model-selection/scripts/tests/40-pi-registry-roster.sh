@@ -5,14 +5,14 @@
 # in pi's enabledModels?  Registry drift shows up here as a dispatch that
 # fails only for one model, long after the roster changed.
 #
-# Env: MODEL_ROUTER_HOST, MODEL_ROUTER_REGISTRY, MODEL_ROUTER_PI_SETTINGS.
+# Env: MODEL_SELECTION_HOST, MODEL_SELECTION_REGISTRY, MODEL_SELECTION_PI_SETTINGS.
 # Exit: 0 all present, 1 drift, 77 skipped.
 
 set -o nounset
 
-REGISTRY="${MODEL_ROUTER_REGISTRY:-${HOME}/.agents/model-benchmarks.json}"
-HOST="${MODEL_ROUTER_HOST:-$(hostname -s)}"
-PI_SETTINGS="${MODEL_ROUTER_PI_SETTINGS:-${HOME}/.pi/agent/settings.json}"
+REGISTRY="${MODEL_SELECTION_REGISTRY:-${HOME}/.agents/model-benchmarks.json}"
+HOST="${MODEL_SELECTION_HOST:-$(hostname -s)}"
+PI_SETTINGS="${MODEL_SELECTION_PI_SETTINGS:-${HOME}/.pi/agent/settings.json}"
 
 command -v jq > /dev/null 2>&1 || {
 	echo 'jq absent'

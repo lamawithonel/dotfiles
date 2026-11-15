@@ -26,19 +26,19 @@ HOOK = find_hook("require-agent-model.sh")
 def setUpModule() -> None:
     if HOOK is None:
         raise unittest.SkipTest(
-            "require-agent-model.sh not found in staging/hooks or ~/.claude/hooks"
+            "require-agent-model.sh not found in the staged .claude/hooks or ~/.claude/hooks"
         )
 
 
 REASON = (
     "Agent call has no model.  Run "
-    "~/.agents/skills/model-router/scripts/score.py --pick --band <band> "
+    "~/.agents/skills/model-selection/scripts/score.py --pick --band <band> "
     "and pass its model_param as model and its effort as effort."
 )
 EFFORT_REASON = (
-    "Agent call has no effort.  Every dispatch names its model and effort "
-    "(~/.agents/AGENTS.md, Delegation).  Pass the effort that "
-    "~/.agents/skills/model-router/scripts/score.py --pick returned."
+    "Agent call has no effort.  Run "
+    "~/.agents/skills/model-selection/scripts/score.py --pick --band <band> "
+    "and pass its model_param as model and its effort as effort."
 )
 
 

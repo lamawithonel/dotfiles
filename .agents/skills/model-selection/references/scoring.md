@@ -94,7 +94,7 @@ below the request (today in `pi-zdr`: GLM 5.3 at `max`).
 
 Fixed at session start, so a session's profile never changes (strong
 tranquility, in the Bell-LaPadula sense).  First hit wins: `--profile`,
-`MODEL_ROUTER_PROFILE`, `MODEL_ROUTER_HARNESS=pi` or `PI_CODING_AGENT`
+`MODEL_SELECTION_PROFILE`, `MODEL_SELECTION_HARNESS=pi` or `PI_CODING_AGENT`
 (`pi-zdr`), `CLAUDE_CODE_USE_BEDROCK=1`, `CLAUDECODE`, the host's
 default.  The innermost harness wins: Pi under Claude Code inherits
 both markers.  Each profile names its `primary` harness, which decides
@@ -134,8 +134,8 @@ timestamp, token counts, session names), never message content.
     token-share.py [--days N] [--session PREFIX] [--json]
 
 Transcripts under `~/.claude/projects` are grouped by role (from the
-session name: orchestrator, coordinator, pane-worker, else
-independent; plus subagent and scheduled) and by model family.  The
+session name: executive, coordinator, pane-worker, else
+standalone; plus subagent and scheduled) and by model family.  The
 table gives messages, output tokens, input plus cache tokens, and the
 percent of output.
 
@@ -147,7 +147,7 @@ percent of output.
   is documentation.
 
 - Tests: `python3 -m unittest discover -s
-  ~/.agents/skills/model-router/scripts/tests`
+  ~/.agents/skills/model-selection/scripts/tests`
 - A model that fails to link to a feed: add
   `overrides.<id>.match.<feed>`.
 - Layout change: raise `schema_version` in the schema, in

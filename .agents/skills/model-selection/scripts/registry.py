@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Shared helpers for the v4 model-router registry: load, band, and cost.
+"""Shared helpers for the v4 model-selection registry: load, band, and cost.
 
 `score.py`, `refresh-benchmarks.py`, and the migration all import this
 module, so a band or a repriced cost means the same thing everywhere.

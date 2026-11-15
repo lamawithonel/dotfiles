@@ -5,8 +5,8 @@ A dispatch is an `Agent` call that names a model, or a Bash command that
 runs `pi --model M --thinking T` or `claude --model M --effort E`
 anywhere in it, including a Herdr pane command after `--`.  Each one
 becomes a JSON line {ts, session_id, tool, harness, model, effort} in
-$MODEL_ROUTER_DISPATCH_LOG, else
-$XDG_STATE_HOME/agents/model-router/dispatches.jsonl.  `score.py --mix`
+$MODEL_SELECTION_DISPATCH_LOG, else
+$XDG_STATE_HOME/agents/model-selection/dispatches.jsonl.  `score.py --mix`
 reads the log and assigns bands at report time.
 
 The hook never blocks: it prints nothing on stdout and exits 0 always.
@@ -37,10 +37,10 @@ def _warn(text: str) -> None:
 
 
 def log_path(env: Mapping[str, str]) -> str:
-    if env.get("MODEL_ROUTER_DISPATCH_LOG"):
-        return env["MODEL_ROUTER_DISPATCH_LOG"]
+    if env.get("MODEL_SELECTION_DISPATCH_LOG"):
+        return env["MODEL_SELECTION_DISPATCH_LOG"]
     state = env.get("XDG_STATE_HOME") or os.path.expanduser("~/.local/state")
-    return os.path.join(state, "agents", "model-router", "dispatches.jsonl")
+    return os.path.join(state, "agents", "model-selection", "dispatches.jsonl")
 
 
 def shell_dispatches(command: str) -> Iterator[dict[str, Any]]:

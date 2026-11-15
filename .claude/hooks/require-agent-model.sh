@@ -15,14 +15,14 @@
 #
 # JSON parsing uses jq when present, else python3 (stdlib only).  With
 # neither tool, the hook allows the call and warns on stderr: this guard
-# fails open, and the model-router skill text is the primary control.
+# fails open, and the model-selection skill text is the primary control.
 #
 # Exit codes: 0 always.  A deny prints the PreToolUse decision JSON on stdout.
 
 set -o nounset
 
-readonly DENY_REASON='Agent call has no model.  Run ~/.agents/skills/model-router/scripts/score.py --pick --band <band> and pass its model_param as model and its effort as effort.'
-readonly EFFORT_REASON='Agent call has no effort.  Every dispatch names its model and effort (~/.agents/AGENTS.md, Delegation).  Pass the effort that ~/.agents/skills/model-router/scripts/score.py --pick returned.'
+readonly DENY_REASON='Agent call has no model.  Run ~/.agents/skills/model-selection/scripts/score.py --pick --band <band> and pass its model_param as model and its effort as effort.'
+readonly EFFORT_REASON='Agent call has no effort.  Run ~/.agents/skills/model-selection/scripts/score.py --pick --band <band> and pass its model_param as model and its effort as effort.'
 
 _warn() {
 	echo "require-agent-model: warning: $*" >&2

@@ -16,8 +16,9 @@ from typing import Any, Final
 
 DEFAULT_PROJECTS: Final = Path.home() / ".claude" / "projects"
 ROLE_RES: Final = (
-    ("orchestrator", re.compile(r"-orchestrator$")),
+    ("executive", re.compile(r"-(executive|orchestrator)$")),
     ("coordinator", re.compile(r"-(lead|co|coordinator)$")),
+    ("consultant", re.compile(r"-consultant(-\d+)?$")),
     ("pane-worker", re.compile(r"-worker(-\d+)?$")),
 )
 FAMILIES: Final = ("opus", "sonnet", "haiku", "fable")
@@ -36,7 +37,7 @@ def session_role(path: Path, names: Sequence[str]) -> str:
     for role, rx in ROLE_RES:
         if names and rx.search(names[-1]):
             return role
-    return "independent"
+    return "standalone"
 
 
 def session_id(path: Path) -> str:

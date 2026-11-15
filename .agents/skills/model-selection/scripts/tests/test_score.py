@@ -315,7 +315,7 @@ class BandPickTests(ScoreCase):
         self.assertEqual(res.data["pick"]["banded_effort"], "medium")
 
     def test_metered_ranks_by_aai_over_cost(self) -> None:
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         pick = res.data["pick"]
         self.assertEqual(pick["id"], GLM)
         self.assertEqual(pick["banded_effort"], "high")
@@ -327,7 +327,7 @@ class BandPickTests(ScoreCase):
             "input": 1.68,
             "output": 5.28,
         }
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertAlmostEqual(res.data["pick"]["cost_usd"], 3000)
 
     def test_bedrock_is_metered(self) -> None:
@@ -338,38 +338,38 @@ class BandPickTests(ScoreCase):
 
     def test_track_only_never_enters_a_pick(self) -> None:
         self.reg["overrides"][GLM] = {"track_only": True}
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertNotEqual((res.data["pick"] or {}).get("id"), GLM)
         self.assertNotEqual((res.data["degrade"] or {}).get("id"), GLM)
 
     def test_unvalued_variant_ranks_after_valued_with_warning(self) -> None:
         self.reg["models"][GLM]["variants"] = {"off": _variant(30.0, None)}
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertEqual(res.data["pick"]["id"], GLM)
         self.assertTrue(self.warned(res, "no index cost"))
 
     def test_pi_level_not_in_pi_levels_is_skipped_with_warning(self) -> None:
         self.reg["models"][GLM]["variants"]["medium"] = _variant(30.0, 1)
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertNotEqual(res.data["pick"]["banded_effort"], "medium")
         self.assertTrue(self.warned(res, "pi level"))
 
     def test_single_effort_sends_high_when_listed(self) -> None:
         self.reg["models"][GLM]["variants"] = {"single": _variant(30.0, 100)}
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertEqual(res.data["pick"]["banded_effort"], "single")
         self.assertIn("--thinking high", res.data["pick"]["command"])
 
     def test_single_effort_without_high_uses_top_level(self) -> None:
         self.reg["hosts"]["h1"]["roster"][GLM]["pi_levels"] = ["low", "max"]
         self.reg["models"][GLM]["variants"] = {"single": _variant(30.0, 100)}
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertIn("--thinking max", res.data["pick"]["command"])
 
     def test_empty_pi_levels_sends_high_without_warning(self) -> None:
         self.reg["hosts"]["h1"]["roster"][GLM]["pi_levels"] = []
         self.reg["models"][GLM]["variants"] = {"single": _variant(30.0, 100)}
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertIn("--thinking high", res.data["pick"]["command"])
         self.assertFalse(self.warned(res, "pi level"))
 
@@ -380,7 +380,7 @@ class BandPickTests(ScoreCase):
         self.reg["overrides"][QWEN] = {
             "placements": {"high": {"aai": 41.0, "confidence": "low"}}
         }
-        res = self.pick("--band", "sonnet", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "sonnet", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertEqual(res.data["pick"]["id"], QWEN)
         self.assertEqual(res.data["pick"]["confidence"], "low")
         self.assertTrue(self.warned(res, "low confidence"))
@@ -409,7 +409,7 @@ class EmptyBandTests(ScoreCase):
 
     def test_pi_zdr_empty_sonnet_drops_to_best_haiku(self) -> None:
         self.drop_roster(GPTX)
-        res = self.pick("--band", "sonnet", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "sonnet", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertEqual(res.code, 0)
         self.assertIsNone(res.data["pick"])
         self.assertEqual(res.data["degrade"]["id"], GLM)
@@ -500,7 +500,7 @@ class TagTests(ScoreCase):
 class CostCeilingTests(ScoreCase):
     """A tag may not move a pick to a variant over 1.5x the untagged cost."""
 
-    PI: ClassVar[dict[str, str]] = {"MODEL_ROUTER_HARNESS": "pi"}
+    PI: ClassVar[dict[str, str]] = {"MODEL_SELECTION_HARNESS": "pi"}
 
     def claude_only(self) -> None:
         for model_id in (GLM, DSEEK, GPTX, FABLE):
@@ -644,6 +644,92 @@ class MythosTests(ScoreCase):
         self.assertEqual(res.code, 0)
         self.assertEqual(res.data["pick"]["id"], FABLE)
 
+    def test_user_named_picks_best_mythos_and_exits_0(self) -> None:
+        res = self.pick("--band", "mythos", "--user-named")
+        self.assertEqual(res.code, 0, res.err)
+        self.assertEqual(res.data["band"], "mythos")
+        self.assertEqual(res.data["pick"]["id"], FABLE)
+        self.assertFalse(self.warned(res, "directive-only"))
+
+    def test_user_named_respects_effort(self) -> None:
+        res = self.pick("--band", "mythos", "--user-named", "--effort", "xhigh")
+        self.assertEqual(res.code, 0, res.err)
+        self.assertEqual(res.data["pick"]["effort"], "xhigh")
+
+    def test_user_named_leaves_other_bands_unchanged(self) -> None:
+        plain = self.pick("--band", "sonnet")
+        named = self.pick("--band", "sonnet", "--user-named")
+        self.assertEqual(named.code, 0)
+        self.assertEqual(named.data, plain.data)
+
+
+class ConsultantTests(ScoreCase):
+    def test_steps_band_and_effort_up(self) -> None:
+        res = self.pick("--consultant-for", "sonnet:high")
+        self.assertEqual(res.code, 0, res.err)
+        self.assertEqual(res.data["band"], "opus")
+        self.assertEqual(res.data["pick"]["id"], OPUS)
+        self.assertEqual(res.data["pick"]["effort"], "xhigh")
+        self.assertEqual(res.data["consultant_for"], "sonnet:high")
+
+    def test_band_caps_at_opus_and_effort_at_max(self) -> None:
+        for creator in ("opus:max", "mythos:max"):
+            res = self.pick("--consultant-for", creator)
+            self.assertEqual(res.code, 0, res.err)
+            self.assertEqual(res.data["band"], "opus", creator)
+            self.assertEqual(res.data["pick"]["effort"], "max", creator)
+
+    def test_lowest_levels_step_up_one(self) -> None:
+        res = self.pick("--consultant-for", "bulk:off")
+        self.assertEqual(res.data["band"], "haiku")
+        self.assertEqual(res.data["pick"]["effort"], "minimal")
+
+    def test_conflicting_flags_exit_2(self) -> None:
+        for extra in (
+            ("--band", "opus"),
+            ("--role", "coordinator"),
+            ("--effort", "high"),
+            ("--model", OPUS),
+        ):
+            res = self.pick("--consultant-for", "sonnet:high", *extra)
+            self.assertEqual(res.code, 2, extra)
+            self.assertIn("--consultant-for", res.err, extra)
+
+    def test_unknown_band_or_effort_exits_2(self) -> None:
+        for bad in ("nope:high", "sonnet:nope", "sonnet", "single:high"):
+            self.assertEqual(self.pick("--consultant-for", bad).code, 2, bad)
+
+
+class ExecutiveRoleTests(ScoreCase):
+    def test_executive_falls_back_to_orchestrator_entry(self) -> None:
+        res = self.pick("--role", "executive")
+        self.assertEqual(res.code, 0, res.err)
+        self.assertEqual(res.data["role"], "executive")
+        self.assertEqual(res.data["band"], "opus")
+        self.assertEqual(res.data["pick"]["effort"], "xhigh")
+
+    def test_executive_entry_wins_when_present(self) -> None:
+        roles = self.reg["policy"]["roles"]
+        roles["executive"] = {"band": "sonnet", "effort": "high"}
+        res = self.pick("--role", "executive")
+        self.assertEqual(res.data["band"], "sonnet")
+        self.assertEqual(res.data["pick"]["effort"], "high")
+
+    def test_orchestrator_is_an_alias_for_the_executive_entry(self) -> None:
+        roles = self.reg["policy"]["roles"]
+        roles["executive"] = {"band": "sonnet", "effort": "high"}
+        del roles["orchestrator"]
+        res = self.pick("--role", "orchestrator")
+        self.assertEqual(res.code, 0, res.err)
+        self.assertEqual(res.data["role"], "orchestrator")
+        self.assertEqual(res.data["band"], "sonnet")
+        self.assertEqual(res.data["pick"]["effort"], "high")
+
+    def test_orchestrator_still_works(self) -> None:
+        res = self.pick("--role", "orchestrator")
+        self.assertEqual(res.code, 0, res.err)
+        self.assertEqual(res.data["role"], "orchestrator")
+
 
 class EffortTests(ScoreCase):
     def test_claude_pick_defaults_to_medium(self) -> None:
@@ -694,7 +780,7 @@ class EffortTests(ScoreCase):
         self.assertEqual(res.data["pick"]["effort"], "medium")
 
     def test_pi_pick_uses_banded_effort(self) -> None:
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertEqual(res.data["pick"]["effort"], "high")
         self.assertIn("--thinking high", res.data["pick"]["command"])
 
@@ -705,7 +791,7 @@ class EffortTests(ScoreCase):
 
     def test_pi_thinking_override_changes_thinking_flag(self) -> None:
         res = self.pick(
-            "--band", "haiku", env={"MODEL_ROUTER_PROFILE": "pi-permissive"}
+            "--band", "haiku", env={"MODEL_SELECTION_PROFILE": "pi-permissive"}
         )
         pick = res.data["pick"]
         self.assertEqual(pick["id"], DSEEK)
@@ -720,7 +806,7 @@ class ChannelTests(ScoreCase):
         self.allow_reroute()
 
     def test_every_pi_command_ends_in_dev_null(self) -> None:
-        for env in ({"MODEL_ROUTER_HARNESS": "pi"}, {"HERDR_ENV": "1"}, {}):
+        for env in ({"MODEL_SELECTION_HARNESS": "pi"}, {"HERDR_ENV": "1"}, {}):
             res = self.pick("--band", "haiku", "--tag", "design", env=env)
             self.assertTrue(res.data["pick"]["command"].endswith("< /dev/null"))
 
@@ -734,7 +820,7 @@ class ChannelTests(ScoreCase):
         self.assertEqual(res.data["pick"]["channel"], "shell")
 
     def test_pi_pick_in_pi_profile_is_in_process(self) -> None:
-        res = self.pick("--band", "haiku", env={"MODEL_ROUTER_HARNESS": "pi"})
+        res = self.pick("--band", "haiku", env={"MODEL_SELECTION_HARNESS": "pi"})
         self.assertEqual(res.data["pick"]["channel"], "pi")
 
     def test_fallback_is_primary_harness_variant_in_band(self) -> None:
@@ -758,15 +844,15 @@ class ProfileTests(ScoreCase):
         return res.data["profile"], res.data["profile_source"]
 
     def test_flag_wins(self) -> None:
-        env = {"MODEL_ROUTER_PROFILE": "pi-zdr", "CLAUDECODE": "1"}
+        env = {"MODEL_SELECTION_PROFILE": "pi-zdr", "CLAUDECODE": "1"}
         self.assertEqual(
             self.source(env, "--profile", "claude-code"),
             ("claude-code", "--profile"),
         )
 
     def test_env_profile_second(self) -> None:
-        env = {"MODEL_ROUTER_PROFILE": "pi-zdr", "CLAUDE_CODE_USE_BEDROCK": "1"}
-        self.assertEqual(self.source(env), ("pi-zdr", "MODEL_ROUTER_PROFILE"))
+        env = {"MODEL_SELECTION_PROFILE": "pi-zdr", "CLAUDE_CODE_USE_BEDROCK": "1"}
+        self.assertEqual(self.source(env), ("pi-zdr", "MODEL_SELECTION_PROFILE"))
 
     def test_bedrock_after_pi(self) -> None:
         env = {"CLAUDE_CODE_USE_BEDROCK": "1", "CLAUDECODE": "1"}
@@ -781,7 +867,7 @@ class ProfileTests(ScoreCase):
 
     def test_pi_under_claude_code_is_pi(self) -> None:
         for env in (
-            {"CLAUDECODE": "1", "MODEL_ROUTER_HARNESS": "pi"},
+            {"CLAUDECODE": "1", "MODEL_SELECTION_HARNESS": "pi"},
             {"CLAUDECODE": "1", "PI_CODING_AGENT": "true"},
             {"CLAUDECODE": "1", "CLAUDE_CODE_USE_BEDROCK": "1", "PI_CODING_AGENT": "1"},
         ):
@@ -789,8 +875,8 @@ class ProfileTests(ScoreCase):
 
     def test_pi_harness_markers(self) -> None:
         self.assertEqual(
-            self.source({"MODEL_ROUTER_HARNESS": "pi"}),
-            ("pi-zdr", "MODEL_ROUTER_HARNESS"),
+            self.source({"MODEL_SELECTION_HARNESS": "pi"}),
+            ("pi-zdr", "MODEL_SELECTION_HARNESS"),
         )
         self.assertEqual(
             self.source({"PI_CODING_AGENT": "1"}), ("pi-zdr", "PI_CODING_AGENT")
@@ -901,7 +987,7 @@ class UsageTests(ScoreCase):
 
 
 class RepairTests(ScoreCase):
-    PI: ClassVar[dict[str, str]] = {"MODEL_ROUTER_HARNESS": "pi"}
+    PI: ClassVar[dict[str, str]] = {"MODEL_SELECTION_HARNESS": "pi"}
 
     def add_qwen(self, aai: float, cost: float, boards: Reg | None = None) -> None:
         self.reg["models"][QWEN] = _model(
@@ -920,7 +1006,7 @@ class RepairTests(ScoreCase):
 
     def test_m2_override_remap_shows_in_effort(self) -> None:
         res = self.pick(
-            "--band", "haiku", env={"MODEL_ROUTER_PROFILE": "pi-permissive"}
+            "--band", "haiku", env={"MODEL_SELECTION_PROFILE": "pi-permissive"}
         )
         self.assertEqual(res.data["pick"]["effort"], "high")
         self.assertEqual(res.data["pick"]["banded_effort"], "max")

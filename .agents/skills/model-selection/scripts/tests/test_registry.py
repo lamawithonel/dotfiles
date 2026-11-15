@@ -3,13 +3,17 @@
 
 import copy
 import importlib.util
+import os
 import unittest
 from pathlib import Path
 from typing import Any
 
 SCRIPTS = Path(__file__).resolve().parent.parent
-STAGING = SCRIPTS.parent.parent.parent
-REGISTRY_FILE = STAGING / "registry" / "model-benchmarks.json"
+# Read-only: the live registry is the file the staged code reads.
+REGISTRY_FILE = Path(
+    os.environ.get("MODEL_SELECTION_REGISTRY")
+    or Path.home() / ".agents" / "model-benchmarks.json"
+)
 
 spec = importlib.util.spec_from_file_location("registry", SCRIPTS / "registry.py")
 assert spec is not None and spec.loader is not None
@@ -82,7 +86,7 @@ CONTRACT_POLICY: dict[str, Any] = {
         "japanese": {"kind": "language", "board": "arena_japanese", "margin": "ci"},
     },
     "roles": {
-        "orchestrator": {"band": "opus", "effort": "xhigh", "rank_on": "long-horizon"},
+        "executive": {"band": "opus", "effort": "xhigh", "rank_on": "long-horizon"},
         "coordinator": {"band": "sonnet", "effort": "high", "rank_on": "long-horizon"},
         "worker": {"band": None, "effort": "medium"},
     },
@@ -309,7 +313,7 @@ class Validate(unittest.TestCase):
         self.assertTrue(any("x" in e for e in registry.validate(reg)))
 
 
-@unittest.skipUnless(REGISTRY_FILE.exists(), "staged registry not built")
+@unittest.skipUnless(REGISTRY_FILE.exists(), "registry not found")
 class StagedRegistry(unittest.TestCase):
     reg: dict[str, Any]
 
