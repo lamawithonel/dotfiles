@@ -26,8 +26,9 @@ the skeleton.
    unknown is itself an interview or assumption slot).  Genre sets which
    techniques are eligible; complexity sets how much scaffold to deploy;
    family filters both.  Also set two flags: **agent-directed** (the
-   target assigns work to an agent: a commission, a worker brief, a prompt
-   for a new session, or a prompt that will delegate) and
+   target assigns work to an agent: a charter, a worker brief, a
+   consultation, a prompt for a new session, or a prompt that will
+   delegate) and
    **repo-touching** (the work reads or changes a repository).  Neither
    flag set: skip S5 entirely.
 3. **Diagnose** -- score against the 10-dim rubric (S1).  Name concrete
@@ -130,7 +131,9 @@ speaks (cognitive framing, voice); a *role* states the functional
 assignment and its scope of responsibility.  Most prompts need only
 one; when the prompt assigns work, give both, as separate elements.
 When a genre does warrant a persona, build it with the four-quadrant
-recipe in `references/genre-recipes.md`.
+recipe in `references/genre-recipes.md`.  PACT requires a persona in a
+worker brief, a charter, a consultation, and a `prompt`: write it for
+those, as behavioral framing only.
 
 **Target model family filters every genre choice**:
 
@@ -226,17 +229,17 @@ and fires only when no interactive tool exists.
 
 Detail, probe commands, fallback text, and the tag mapping live in
 `references/delegation-and-vcs.md`; the rules themselves live in
-`~/.agents/AGENTS.md`, `~/.agents/ROLES.md`, and the `model-router` and
-`vcs-workflow` skills.  Point to them; never restate them in the rewrite.
+`~/.agents/AGENTS.md` and the `roles`, `delegation-mechanics`,
+`model-selection`, and `vcs-workflow` skills.  Point to them; never restate them in the rewrite.
 
-- **Agent-directed** -- fill: position (class plus domain, or "works for
-  the user directly"), supervisor, milestones and receipt, who the agent
-  may message, and model and effort.  Take model and effort from
-  `score.py`, and derive the target model family from the pick instead of
-  asking.  When the target will delegate, the prompt tells it to load
-  `model-router`, split the work into a work breakdown structure under
-  the 100% rule, name model and effort on every dispatch, and put the
-  worker guards in every worker brief.
+- **Agent-directed** -- fill: position (class plus domain, or "standalone
+  session"), supervisor, milestones and final report, who the agent may
+  message, and model and effort.  Take model and effort from `score.py`,
+  and derive the target model family from the pick instead of asking.
+  When the target will delegate, the prompt tells it to read
+  `delegation-mechanics` and `model-selection`, split the work into a
+  work breakdown structure under the 100% rule, and name model and
+  effort on every dispatch.
 - **Repo-touching** -- fill four slots: isolation (jj workspace at
   levels standard and full, never a git worktree), commit policy (atomic
   commits through `git-commit` after verification gates pass, or leave
@@ -252,11 +255,13 @@ Detail, probe commands, fallback text, and the tag mapping live in
 
 ## Output contract
 
-**Agent-directed targets** -- the improved prompt is a brief in the
-`brief.md` XML contract (persona, role, context, goal, task_list,
-constraints, return), with the `<subagent_task>` envelope when the target
-runs through a CLI shell-out.  PICCO still drives the diagnosis;
-`references/delegation-and-vcs.md` maps its slots to the tags.
+**Agent-directed targets** -- the improved prompt is a PACT document
+(a `.pact` file): a worker brief, a charter, a consultation, or a
+`prompt` for a standalone session.  Write it in the PACT elements,
+lint it with `~/.agents/schemas/pact-lint.sh`, and fix it until the
+lint exits 0.  PICCO still drives the diagnosis;
+`references/delegation-and-vcs.md` maps its slots to the PACT elements
+and holds the examples.
 
 **Default (inference path)** -- return, in order:
 
@@ -294,7 +299,7 @@ a reasonable-sounding merge can score worse than either parent.
   `references/domains/README.md` is maintainer documentation for adding one,
   not loaded during a run.
 - Agent-directed or repo-touching flag set -> `references/delegation-and-vcs.md`
-  (slot definitions, probes, instruct fallback, PICCO-to-brief mapping,
-  source documents).
+  (slot definitions, probes, instruct fallback, PICCO-to-PACT mapping,
+  PACT examples, source documents).
 - Target is itself a skill or agent prompt -> `references/skill-authoring.md`
   (frontmatter contract, DoD gate).

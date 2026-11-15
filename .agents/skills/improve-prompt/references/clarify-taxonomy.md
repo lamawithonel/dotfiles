@@ -161,9 +161,9 @@ stakes-override slots (ASK, or flag the assumption conspicuously).
 
 | Slot | Type | Question template | Options (default first) |
 | --- | --- | --- | --- |
-| Position | REFERENCE | "Is {agent} a worker dispatched for {package}, a coordinator your orchestrator commissions, or an independent session you start?" | worker (Recommended) / coordinator / independent session |
-| Supervisor | REFERENCE | "Who does {position} report to: {requester} or a named orchestrator?" | requester (Recommended) / named orchestrator |
-| Milestones | CRITERION | "Should {agent} report at checkpoints (for example {milestone}), or only at its receipt?" | receipt only (Recommended) / named milestones |
+| Position | REFERENCE | "Is {agent} a worker dispatched for {package}, a coordinator your executive charters, a consultant that only answers questions, or a standalone session you start?" | worker (Recommended) / coordinator / consultant / standalone session |
+| Supervisor | REFERENCE | "Who does {position} report to: {requester} or a named executive?" | requester (Recommended) / named executive |
+| Milestones | CRITERION | "Should {agent} report at checkpoints (for example {milestone}), or only at its final report?" | final report only (Recommended) / named milestones |
 | Model and effort | CONSTRAINT | "`score.py` picks {model} at {effort} for {band}; use it?" | probed pick (Recommended) / one band up / name a model |
 | Isolation | CONSTRAINT | "Work in a jj workspace, or in place in {repo}?" | per level: workspace at standard or full, else in place (Recommended) / in place |
 | Commit policy | CONSTRAINT | "Should {agent} commit {change} (atomic commits via `git-commit` after the gates pass), or leave it uncommitted for you?" | leave uncommitted (Recommended) / atomic commits |

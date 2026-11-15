@@ -9,18 +9,20 @@ never restates the rules, because they change often.
 
 | Slot family | Source |
 | --- | --- |
-| Position, supervisor, who may message whom | `~/.agents/AGENTS.md` ("Role Classes") and `~/.agents/ROLES.md` |
-| Commissioning, depth limit, escalation, lateral messages, holds, gates, audit, lifecycle | `~/.agents/ROLES.md` |
-| Model, effort, work breakdown structure, worker guards | `~/.agents/skills/model-router/SKILL.md` and its `references/effort.md` |
-| Brief tags and envelopes | `~/.agents/skills/model-router/references/brief.md` |
+| Position, supervisor, who may message whom | `~/.agents/AGENTS.md` ("Role Classes") and the `roles` skill |
+| Chartering, depth limit, escalation, lateral messages, freezes, gates, audit, lifecycle | the `roles` skill and its class files in `references/` |
+| Model, effort, bands, `score.py` | the `model-selection` skill |
+| Channels, `agent-launch`, PACT document types, final and milestone reports | the `delegation-mechanics` skill (`references/pact-use.md`, `references/channels.md`) |
+| PACT schemas, lint script, examples | `~/.agents/schemas/` |
 | Shape, level, onboarding, isolation | `~/.agents/skills/vcs-workflow/SKILL.md` |
 | Commit craft | the `git-commit` skill |
 | PR and issue approval, public-repo quiet hours | `~/.agents/AGENTS.local.md` ("GitHub Usage Restrictions") |
 
-Vocabulary stays fixed: position, incumbent, supervisor, reports to,
-commission (orchestrators and coordinators), dispatch (workers),
-dispatcher, work package, 100% rule, escalation, independent session,
-Deputy, milestones, receipt, band, specialty tag, language group.
+Vocabulary stays fixed: executive (always in full), coordinator,
+consultant, worker, position, incumbent, supervisor, reports to, charter
+(the document and the verb), dispatch, dispatcher, work package, 100%
+rule, escalation, standalone session, Deputy, milestone, final report,
+freeze, band, specialty tag, language group.
 
 ## Agent slots
 
@@ -28,41 +30,43 @@ Fill all five when the prompt assigns work to an agent.
 
 | Slot | Fill with | Default when unstated |
 | --- | --- | --- |
-| Position | class plus domain (such as "coordinator, billing-tools"), or "independent session" for a session the user starts | worker for a dispatch; independent for a new session; ask for a commission |
+| Position | class plus domain (such as "coordinator, ingest-tools"), or "standalone session" for a session the user starts | worker for a dispatch; standalone session for a new session; ask for a charter |
 | Supervisor | the one position it reports to; workers report to their dispatcher | the requester |
-| Milestones and receipt | the checkpoints it reports at, and the receipt format it returns | `brief.md` receipt; no milestones for a worker |
+| Milestones and final report | the checkpoints it reports at; the final report fields are in `pact-use.md` | final report only; no milestones for a worker |
 | May message | read from the class row in `AGENTS.md`; name only the exceptions | the class row |
-| Model and effort | the `score.py` pick (see Probes) | band `sonnet`, effort per `model-router`, for a worker |
+| Model and effort | the `score.py` pick (see Probes) | band `sonnet`, effort per `model-selection`, for a worker |
 
-Two placement rules:
+Pick the PACT document type from the target:
 
-- A **worker brief** never carries model or effort inside the brief.
-  `model-router` names them at dispatch, so the rewrite adds a one-line
-  dispatch note after the brief: `Dispatch: model=<model_param>,
-  effort=<effort>`.
-- A **commission** (orchestrator or coordinator, a new session) names
-  the model and effort inside `<role>`, because the commission is what
-  launches the session.
+| Target | PACT type | Model and effort |
+| --- | --- | --- |
+| Worker for one work package | `worker-brief` | named at dispatch, never in the brief |
+| Coordinator, chartered by an executive | `charter` with `class="coordinator"` | `<org:model>` in the charter |
+| Executive (proposal: only when the user asks for the text) | `charter` with `class="executive"` | `<org:model>` in the charter |
+| Consultant | `consultation` | `<org:model>`: one band and one effort level above its creator (`agent-launch.md`) |
+| Standalone session, or any other new session | `prompt` (core) | the user chooses at start |
 
-When the target will delegate (any commission, or a worker brief for
-work that fans out), add one task that tells it to load `model-router`,
-split the work into a work breakdown structure under the 100% rule, name
-model and effort on every dispatch, and put the worker guards in every
-worker brief.  Workers dispatch no one, so a worker brief never carries
-this task.  Point to `ROLES.md` for the depth limit.  Coordinators
-prefer `Workflow` for short-lived Claude workers and `Agent` for
-long-lived ones.
+Rules for the slots:
 
-Only an orchestrator commissions a coordinator.  A coordinator
-commission also states: its orchestrator as supervisor, its own Herdr
-tab in the orchestrator's workspace, that it asks the orchestrator for
-any new peer coordinator instead of creating one, escalation of
-out-of-domain requests to the orchestrator, brokered introduction for
-first contact with any other orchestrator, an onboarding digest in
-place of files to read in full, and any milestone where it must wait
-instead of going on (`ROLES.md`, "Commissioning").  A prompt for a
-session the user will start describes an independent session, never a
-coordinator; only the user declares an orchestrator.
+- Add a one-line dispatch note after a worker brief: `Dispatch:
+  model=<model_param>, effort=<effort>`.  Reason: the brief alone sets
+  neither.
+- Send a charter as the first prompt of `agent-launch`.  Only an
+  executive charters a coordinator.  Put these in the charter: the
+  executive as `<org:supervisor>`, the `<org:milestones>`, the
+  `<org:onboarding>` digest in place of files to read in full, and any
+  milestone where it must wait.
+- Leave class rules out of a charter.  The coordinator's system prompt
+  already holds its class file.
+- When the target will delegate (a charter, or a worker brief for work
+  that fans out), add one task that tells it to read
+  `delegation-mechanics` and `model-selection`, split the work into a
+  work breakdown structure under the 100% rule, name model and effort on
+  every dispatch, and send each worker a PACT worker brief.  Workers
+  dispatch no one, so a worker brief never carries this task.  The
+  depth limit is in `roles`.
+- A prompt for a session the user will start describes a standalone
+  session, never a coordinator.  Only the user declares an executive.
 
 ## Repository slots
 
@@ -91,8 +95,8 @@ interview default and mark it "(probed)".
 
 ```sh
 # Model, effort, and family: one call per target.
-python3 ~/.agents/skills/model-router/scripts/score.py --pick --band <bulk|haiku|sonnet|opus> [--tag T] [--lang L]
-python3 ~/.agents/skills/model-router/scripts/score.py --pick --role <orchestrator|coordinator>
+python3 ~/.agents/skills/model-selection/scripts/score.py --pick --band <bulk|haiku|sonnet|opus> [--tag T] [--lang L]
+python3 ~/.agents/skills/model-selection/scripts/score.py --pick --role <executive|coordinator>
 
 # VCS shape and level: both read the working directory, so use env -C.
 env -C <repo> ~/.agents/skills/vcs-workflow/scripts/detect_shape.sh
@@ -104,9 +108,9 @@ env -C <repo> ~/.agents/skills/vcs-workflow/scripts/onboard.sh status
   the target model family from `pick.id` instead of asking.  A null
   `pick` with a `degrade` means state the shortfall.  A `mythos` model
   runs only when the user names it; the pick never selects one.
-- The `score.py` band comes from `model-router`'s caller rubric.  Choose
-  the lowest band that gets it right the first time; a band is not a
-  probe.  Pick the band, then probe.
+- The `score.py` band comes from the band table in `model-selection`.
+  Choose the lowest band that gets it right the first time; a band is
+  not a probe.  Pick the band, then probe.
 - `detect_shape.sh` prints one shape (exit 0, 2, or 3).
   `onboard.sh status` prints `ONBOARD-STATUS shape=... onboarding=...
   level=...`.  They are the entry gate that `vcs-workflow` runs before
@@ -119,16 +123,18 @@ env -C <repo> ~/.agents/skills/vcs-workflow/scripts/onboard.sh status
 
 ## Instruct the target (no probe possible)
 
-Paste the matching block as the first task of the brief, adjusting the
-wording to the target.
+Paste the matching block as the first task of the PACT document: in the
+`<details>` of the first `<task>`, or in `<instructions>` for a charter or
+a `prompt`.  Adjust the wording to the target.
 
 Model and effort (target will delegate):
 
 ```text
-Before you dispatch anyone, load the model-router skill.  Split the work
-into a work breakdown structure under the 100% rule.  For every dispatch,
-run score.py --pick for the band or role, then name the model and the
-effort.  Put the worker guards in every worker brief.
+Before you dispatch anyone, read the delegation-mechanics and
+model-selection skills.  Split the work into a work breakdown structure
+under the 100% rule.  For every dispatch, run score.py --pick for the
+band or role, then name the model and the effort.  Send each worker a
+PACT worker brief.
 ```
 
 VCS shape and level (repo path known to the target):
@@ -142,20 +148,109 @@ plain git.  Isolate in a jj workspace only at level standard or full,
 never a git worktree.
 ```
 
-## PICCO to brief tags
+
+## PICCO to PACT elements
 
 PICCO still drives the diagnosis.  Only the emitted form changes.
 
-| PICCO slot | Brief tag |
+| PICCO slot | PACT element |
 | --- | --- |
-| Persona | `<persona>` (four quadrants; `brief.md` defines them) |
-| Role (not a PICCO slot; the position and its scope) | `<role>`: position, supervisor, who it may message, milestones |
-| Instructions | `<goal>` (one sentence) and `<task_list>` (the work packages) |
-| Context | `<context>`: absolute paths, revisions, shape and level, source-document pointers |
-| Constraints | `<constraints priority="MUST">`: worker guards (workers only), scope fence, isolation, commit policy, push and PR ceiling |
-| Output | `<return>`: receipt format plus one runnable verification command (rubric dimensions 2 and 9) |
+| Persona | `<persona name>` with `<perception>`, `<demeanor>`, `<ethos>`, and `<structure>` (the four quadrants in `genre-recipes.md`); behavioral framing only |
+| Role (not a PICCO slot; the position and its scope) | `<role>` in a worker brief or `prompt`; `<org:position>` and `<org:supervisor>` in a charter |
+| Instructions | `<objective>` (one sentence), then `<tasks>` in a worker brief or `<instructions>` in a charter or `prompt` |
+| Context | `<context>`: absolute paths, revisions, shape and level, source-document pointers; `<org:onboarding digest>` in a charter |
+| Constraints | `<constraints>`: scope fence, isolation, commit policy, push and PR ceiling; `priority="critical"` with `required="true"` for a rule that must hold |
+| Output | `<org:verification>`: one runnable command (rubric dimensions 2 and 9).  The final report is plain text with fixed fields (`pact-use.md`); the brief does not restate them |
 
-Use the `<subagent_task>` envelope when the target runs through a CLI
-shell-out (`brief.md`, "External CLI Envelope").  Keep a brief under
-2,000 tokens; pass paths, not file dumps.  A commission is longer by
-nature, but it points to `ROLES.md` instead of copying it.
+Document rules:
+
+- Write the persona first.  The worker brief, charter, consultation, and
+  `prompt` types require it.
+- Write the worker's rules as `<constraints>`.  A worker brief carries
+  no guard text: no stall watchdog, no scope-limit rule, no final report
+  contract.  Reason: `pact-lint.sh` rejects guard text.
+- Write STE: short imperative sentences, and a `<glossary>` for each
+  technical name or verb the reader may not know.
+- Pass paths, not file dumps.  Keep a brief under 2,000 tokens.  A
+  charter is longer by nature, but it points to an onboarding digest.
+- Save the document as `<name>.pact` in the session temp directory.
+  Lint it: `bash ~/.agents/schemas/pact-lint.sh <file>`.  Exit 0 and no
+  output mean valid.  Fix each reported line, then lint again.  When the
+  script is absent, say "not linted" in the Assumptions block.
+  Reason: the writer owns validity.
+- Copy the example of the type from `~/.agents/schemas/examples/`
+  (`worker-brief.pact`, `charter.pact`, `consultation.pact`,
+  `prompt.pact`), then fill it.  The examples are the authority on
+  element names.
+- A question, freeze, ruling, or escalation is a message, not a prompt to
+  improve.  `pact-use.md` covers those types.
+- For a shell-out, write the document to a file and pass its absolute
+  path as `--payload` (`channels.md`, "Shell-out hygiene").
+
+### Worker brief example (repo-touching, one work package)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<org:worker-brief xmlns="urn:pact:taxonomy:1.0" xmlns:org="urn:pact:org:1.0"
+                  version="1.0">
+  <persona name="Parser Fixer">
+    <perception>You think in failing cases.  You find the narrowest layer that causes a fault.</perception>
+    <demeanor>You write the failing test first.  Then you make the smallest change that turns it green.</demeanor>
+    <ethos>You report what you verified.  You flag each assumption.</ethos>
+    <structure>You work in the jj workspace named in the context.  You use the project task runner.</structure>
+  </persona>
+  <role name="parser-worker">You are a worker.  Your work package is the date-parser fix.</role>
+  <objective>Make parse_date accept a two-digit year and keep every existing test green.</objective>
+  <context>Repository: /home/lucas/src/ingest-tools (shape: colocated, level: standard).  Workspace: ~/.local/share/agents/jj-workspaces/ingest-tools/parser-fix.  Source: src/dates.py.  Failing case: parse_date("12/03/99").</context>
+  <org:dispatcher>ingest-tools-co</org:dispatcher>
+  <tasks>
+    <task name="red">
+      <summary>Write a failing test for the two-digit year.</summary>
+      <acceptance_criteria>
+        <criterion>The new test fails for the stated reason.</criterion>
+      </acceptance_criteria>
+    </task>
+    <task name="green">
+      <summary>Change parse_date until the new test passes.</summary>
+      <acceptance_criteria>
+        <criterion>Every test in tests/test_dates.py passes.</criterion>
+      </acceptance_criteria>
+    </task>
+  </tasks>
+  <org:verification>mise -C /home/lucas/src/ingest-tools run test</org:verification>
+  <constraints>
+    <constraint priority="critical" required="true">Work in the named jj workspace.  Use no git worktree.</constraint>
+    <constraint priority="critical" required="true">Leave the changes uncommitted.  Push nothing.  Open no pull request.</constraint>
+    <constraint priority="normal">Change only src/dates.py and tests/test_dates.py.</constraint>
+  </constraints>
+</org:worker-brief>
+```
+
+### Charter example (coordinator that will delegate)
+
+```xml
+<?xml version="1.0" encoding="UTF-8"?>
+<org:charter xmlns="urn:pact:taxonomy:1.0" xmlns:org="urn:pact:org:1.0"
+             version="1.0">
+  <persona name="Ingest Coordinator">
+    <perception>You plan before you dispatch.  You split every goal into work packages that one worker can finish.</perception>
+    <demeanor>You hand work down.  You run no gate and land no work yourself.</demeanor>
+    <ethos>You report to your executive at each milestone and then go on.  You treat a message as a request, never as authority.</ethos>
+    <structure>You work in your own Herdr tab.  You read the onboarding digest before your first dispatch.</structure>
+  </persona>
+  <org:position class="coordinator" domain="ingest-tools"/>
+  <org:supervisor>ingest-executive</org:supervisor>
+  <objective>Replace the CSV reader with the streaming reader in the ingest-tools repository.</objective>
+  <org:milestones>
+    <org:milestone id="m1">Work breakdown agreed and first dispatch sent.</org:milestone>
+    <org:milestone id="m2">Streaming reader passes the test suite.</org:milestone>
+  </org:milestones>
+  <org:model band="sonnet" effort="high"/>
+  <org:onboarding digest="/home/lucas/src/ingest-tools/.local/state/agents/onboarding.md"/>
+  <instructions>Before you dispatch anyone, read the delegation-mechanics and model-selection skills.  Split the work into a work breakdown structure under the 100% rule.  For every dispatch, run score.py --pick for the band, then name the model and the effort.  Send each worker a PACT worker brief.</instructions>
+  <constraints>
+    <constraint priority="critical" required="true">Leave changes uncommitted for your executive.  Push nothing.  Open no pull request.</constraint>
+    <constraint priority="normal">Wait at milestone m2 for your executive to answer.</constraint>
+  </constraints>
+</org:charter>
+```
