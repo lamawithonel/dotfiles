@@ -1,0 +1,480 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PACT core schema, draft 1.0.
+
+  Edited from /home/lucas/me-os/local/pact-1.0.xsd for the delegation
+  revamp (design section 8).  Changes from the draft:
+
+  - xml.xsd is a local file.  No network access is needed.
+  - Structured types replace the free-form persona, constraints,
+    glossary, term, and task elements.  Each structured element appears
+    only where a document type lists it.  Free-form elements stay in the
+    pact:node substitution group.
+  - persona has four required quadrant elements, in this order:
+    perception (UL, "You think"), demeanor (UR, "You behave"),
+    ethos (LL, "You relate"), and structure (LR, "You participate").
+  - priority="critical" with required="true" replaces priority="MUST".
+    The required attribute has no default.  A constraint states it.
+    XSD 1.0 cannot test "critical implies required"; pact-lint.sh does.
+  - Core document types: prompt, message, agent-definition.
+  - Profiles import this schema and add their own document types.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pact:taxonomy:1.0"
+           xmlns:pact="urn:pact:taxonomy:1.0"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified"
+           version="1.0">
+
+  <!-- Local copy of the xml: attributes.  Never fetch from the network. -->
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+             schemaLocation="xml.xsd"/>
+
+  <!-- =================================================================== -->
+  <!-- 1. SIMPLE TYPES                                                     -->
+  <!-- =================================================================== -->
+
+  <xs:simpleType name="PriorityType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="critical"/>
+      <xs:enumeration value="high"/>
+      <xs:enumeration value="normal"/>
+      <xs:enumeration value="low"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="StageType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="system"/>
+      <xs:enumeration value="developer"/>
+      <xs:enumeration value="user"/>
+      <xs:enumeration value="assistant"/>
+      <xs:enumeration value="runtime"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- "orchestrator" here means workflow software.  It no longer
+       collides with the agent class, which is now "executive". -->
+  <xs:simpleType name="AudienceType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="model"/>
+      <xs:enumeration value="orchestrator"/>
+      <xs:enumeration value="both"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="CacheHintType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="ephemeral"/>
+      <xs:enumeration value="persistent"/>
+      <xs:enumeration value="none"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="QuadrantType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="UL"/>
+      <xs:enumeration value="UR"/>
+      <xs:enumeration value="LL"/>
+      <xs:enumeration value="LR"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="AxisType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="S/N"/>
+      <xs:enumeration value="I/E"/>
+      <xs:enumeration value="F/T"/>
+      <xs:enumeration value="P/J"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="PoleType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="S"/>
+      <xs:enumeration value="N"/>
+      <xs:enumeration value="I"/>
+      <xs:enumeration value="E"/>
+      <xs:enumeration value="F"/>
+      <xs:enumeration value="T"/>
+      <xs:enumeration value="P"/>
+      <xs:enumeration value="J"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Kind of glossary entry: a technical name or a verb. -->
+  <xs:simpleType name="TermKindType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="name"/>
+      <xs:enumeration value="verb"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- =================================================================== -->
+  <!-- 2. ATTRIBUTE GROUPS                                                 -->
+  <!-- =================================================================== -->
+
+  <xs:attributeGroup name="IdentityAttrs">
+    <xs:attribute name="id"    type="xs:ID"       use="optional"/>
+    <xs:attribute name="ref"   type="xs:string"   use="optional"/>
+    <xs:attribute name="index" type="xs:string"   use="optional"/>
+    <xs:attribute name="name"  type="xs:NCName"   use="optional"/>
+    <xs:attribute name="title" type="xs:string"   use="optional"/>
+    <xs:attribute name="tags"  type="xs:NMTOKENS" use="optional"/>
+  </xs:attributeGroup>
+
+  <!-- required has no default.  A critical constraint says
+       required="true" in the document. -->
+  <xs:attributeGroup name="ControlAttrs">
+    <xs:attribute name="priority" type="pact:PriorityType" use="optional" default="normal"/>
+    <xs:attribute name="weight"   type="xs:decimal"        use="optional"/>
+    <xs:attribute name="required" type="xs:boolean"        use="optional"/>
+    <xs:attribute name="mutable"  type="xs:boolean"        use="optional" default="false"/>
+  </xs:attributeGroup>
+
+  <xs:attributeGroup name="ScopeAttrs">
+    <xs:attribute name="stage"     type="pact:StageType"     use="optional"/>
+    <xs:attribute name="audience"  type="pact:AudienceType"  use="optional" default="model"/>
+    <xs:attribute name="condition" type="xs:string"          use="optional"/>
+    <xs:attribute name="cache"     type="pact:CacheHintType" use="optional"/>
+  </xs:attributeGroup>
+
+  <xs:attributeGroup name="PersonaAttrs">
+    <xs:attribute name="axis" type="pact:AxisType" use="optional"/>
+    <xs:attribute name="pole" type="pact:PoleType" use="optional"/>
+  </xs:attributeGroup>
+
+  <xs:attributeGroup name="FormatAttrs">
+    <xs:attribute name="mime"     type="xs:string" use="optional" default="text/markdown"/>
+    <xs:attribute name="encoding" type="xs:string" use="optional" default="UTF-8"/>
+  </xs:attributeGroup>
+
+  <xs:attributeGroup name="XmlStandardAttrs">
+    <xs:attribute ref="xml:lang"  use="optional"/>
+    <xs:attribute ref="xml:space" use="optional"/>
+    <xs:attribute ref="xml:base"  use="optional"/>
+  </xs:attributeGroup>
+
+  <xs:attributeGroup name="CommonNodeAttrs">
+    <xs:attributeGroup ref="pact:IdentityAttrs"/>
+    <xs:attributeGroup ref="pact:ControlAttrs"/>
+    <xs:attributeGroup ref="pact:ScopeAttrs"/>
+    <xs:attributeGroup ref="pact:FormatAttrs"/>
+    <xs:attributeGroup ref="pact:XmlStandardAttrs"/>
+    <xs:anyAttribute namespace="##other" processContents="lax"/>
+  </xs:attributeGroup>
+
+  <!-- Attributes of every document root, core and profile. -->
+  <xs:attributeGroup name="DocumentAttrs">
+    <xs:attribute name="version" type="xs:string" use="optional" fixed="1.0"/>
+    <xs:attribute name="id"      type="xs:ID"     use="optional"/>
+    <xs:attribute name="tags"    type="xs:NMTOKENS" use="optional"/>
+    <xs:attributeGroup ref="pact:XmlStandardAttrs"/>
+  </xs:attributeGroup>
+
+  <!-- =================================================================== -->
+  <!-- 3. FREE-FORM NODE MODEL                                             -->
+  <!-- =================================================================== -->
+
+  <!-- Free-form text and nested nodes.  Structured elements (persona,
+       constraints, glossary, task) are NOT nodes.  They appear only
+       where a document type lists them. -->
+  <xs:complexType name="NodeType" mixed="true">
+    <xs:choice minOccurs="0" maxOccurs="unbounded">
+      <xs:element ref="pact:node"/>
+      <xs:any namespace="##other" processContents="lax"/>
+    </xs:choice>
+    <xs:attributeGroup ref="pact:CommonNodeAttrs"/>
+  </xs:complexType>
+
+  <xs:element name="node" type="pact:NodeType" abstract="true"/>
+
+  <!-- Text only: no child elements. -->
+  <xs:complexType name="TextType" mixed="true">
+    <xs:attributeGroup ref="pact:CommonNodeAttrs"/>
+  </xs:complexType>
+
+  <!-- =================================================================== -->
+  <!-- 4. STRUCTURED TYPES                                                 -->
+  <!-- =================================================================== -->
+
+  <!-- Persona: four required quadrants in fixed order. -->
+  <xs:complexType name="UlTextType" mixed="true">
+    <xs:attribute name="quadrant" type="pact:QuadrantType" fixed="UL"/>
+  </xs:complexType>
+  <xs:complexType name="UrTextType" mixed="true">
+    <xs:attribute name="quadrant" type="pact:QuadrantType" fixed="UR"/>
+  </xs:complexType>
+  <xs:complexType name="LlTextType" mixed="true">
+    <xs:attribute name="quadrant" type="pact:QuadrantType" fixed="LL"/>
+  </xs:complexType>
+  <xs:complexType name="LrTextType" mixed="true">
+    <xs:attribute name="quadrant" type="pact:QuadrantType" fixed="LR"/>
+  </xs:complexType>
+
+  <xs:element name="perception" type="pact:UlTextType"/>
+  <xs:element name="demeanor"   type="pact:UrTextType"/>
+  <xs:element name="ethos"      type="pact:LlTextType"/>
+  <xs:element name="structure"  type="pact:LrTextType"/>
+
+  <xs:complexType name="PersonaType">
+    <xs:sequence>
+      <xs:element ref="pact:perception"/>
+      <xs:element ref="pact:demeanor"/>
+      <xs:element ref="pact:ethos"/>
+      <xs:element ref="pact:structure"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:string" use="required"/>
+    <xs:attribute name="id"   type="xs:ID"     use="optional"/>
+    <xs:attributeGroup ref="pact:PersonaAttrs"/>
+    <xs:attributeGroup ref="pact:XmlStandardAttrs"/>
+  </xs:complexType>
+
+  <xs:element name="persona" type="pact:PersonaType"/>
+
+  <!-- Constraints: a list of rules.  A critical rule also states
+       required="true" (checked by pact-lint.sh). -->
+  <xs:element name="constraint" type="pact:TextType"/>
+
+  <xs:complexType name="ConstraintsType">
+    <xs:sequence>
+      <xs:element ref="pact:constraint" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:ID" use="optional"/>
+    <xs:attributeGroup ref="pact:ControlAttrs"/>
+    <xs:attributeGroup ref="pact:XmlStandardAttrs"/>
+  </xs:complexType>
+
+  <xs:element name="constraints" type="pact:ConstraintsType"/>
+
+  <!-- Glossary: declares technical names and verbs. -->
+  <xs:complexType name="TermType" mixed="true">
+    <xs:attribute name="name" type="xs:token"         use="required"/>
+    <xs:attribute name="kind" type="pact:TermKindType" use="optional"/>
+    <xs:attribute name="id"   type="xs:ID"            use="optional"/>
+  </xs:complexType>
+
+  <xs:element name="term" type="pact:TermType"/>
+
+  <xs:complexType name="GlossaryType">
+    <xs:sequence>
+      <xs:element ref="pact:term" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+    <xs:attribute name="id" type="xs:ID" use="optional"/>
+    <xs:attributeGroup ref="pact:XmlStandardAttrs"/>
+  </xs:complexType>
+
+  <xs:element name="glossary" type="pact:GlossaryType"/>
+
+  <!-- Tasks: each task has a name and a summary.  Details and
+       acceptance criteria are optional. -->
+  <xs:complexType name="AcceptanceType">
+    <xs:sequence>
+      <xs:element ref="pact:criterion" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="acceptance_criteria" type="pact:AcceptanceType"/>
+
+  <xs:complexType name="TaskType">
+    <xs:sequence>
+      <xs:element ref="pact:summary"/>
+      <xs:element ref="pact:details"             minOccurs="0"/>
+      <xs:element ref="pact:acceptance_criteria" minOccurs="0"/>
+    </xs:sequence>
+    <xs:attribute name="name" type="xs:NCName" use="required"/>
+    <xs:attribute name="id"   type="xs:ID"     use="optional"/>
+  </xs:complexType>
+
+  <xs:element name="task" type="pact:TaskType"/>
+
+  <xs:complexType name="TasksType">
+    <xs:sequence>
+      <xs:element ref="pact:task" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+
+  <xs:element name="tasks" type="pact:TasksType"/>
+
+  <!-- =================================================================== -->
+  <!-- 5. FREE-FORM ELEMENTS (substitution group of pact:node)             -->
+  <!-- =================================================================== -->
+
+  <!-- ChatML role and conversation boundaries -->
+  <xs:element name="system"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="developer"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="user"             type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="assistant"        type="pact:NodeType" substitutionGroup="pact:node"/>
+
+  <!-- Identity, directives, and governance -->
+  <xs:element name="role"             type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="objective"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="directive"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="instructions"     type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="instruction"      type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="guardrail"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="policy"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="hint"             type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="warning"          type="pact:NodeType" substitutionGroup="pact:node"/>
+
+  <!-- Reasoning, planning, and the ReAct loop -->
+  <xs:element name="thinking"         type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="thought"          type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="scratchpad"       type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="plan"             type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="heuristic"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="decision"         type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="action"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="action_input"     type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="observation"      type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="reflection"       type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="critique"         type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="answer"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="final_answer"     type="pact:NodeType" substitutionGroup="pact:node"/>
+
+  <!-- Context, grounding, and knowledge -->
+  <xs:element name="context"          type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="background"       type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="domain"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="environment"      type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="memory"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="state"            type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="artifact"         type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="isolate"          type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="documents"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="document"         type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="source"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="document_content" type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="citations"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="citation"         type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="summary"          type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="description"      type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="details"          type="pact:NodeType" substitutionGroup="pact:node"/>
+
+  <!-- Workflows, examples, and payloads -->
+  <xs:element name="workflow"         type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="step"             type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="prereq"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="examples"         type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="example"          type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="counterexample"   type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="input"            type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="data"             type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="schema"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="media"            type="pact:NodeType" substitutionGroup="pact:node"/>
+
+  <!-- Tools and invocations -->
+  <xs:element name="tools"            type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="tool"             type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="parameter"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="capability"       type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="tool_call"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="tool_result"      type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="function_calls"   type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="invoke"           type="pact:NodeType" substitutionGroup="pact:node"/>
+
+  <!-- Output and evaluation -->
+  <xs:element name="output"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <!-- field: one named item the dispatcher wants back inside output. -->
+  <xs:complexType name="FieldType" mixed="true">
+    <xs:complexContent>
+      <xs:restriction base="pact:NodeType">
+        <xs:choice minOccurs="0" maxOccurs="unbounded">
+          <xs:element ref="pact:node"/>
+          <xs:any namespace="##other" processContents="lax"/>
+        </xs:choice>
+        <xs:attribute name="name" type="xs:NCName" use="required"/>
+      </xs:restriction>
+    </xs:complexContent>
+  </xs:complexType>
+  <xs:element name="field"            type="pact:FieldType" substitutionGroup="pact:node"/>
+  <xs:element name="format"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="template"         type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="rubric"           type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="criterion"        type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="fallback"         type="pact:NodeType" substitutionGroup="pact:node"/>
+
+  <!-- Structure and meta -->
+  <xs:element name="section"          type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="block"            type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="note"             type="pact:NodeType" substitutionGroup="pact:node"/>
+  <xs:element name="metadata"         type="pact:NodeType" substitutionGroup="pact:node"/>
+
+  <!-- =================================================================== -->
+  <!-- 6. DOCUMENT TYPES                                                   -->
+  <!-- Each root lists the elements it allows and which are required.      -->
+  <!-- xs:all means any order, each element at most once.                  -->
+  <!-- =================================================================== -->
+
+  <!-- Free-form container.  No required parts.  Kept for notes and
+       drafts.  Use a typed document where one fits. -->
+  <xs:element name="pact">
+    <xs:complexType mixed="true">
+      <xs:choice minOccurs="0" maxOccurs="unbounded">
+        <xs:element ref="pact:node"/>
+        <xs:element ref="pact:persona"/>
+        <xs:element ref="pact:tasks"/>
+        <xs:element ref="pact:constraints"/>
+        <xs:element ref="pact:glossary"/>
+        <xs:any namespace="##other" processContents="lax"/>
+      </xs:choice>
+      <xs:attributeGroup ref="pact:DocumentAttrs"/>
+    </xs:complexType>
+  </xs:element>
+
+  <!-- prompt: a generic instruction document.  Persona is required. -->
+  <xs:complexType name="PromptType">
+    <xs:all>
+      <xs:element ref="pact:persona"/>
+      <xs:element ref="pact:role"         minOccurs="0"/>
+      <xs:element ref="pact:objective"/>
+      <xs:element ref="pact:context"      minOccurs="0"/>
+      <xs:element ref="pact:instructions" minOccurs="0"/>
+      <xs:element ref="pact:tasks"        minOccurs="0"/>
+      <xs:element ref="pact:constraints"  minOccurs="0"/>
+      <xs:element ref="pact:glossary"     minOccurs="0"/>
+      <xs:element ref="pact:examples"     minOccurs="0"/>
+      <xs:element ref="pact:output"       minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+
+  <xs:element name="prompt" type="pact:PromptType"/>
+
+  <!-- message: a generic note between agents.  No persona. -->
+  <xs:complexType name="MessageType">
+    <xs:all>
+      <xs:element ref="pact:summary"/>
+      <xs:element ref="pact:context"      minOccurs="0"/>
+      <xs:element ref="pact:instructions" minOccurs="0"/>
+      <xs:element ref="pact:glossary"     minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+
+  <xs:element name="message" type="pact:MessageType"/>
+
+  <!-- agent-definition: a specialist persona any class may use.  The
+       harness frontmatter (name, description, tools, model, effort)
+       stays outside this body.  Persona, role, and instructions are
+       required. -->
+  <xs:complexType name="AgentDefinitionType">
+    <xs:all>
+      <xs:element ref="pact:persona"/>
+      <xs:element ref="pact:role"/>
+      <xs:element ref="pact:instructions"/>
+      <xs:element ref="pact:description"  minOccurs="0"/>
+      <xs:element ref="pact:context"      minOccurs="0"/>
+      <xs:element ref="pact:tools"        minOccurs="0"/>
+      <xs:element ref="pact:constraints"  minOccurs="0"/>
+      <xs:element ref="pact:glossary"     minOccurs="0"/>
+      <xs:element ref="pact:examples"     minOccurs="0"/>
+      <xs:element ref="pact:output"       minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+    <xs:attribute name="name" type="xs:NCName" use="optional"/>
+  </xs:complexType>
+
+  <xs:element name="agent-definition" type="pact:AgentDefinitionType"/>
+
+</xs:schema>

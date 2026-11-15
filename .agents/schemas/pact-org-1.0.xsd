@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PACT org profile, draft 1.0.
+
+  Document types for the agent delegation tree: charter, worker brief,
+  consultation, question, freeze, relay, ruling, and escalation.  The
+  profile has its own namespace and imports the PACT core.
+
+  Vocabulary follows design section 2: executive, coordinator,
+  consultant, worker, charter, final report, freeze, standalone session.
+
+  Persona is required in charter, worker-brief, and consultation.  It is
+  not allowed in question, freeze, relay, ruling, or escalation.
+
+  The worker-brief type has no guard elements: no stall watchdog, scope
+  limit, final report contract, or raw-quotes rule.  Those rules live in
+  the dispatch skill, not in each brief.  pact-lint.sh also flags guard
+  text in a worker brief.
+
+  Validation is advisory.  A writer runs pact-lint.sh before it sends.
+  A receiver never rejects a message because it fails validation.
+
+  Each element marked "proposed" is a choice the design left open.  The
+  user settles the exact set at the draft review.
+-->
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="urn:pact:org:1.0"
+           xmlns:org="urn:pact:org:1.0"
+           xmlns:pact="urn:pact:taxonomy:1.0"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified"
+           version="1.0">
+
+  <xs:import namespace="http://www.w3.org/XML/1998/namespace"
+             schemaLocation="xml.xsd"/>
+  <xs:import namespace="urn:pact:taxonomy:1.0"
+             schemaLocation="pact-1.0.xsd"/>
+
+  <!-- =================================================================== -->
+  <!-- 1. SIMPLE TYPES                                                     -->
+  <!-- =================================================================== -->
+
+  <xs:simpleType name="ClassType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="deputy"/>
+      <xs:enumeration value="executive"/>
+      <xs:enumeration value="coordinator"/>
+      <xs:enumeration value="consultant"/>
+      <xs:enumeration value="worker"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- A charter creates a standing position under an executive. -->
+  <xs:simpleType name="CharterClassType">
+    <xs:restriction base="org:ClassType">
+      <xs:enumeration value="executive"/>
+      <xs:enumeration value="coordinator"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="BandType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="bulk"/>
+      <xs:enumeration value="haiku"/>
+      <xs:enumeration value="sonnet"/>
+      <xs:enumeration value="opus"/>
+      <xs:enumeration value="mythos"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <xs:simpleType name="EffortType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="off"/>
+      <xs:enumeration value="minimal"/>
+      <xs:enumeration value="low"/>
+      <xs:enumeration value="medium"/>
+      <xs:enumeration value="high"/>
+      <xs:enumeration value="xhigh"/>
+      <xs:enumeration value="max"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- A session, domain, or tab name: lowercase, POSIX portable.
+       "user" is a valid session name. -->
+  <xs:simpleType name="NameType">
+    <xs:restriction base="xs:token">
+      <xs:pattern value="[a-z0-9][a-z0-9._\-]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Text with at least one non-space character. -->
+  <xs:simpleType name="NonBlankType">
+    <xs:restriction base="xs:string">
+      <xs:pattern value="[\s\S]*\S[\s\S]*"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- An explicit flag.  Only the words true and false are valid. -->
+  <xs:simpleType name="FlagType">
+    <xs:restriction base="xs:token">
+      <xs:enumeration value="true"/>
+      <xs:enumeration value="false"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- =================================================================== -->
+  <!-- 2. SHARED ELEMENTS                                                  -->
+  <!-- =================================================================== -->
+
+  <!-- Session names. -->
+  <xs:element name="supervisor" type="org:NameType"/>
+  <xs:element name="creator"    type="org:NameType"/>
+  <xs:element name="dispatcher" type="org:NameType"/>
+  <xs:element name="issuer"     type="org:NameType"/>
+  <xs:element name="lifter"     type="org:NameType"/>
+  <xs:element name="relayer"    type="org:NameType"/>
+  <xs:element name="from"       type="org:NameType"/>
+  <xs:element name="to"         type="org:NameType"/>
+
+  <!-- Free text with a required, non-blank body. -->
+  <xs:element name="reason"       type="org:NonBlankType"/>
+  <xs:element name="scope"        type="org:NonBlankType"/>
+  <xs:element name="end"          type="org:NonBlankType"/>
+  <xs:element name="ends-when"    type="org:NonBlankType"/>
+  <xs:element name="ask"          type="org:NonBlankType"/>
+  <xs:element name="decision"     type="org:NonBlankType"/>
+  <xs:element name="applies-to"   type="org:NonBlankType"/>
+  <xs:element name="problem"      type="org:NonBlankType"/>
+  <xs:element name="request"      type="org:NonBlankType"/>
+  <xs:element name="evidence"     type="org:NonBlankType"/>
+  <xs:element name="verification" type="org:NonBlankType"/>
+  <xs:element name="source"       type="org:NonBlankType"/>
+  <xs:element name="added"        type="org:NonBlankType"/>
+  <xs:element name="option"       type="org:NonBlankType"/>
+
+  <!-- Verbatim text.  Whitespace is kept.  A relay quotes a freeze
+       word for word in this element. -->
+  <xs:complexType name="VerbatimType">
+    <xs:simpleContent>
+      <xs:extension base="org:NonBlankType">
+        <xs:attribute ref="xml:space" fixed="preserve"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name="quote" type="org:VerbatimType"/>
+
+  <!-- A freeze says in words whether it covers dispatch. -->
+  <xs:element name="covers-dispatch" type="org:FlagType"/>
+
+  <!-- A ruling can replace earlier rulings.  Space-separated list of
+       file paths or ids. -->
+  <xs:element name="supersedes" type="org:NonBlankType"/>
+
+  <!-- Model band and effort.  name holds the model_param when known. -->
+  <xs:complexType name="ModelType">
+    <xs:attribute name="band"   type="org:BandType"   use="required"/>
+    <xs:attribute name="effort" type="org:EffortType" use="required"/>
+    <xs:attribute name="name"   type="xs:token"       use="optional"/>
+  </xs:complexType>
+  <xs:element name="model" type="org:ModelType"/>
+
+  <!-- A pointer to an onboarding digest: a file path or URL. -->
+  <xs:complexType name="OnboardingType">
+    <xs:attribute name="digest" type="org:NonBlankType" use="required"/>
+  </xs:complexType>
+  <xs:element name="onboarding" type="org:OnboardingType"/>
+
+  <!-- Position: a role class and a domain. -->
+  <xs:complexType name="CharterPositionType">
+    <xs:attribute name="class"  type="org:CharterClassType" use="required"/>
+    <xs:attribute name="domain" type="org:NameType"         use="required"/>
+  </xs:complexType>
+
+  <xs:complexType name="ConsultantPositionType">
+    <xs:attribute name="class"     type="org:ClassType" use="required" fixed="consultant"/>
+    <xs:attribute name="domain"    type="org:NameType"  use="required"/>
+    <xs:attribute name="specialty" type="org:NameType"  use="optional"/>
+  </xs:complexType>
+
+  <!-- Milestones: at least one.  The incumbent reports at each one and
+       goes on. -->
+  <xs:complexType name="MilestoneType">
+    <xs:simpleContent>
+      <xs:extension base="org:NonBlankType">
+        <xs:attribute name="id" type="xs:ID" use="optional"/>
+      </xs:extension>
+    </xs:simpleContent>
+  </xs:complexType>
+  <xs:element name="milestone" type="org:MilestoneType"/>
+
+  <xs:complexType name="MilestonesType">
+    <xs:sequence>
+      <xs:element ref="org:milestone" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="milestones" type="org:MilestonesType"/>
+
+  <!-- Added text, one element per addition.  A relay marks its own
+       words this way so a reader can tell them from the quote. -->
+  <xs:complexType name="AdditionsType">
+    <xs:sequence>
+      <xs:element ref="org:added" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="additions" type="org:AdditionsType"/>
+
+  <xs:complexType name="OptionsType">
+    <xs:sequence>
+      <xs:element ref="org:option" minOccurs="1" maxOccurs="unbounded"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:element name="options" type="org:OptionsType"/>
+
+  <!-- =================================================================== -->
+  <!-- 3. DOCUMENT TYPES                                                   -->
+  <!-- xs:all: any order, each element at most once.                       -->
+  <!-- =================================================================== -->
+
+  <!-- charter: an executive charters a coordinator (or the user
+       charters an executive).  Persona is required. -->
+  <xs:complexType name="CharterDocType">
+    <xs:all>
+      <xs:element ref="pact:persona"/>
+      <xs:element name="position" type="org:CharterPositionType"/>
+      <xs:element ref="org:supervisor"/>
+      <xs:element ref="pact:objective"/>
+      <xs:element ref="org:milestones"/>
+      <xs:element ref="org:model"/>
+      <xs:element ref="org:onboarding"/>
+      <xs:element ref="pact:context"      minOccurs="0"/>
+      <xs:element ref="pact:instructions" minOccurs="0"/>
+      <xs:element ref="pact:constraints"  minOccurs="0"/>
+      <xs:element ref="pact:glossary"     minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+  <xs:element name="charter" type="org:CharterDocType"/>
+
+  <!-- worker-brief: a dispatcher briefs a worker for one work package.
+       Persona is required.  No guard elements.  Model and effort go in
+       the dispatch call, not in the brief. -->
+  <xs:complexType name="WorkerBriefDocType">
+    <xs:all>
+      <xs:element ref="pact:persona"/>
+      <xs:element ref="pact:role"/>
+      <xs:element ref="pact:objective"/>
+      <xs:element ref="pact:tasks"/>
+      <xs:element ref="org:verification"/>
+      <xs:element ref="pact:context"     minOccurs="0"/>
+      <xs:element ref="org:dispatcher"   minOccurs="0"/>
+      <xs:element ref="pact:constraints" minOccurs="0"/>
+      <xs:element ref="pact:glossary"    minOccurs="0"/>
+      <xs:element ref="pact:output"      minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+  <xs:element name="worker-brief" type="org:WorkerBriefDocType"/>
+
+  <!-- consultation: the first prompt of a consultant.  Persona is
+       required.  A consultant answers questions and makes no work
+       product. -->
+  <xs:complexType name="ConsultationDocType">
+    <xs:all>
+      <xs:element ref="pact:persona"/>
+      <xs:element name="position" type="org:ConsultantPositionType"/>
+      <xs:element ref="org:creator"/>
+      <xs:element ref="pact:objective"/>
+      <xs:element ref="org:ends-when"/>
+      <xs:element ref="org:model"/>
+      <xs:element ref="org:onboarding" minOccurs="0"/>
+      <xs:element ref="pact:context"   minOccurs="0"/>
+      <xs:element ref="pact:glossary"  minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+  <xs:element name="consultation" type="org:ConsultationDocType"/>
+
+  <!-- question: an asker asks a consultant.  No persona. -->
+  <xs:complexType name="QuestionDocType">
+    <xs:all>
+      <xs:element ref="org:from"/>
+      <xs:element ref="org:ask"/>
+      <xs:element ref="org:to"       minOccurs="0"/>
+      <xs:element ref="pact:context" minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+  <xs:element name="question" type="org:QuestionDocType"/>
+
+  <!-- freeze: stops work.  It names a reason, a scope, an end, and a
+       lifter.  It says whether it covers dispatch.  No persona. -->
+  <xs:complexType name="FreezeDocType">
+    <xs:all>
+      <xs:element ref="org:issuer"/>
+      <xs:element ref="org:reason"/>
+      <xs:element ref="org:scope"/>
+      <xs:element ref="org:end"/>
+      <xs:element ref="org:lifter"/>
+      <xs:element ref="org:covers-dispatch"/>
+      <xs:element ref="pact:glossary" minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+  <xs:element name="freeze" type="org:FreezeDocType"/>
+
+  <!-- relay: a session passes a freeze on.  The quote is the freeze
+       word for word.  Text the relayer adds goes in additions, apart
+       from the quote.  No persona. -->
+  <xs:complexType name="RelayDocType">
+    <xs:all>
+      <xs:element ref="org:relayer"/>
+      <xs:element ref="org:source"/>
+      <xs:element ref="org:quote"/>
+      <xs:element ref="org:additions" minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+  <xs:element name="relay" type="org:RelayDocType"/>
+
+  <!-- ruling: a decision with its issuer and its scope.  No persona. -->
+  <xs:complexType name="RulingDocType">
+    <xs:all>
+      <xs:element ref="org:issuer"/>
+      <xs:element ref="org:decision"/>
+      <xs:element ref="org:applies-to"/>
+      <xs:element ref="org:reason"       minOccurs="0"/>
+      <xs:element ref="org:supersedes"   minOccurs="0"/>
+      <xs:element ref="pact:instructions" minOccurs="0"/>
+      <xs:element ref="pact:glossary"     minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+  <xs:element name="ruling" type="org:RulingDocType"/>
+
+  <!-- escalation: a session asks its supervisor for a decision.  No
+       persona. -->
+  <xs:complexType name="EscalationDocType">
+    <xs:all>
+      <xs:element ref="org:from"/>
+      <xs:element ref="org:to"/>
+      <xs:element ref="org:problem"/>
+      <xs:element ref="org:request"/>
+      <xs:element ref="org:options"  minOccurs="0"/>
+      <xs:element ref="org:evidence" minOccurs="0"/>
+      <xs:element ref="pact:context" minOccurs="0"/>
+    </xs:all>
+    <xs:attributeGroup ref="pact:DocumentAttrs"/>
+  </xs:complexType>
+  <xs:element name="escalation" type="org:EscalationDocType"/>
+
+</xs:schema>
