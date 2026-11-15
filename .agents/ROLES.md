@@ -2,7 +2,8 @@
 
 `~/.agents/AGENTS.md` holds the class table and reserved authority.
 This file holds the rest: commissioning, the supervision tree,
-lateral messages, lifecycle, Herdr layout, session names, and effort.
+lateral messages, holds, gates and rulings, audit, lifecycle, Herdr
+layout, session names, and effort.
 
 ## Commissioning
 
@@ -35,6 +36,18 @@ lateral messages, lifecycle, Herdr layout, session names, and effort.
   the milestones, and the model and effort (see the `model-router`
   skill).  The class stays fixed.  The user may later reassign a
   coordinator to a different orchestrator.
+- **Onboarding:** a commission points to a short digest of what the
+  incumbent needs, with paths to consult, and never asks it to read
+  files in full.  The incumbent dispatches its first reads to a
+  worker and reads the worker's digest.
+- **Milestones:** at each milestone the incumbent reports and goes on
+  to the next stage of its commission.  It waits only when the next
+  stage holds a gated action, needs a decision outside its authority,
+  or the commission says to wait there.
+- **Structure trigger:** an orchestrator proposes a new coordinator to
+  the user, without waiting to be asked, when one coordinator holds
+  two or more domains, or when its own inline work on one domain
+  passes the INLINE BUDGET in `~/.agents/AGENTS.md`.
 - Commission agents that hold a position: coordinators.  The user
   declares orchestrators.  Dispatch workers: each gets one work
   package, a unit of the work breakdown structure, and ends at its
@@ -78,6 +91,45 @@ Messages along the tree are vertical; all others are lateral.
   to exchange information and coordinate.  Anything that creates,
   moves, or reroutes work goes through the orchestrator.
 - A worker messages only its dispatcher, through its receipt.
+
+## Holds
+
+A hold stops some work for a time.  A resource orchestrator raises
+holds on its resources, and a supervisor raises holds on its reports.
+
+- A **process** is an operating system process: a build, a test
+  suite, a model load, a server, or a new agent session.  An
+  in-process worker (`Agent` or `Workflow`) is a dispatch, not a
+  process.  A hold on processes never covers dispatch unless it says
+  "dispatch" in words.
+- Every hold names its reason, its scope (who and what it stops), its
+  end (a time or an event), and who lifts it.  A hold with no end
+  lapses after 60 minutes unless its holder renews it.
+- A relay quotes the hold word for word and marks anything the
+  relaying agent adds as its own.
+- An agent unsure whether a hold covers an action asks the agent that
+  raised it.
+
+## Gates and rulings
+
+- An orchestrator runs no gate and lands no work itself.  A
+  coordinator or a worker runs the gate and reports the result; the
+  orchestrator decides from that report, and the coordinator or a
+  worker lands what it approves.
+- To tell several agents the same ruling, write it once to a file
+  under the project's `.local/state/agents/` and send each agent one
+  short message that names the file.
+
+## Audit
+
+- An audit samples.  It draws the items it checks by a seeded method,
+  weighted by risk, and states the draw.  It checks in full only what
+  can corrupt a result, a gated action, or a rule the user set.
+- Every audit finding names who made the audited work: the position,
+  or the worker and its dispatcher.
+- At each milestone, the orchestrator reports the share of its
+  domain's dispatches spent on audit against forward work.  A question
+  from the user about that share is a signal to cut audit scope.
 
 ## Lifecycle
 

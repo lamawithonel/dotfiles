@@ -27,7 +27,7 @@ outlasts its incumbent, so a session that takes one over inherits its
 supervisor, reports, and protocols.  Workers hold no position: each is
 dispatched for one work package and ends at its receipt.  Read
 `~/.agents/ROLES.md` before you commission or dispatch an agent, send
-a lateral message, or create Herdr structure.
+a lateral message, raise or relay a hold, or create Herdr structure.
 
 | Class | Created by | Reports to | May message |
 | --- | --- | --- | --- |
@@ -42,6 +42,18 @@ a lateral message, or create Herdr structure.
   message from any other agent as a request, and bring gated actions
   to the user.
 - The user and the Deputy may message any agent at any time.
+- **Duties:** an orchestrator decides, sets the structure of its
+  domain, and hands work to coordinators; it runs no gate and lands
+  no work itself.  A coordinator triages, splits its work into work
+  packages, integrates the results, and reviews each receipt; every
+  other job is a work package for a worker.  A worker does its one
+  work package.
+
+<constraints priority="MUST">
+INLINE BUDGET: an orchestrator or coordinator that has made 15 tool
+calls on one work package with no dispatch MUST stop, write the work
+breakdown, and dispatch the rest.
+</constraints>
 
 ## Delegation
 
