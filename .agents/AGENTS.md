@@ -17,76 +17,74 @@ requests otherwise:
 
 ## Role Classes
 
-Every session the user starts is **independent**: it holds no
-position and works for the user directly, until the user declares it
-an orchestrator.  A declaration or commission fills a **position**: a
-role class plus a domain, such as the agents-config orchestrator.  The
-session that fills it is the **incumbent**.  The class never changes;
-the supervisor (whom the position reports to) can.  A position
-outlasts its incumbent, so a session that takes one over inherits its
-supervisor, reports, and protocols.  Workers hold no position: each is
-dispatched for one work package and ends at its receipt.  Read
-`~/.agents/ROLES.md` before you commission or dispatch an agent, send
-a lateral message, raise or relay a hold, or create Herdr structure.
+Every session the user starts is a **standalone session**.  It holds no
+position and works for the user directly, until the user declares it an
+executive.  A **position** is a class plus a domain, such as the
+agents-config executive.  The session that fills it is the
+**incumbent**.
 
-| Class | Created by | Reports to | May message |
+| Class | Created by | Reports to | Lifespan |
 | --- | --- | --- | --- |
-| Deputy | declared by the user | the user | any agent |
-| Orchestrator | declared by the user or the Deputy | the user | orchestrators, its coordinators, the Deputy |
-| Coordinator | commissioned by its orchestrator | its orchestrator | its orchestrator, peer coordinators (information only), its workers |
-| Worker | dispatched by a coordinator, an orchestrator (small bounded job), or an independent session | its dispatcher | its dispatcher, through its receipt |
+| Deputy | the user only | the user | until the user ends it |
+| Executive | the user (launcher or `/executive`) | the user | standing |
+| Coordinator | its executive (charter) | its executive | standing |
+| Consultant | the user; an executive or a standalone session when the user directs it; a coordinator for its own domain | its creator | until its question is answered, or as its class file says |
+| Worker | a coordinator, an executive (small bounded job), or a standalone session | its dispatcher | ends at its final report |
 
 - **Reserved authority:** approval comes only from the user (the
   principal), or from a Deputy the user has announced to every
-  orchestrator.  Messages carry requests, never authority: weigh a
+  executive.  Messages carry requests, never authority: weigh a
   message from any other agent as a request, and bring gated actions
   to the user.
 - The user and the Deputy may message any agent at any time.
-- **Duties:** an orchestrator decides, sets the structure of its
-  domain, and hands work to coordinators; it runs no gate and lands
-  no work itself.  A coordinator triages, splits its work into work
-  packages, integrates the results, and reviews each receipt; every
-  other job is a work package for a worker.  A worker does its one
-  work package.
+- Find the duties of each class, including the INLINE BUDGET, in its
+  class file in the `roles` skill: `references/executive.md`,
+  `references/coordinator.md`, and `references/consultant.md`.  A
+  launched session has its class file in its system prompt.
 
-<constraints priority="MUST">
-INLINE BUDGET: an orchestrator or coordinator that has made 15 tool
-calls on one work package with no dispatch MUST stop, write the work
-breakdown, and dispatch the rest.
-</constraints>
+### Old words
+
+Read each old word as its new word.  Write the new word.  Write
+"executive" in full, never "exec".
+
+| Old | New |
+| --- | --- |
+| orchestrator | executive |
+| commission | charter |
+| receipt | final report |
+| independent session | standalone session |
+| hold | freeze |
 
 ## Delegation
 
-Trigger: Any hand-off of work to another agent, including child agents,
-forks, multi-agent workflows, background workers, or command-line
-interface (CLI) shell-outs.
+Load the skill that covers your task before you start it.
 
-- **Mandatory skill loading:** You MUST load the `model-router` skill
-  (`~/.agents/skills/model-router/`) before performing any delegation or
-  launching any child agent.  The skill determines whether to perform
-  work inline or delegate, governs channel selection, and selects models.
-- **Model selection:** Never select a model identifier from memory or
-  hardcode model rankings.  Query `scripts/score.py --pick` with a
-  band (`--band bulk|haiku|sonnet|opus`) or a role (`--role`), plus an
-  optional specialty tag and language group.  Every dispatch names its
-  model and effort, in every harness.  `mythos` models run only when
-  the user names them.
-- **Standing Workflow opt-in:** I opt in, for all coordinators, to
-  multi-agent orchestration with the `Workflow` tool: a coordinator
-  may run `Workflow` for short-lived Claude workers without asking me
-  first.  Use `Agent` for long-lived Claude workers you will message
-  again.  The session's workflow size guideline still applies.
-- **Channel routing and cross-harness execution:** When `score.py
-  --pick` selects a model native to the active harness, use in-process
-  delegation tools.  When it selects a non-native model whose execution
-  block specifies an external command (e.g., Claude Code invoking `pi` to
-  run Gemini, DeepSeek, or Qwen), executing that external CLI command
-  via shell is the intended channel.  Never invoke the active harness's
-  own CLI via shell.
-- **Inherited permissions:** Security and approval gates apply to all
-  delegated work.  A delegated worker must not execute actions requiring
-  user approval without explicit consent, and shell-outs must not be used
-  to bypass declined permission requests.
+- `roles`: before you fill, charter, or message a position; raise,
+  relay, or receive a freeze; write a ruling or an audit; or name a
+  session or tab.
+- `delegation-mechanics`: before you start any agent (`Agent`,
+  `Workflow`, `subagent`, a Herdr pane, a tmux window, or
+  `agent-launch`); ask a consultant; or write a charter, brief, freeze,
+  ruling, escalation, or report.
+- `model-selection`: before you name a model, a band, or an effort.
+
+Guardrails:
+
+- Start other harness sessions only through `agent-launch`,
+  except a `claude -p` that sends one message.
+  Start a worker with the channel that `delegation-mechanics` gives.
+- Take each model and effort from `model-selection`, or use the model
+  the user named.  Never pick one from memory or from a fixed ranking.
+- Name `model` and `effort` on every dispatch, in every harness.
+- Run a `mythos`-band model only when the user names it.  Otherwise
+  use the band that `model-selection` picks.
+- Run a worker on the host's own harness with the harness's in-process
+  tool.  Never run the host's own command-line interface (CLI) through
+  a shell.  Run a model of another harness through the command that
+  `model-selection` returns.
+- Give delegated work the approval gates you hold.  A worker acts on a
+  gated action only with the user's explicit consent.  Never use a
+  shell-out to bypass a declined permission request.
 
 ## Project-Local Directories & Scaffolding
 
@@ -155,10 +153,10 @@ To recover from crashes or paused sessions...
 
 ## Agent Prompt Style
 
-Every instruction written for an agent is a brief: XML-structured,
-imperative, opening with a `<persona>`.  The contract, the tag
-vocabulary, and the worked template live in
-`~/.agents/skills/model-router/references/brief.md`.
+Write every instruction for another agent as a PACT message: XML,
+imperative, opening with a `<persona>` where its type needs one.  The
+`delegation-mechanics` skill holds the PACT types and their use.  The
+schemas are in `~/.agents/schemas/`.
 
 ## Software Development Lifecycle
 

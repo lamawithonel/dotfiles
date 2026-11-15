@@ -135,15 +135,30 @@ uses a dual-layer strategy:
   symlinks.
 - `model-benchmarks.json`: Unified model registry containing benchmark scores,
   pricing, and capability matrices.  Auto-refreshed via
-  `skills/model-router/scripts/refresh-benchmarks.py` and evaluated at runtime
-  by `skills/model-router/scripts/score.py`.
+  `skills/model-selection/scripts/refresh-benchmarks.py` and evaluated at
+  runtime by `skills/model-selection/scripts/score.py`.
 - `rules/`: Authoritative path-gated language and formatting specifications
   (`rules/*.md`, including `rust.md`, `python.md`, `shell.md`, `comments.md`,
   and others).  Also holds an untracked `.pi/` directory of Pi extension
   configs (`pi-rules`, `remote-pi`), reached through the `~/.pi/rules`
   symlink.
 - `skills/`: Authoritative skill definitions conforming to the Agent Skills
-  Specification.
+  Specification.  The delegation skills are:
+  - `roles`: shared rules and one class file each for the executive,
+    coordinator, and consultant.
+  - `delegation-mechanics`: how to start each kind of agent on each channel,
+    the PACT brief and final report, and the degradation ladder.
+  - `model-selection`: `score.py`, the registry feeds, bands, and effort
+    defaults.
+  - `executive` and `consultant`: user-invoked commands that declare a
+    running session an executive or create a consultant.
+- `schemas/`: XML schemas for PACT briefs (`pact-1.0.xsd` and a local
+  `xml.xsd`).
+
+### `~/.local/bin/` (Agent Launcher)
+- `agent-launch`: Starts executives, coordinators, and consultants in a
+  visible Herdr or tmux pane.  It appends the class file from the `roles`
+  skill and picks the model through `model-selection`.
 
 ### Settings Pipeline & Shared Runtime Configuration
 - Declarative settings are tracked in yadm under
