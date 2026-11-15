@@ -1,0 +1,889 @@
+#!/usr/bin/env bash
+# agent-launch -- start an executive, coordinator, or consultant session.
+#
+# Usage:
+#   agent-launch <class> <domain> [options] [-- <harness args>]
+#   agent-launch completions zsh
+#
+# A coordinator or consultant starts in a new visible Herdr tab or tmux
+# window.  An executive starts in the caller's own pane with `exec`, after
+# it relabels the tab and workspace (Herdr) or the window (tmux).  The
+# command never starts a harness headless and never as a child of the
+# caller's shell.  Run `agent-launch --help` for options.
+#
+# Environment (test and host overrides):
+#   AGENT_LAUNCH_SCORE      score.py path
+#   AGENT_LAUNCH_CLASS_DIR  class files (<class>.md)
+#   AGENT_LAUNCH_AMEND_DIR  executive amendment files (<domain>.md)
+#   AGENT_LAUNCH_MCP_SOURCE Claude Code user config with `mcpServers`
+#                           (default: ~/.claude.json)
+#   AGENT_LAUNCH_CLAUDE     Claude Code binary (default: claude)
+#   AGENT_LAUNCH_PI         Pi binary (default: pi)
+#   XDG_CACHE_HOME          paper cache base (default: ~/.cache); papers go to
+#                           $XDG_CACHE_HOME/agents/papers
+#
+# Exit codes:
+#   0  started, or dry run done
+#   2  usage error
+#   3  no multiplexer found: nothing started
+#   4  input or tool problem (score.py, class file, first prompt, jq)
+#   5  the multiplexer refused the start or a relabel, or a coordinator or
+#      consultant tab name is taken
+#
+# Design: delegation-revamp design.md, sections 3.1, 4.1, 5, 6, and 13.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+SELF_NAME="$(basename "$0")" && readonly SELF_NAME
+readonly XDG_DATA_HOME="${XDG_DATA_HOME:-${HOME}/.local/share}"
+readonly SCORE="${AGENT_LAUNCH_SCORE:-${HOME}/.agents/skills/model-selection/scripts/score.py}"
+readonly CLASS_DIR="${AGENT_LAUNCH_CLASS_DIR:-${HOME}/.agents/skills/roles/references}"
+readonly AMEND_DIR="${AGENT_LAUNCH_AMEND_DIR:-${XDG_DATA_HOME}/agents/executives}"
+readonly PAPERS_DIR="${XDG_CACHE_HOME:-${HOME}/.cache}/agents/papers"
+readonly MCP_SOURCE="${AGENT_LAUNCH_MCP_SOURCE:-${HOME}/.claude.json}"
+readonly CLAUDE_BIN="${AGENT_LAUNCH_CLAUDE:-claude}"
+readonly PI_BIN="${AGENT_LAUNCH_PI:-pi}"
+
+readonly EX_USAGE=2
+readonly EX_NOMUX=3
+readonly EX_INPUT=4
+readonly EX_START=5
+
+readonly CLASSES=(executive coordinator consultant)
+readonly EFFORTS=(off minimal low medium high xhigh max)
+# Consultant tools (user ruling): no Bash.  Allow the built-in Read, Grep,
+# Glob, WebFetch, and WebSearch, and only the read-only MCP research servers
+# context7, deepwiki, and paper-search, plus four Hugging Face read tools.
+# Block the paper-search download tools and the Hugging Face image tool.
+# Mechanism for Claude Code:
+#   --tools                         limits the built-ins.
+#   --strict-mcp-config --mcp-config  loads only the servers in MCP_SERVERS.
+#       Reason: a deny rule beats an allow rule, so `mcp__*` cannot carry
+#       exceptions.  A strict allow list also blocks servers added later.
+#       The file holds `${VAR}` references, never a secret value.
+#   --allowedTools                  skips prompts for the allowed tools.
+#   --disallowedTools               a deny wins over an allow.  The globs cover
+#       claude.ai connectors and plugin servers, which the docs do not say
+#       strict mode skips.  A server left out of the file is denied too.
+#       Built-in servers (claude-in-chrome, easel) ignore --strict-mcp-config,
+#       so each needs a deny by name; --no-chrome also turns the browser off.
+#       Rerun USER-CHECKS.md check (d) step 2 after a Claude Code update.
+# Paper downloads: the paper-search read_* tools stay allowed, but they save a
+#   PDF to ./downloads unless the call passes `save_path`.  The server has no
+#   environment variable or argument for that default (paper_search_mcp
+#   server.py: `save_path: str = "./downloads"`).  So the launcher gives a
+#   consultant one fixed cache directory in its appended system prompt.
+# Mechanism for Pi: `--tools` is an allow list of exact names.  A `mcp__*`
+#   glob matches nothing: pi-mcp-adapter registers MCP tools after Pi resolves
+#   the list, and only an exact name is kept.  The adapter's `mcp` proxy and
+#   `tool_search` are left out, so no other server is reachable.  Names:
+#   `mcp__<server>__<tool>` with each `-` as `_`, so `paper-search` becomes
+#   `paper_search`; a tool in `directTools` of ~/.pi/agent/mcp-adapter.json
+#   keeps `<server>_<tool>` instead (the three Hugging Face tools there).
+#   `--exclude-tools` stays as a second fence for the download tools, the image
+#   tool, and the MCP resource tools.
+# Guardrail: never add `mcp` (the adapter proxy) to PI_ALLOW.  Pi drops an
+#   excluded name from its active set, so the proxy runs the call itself and
+#   `--exclude-tools` does not bind it (pi-mcp-adapter index.ts createProxyHandOff,
+#   docs/tools.md).  Through `mcp`, a consultant could reach `download_*`.
+# Limit: the adapter rebuilds its MCP tool cache on the first start after an MCP
+#   config change; until then a consultant has none of its MCP tools.  Run one
+#   plain `pi` start first (delegation-mechanics, agent-launch reference).
+# [host list: refresh when MCP servers change]
+readonly CLAUDE_TOOLS='Read,Grep,Glob,WebFetch,WebSearch'
+readonly MCP_SERVERS='["context7","deepwiki","paper-search","huggingface"]'
+readonly CLAUDE_ALLOW=(Read Grep Glob WebFetch WebSearch
+	'mcp__context7__*' 'mcp__deepwiki__*' 'mcp__paper-search__*'
+	mcp__huggingface__hf_fs mcp__huggingface__hub_repo_search
+	mcp__huggingface__hub_repo_details mcp__huggingface__hf_whoami)
+readonly CLAUDE_DENY=('mcp__claude_ai_*' 'mcp__plugin_*'
+	'mcp__claude-in-chrome__*' 'mcp__easel__*'
+	'mcp__paper-search__download_*' mcp__huggingface__gr1_z_image_turbo_generate)
+readonly PI_ALLOW=(read grep find ls
+	mcp__context7__resolve_library_id mcp__context7__query_docs
+	mcp__deepwiki__ask_question mcp__deepwiki__read_wiki_contents
+	mcp__deepwiki__read_wiki_structure
+	huggingface_hf_whoami huggingface_hub_repo_search
+	huggingface_hub_repo_details mcp__huggingface__hf_fs
+	mcp__paper_search__{search_papers,search_arxiv,search_pubmed,search_biorxiv}
+	mcp__paper_search__{search_medrxiv,search_google_scholar,search_iacr}
+	mcp__paper_search__{search_semantic,search_crossref,search_openalex}
+	mcp__paper_search__{search_pmc,search_core,search_europepmc,search_dblp}
+	mcp__paper_search__{search_openaire,search_citeseerx,search_doaj}
+	mcp__paper_search__{search_base,search_zenodo,search_hal,search_ssrn}
+	mcp__paper_search__{search_unpaywall,search_ieee,get_crossref_paper_by_doi}
+	mcp__paper_search__{read_arxiv_paper,read_pubmed_paper,read_biorxiv_paper}
+	mcp__paper_search__{read_medrxiv_paper,read_iacr_paper,read_semantic_paper}
+	mcp__paper_search__{read_crossref_paper,read_dblp_paper,read_openaire_paper}
+	mcp__paper_search__{read_citeseerx_paper,read_doaj_paper,read_base_paper}
+	mcp__paper_search__{read_zenodo_paper,read_hal_paper,read_ssrn_paper}
+	mcp__paper_search__{read_openalex_paper,read_ieee_paper})
+readonly PI_EXCLUDE='mcp__paper_search__download_*,mcp__huggingface__gr1_z_image_turbo_generate,list_mcp_resources,list_mcp_resource_templates,read_mcp_resource'
+
+# Parsed options.  Empty string means "not given".
+_class=''
+_domain=''
+_harness=claude
+_mux=auto
+_model=''
+_effort=''
+_creator=''
+_first=''
+_resume=''
+_specialty=''
+_dry=0
+_pass=()
+_argv=()
+
+# Derived state.
+_creator_class=''
+_creator_band=''
+_creator_effort=''
+_pick_json=''
+_level=none
+_session=''
+_tab=''
+_names=''
+_class_file=''
+_sources=()
+_prompt_file=''
+_papers_file=''
+_mcp_file=''
+_mcp_json=''
+_mcp_dropped=()
+_deny=()
+_cmd=()
+_typed=''
+
+_cleanup() {
+	[ -z "${_prompt_file}" ] || rm -f "${_prompt_file}.tmp" "${_mcp_file}.tmp"
+}
+trap _cleanup EXIT INT TERM HUP
+
+_usage() {
+	cat <<- 'EOF'
+		Usage:
+		  agent-launch <class> <domain> [options] [-- <harness args>]
+		  agent-launch completions zsh
+
+		Class:
+		  executive | coordinator | consultant
+		Domain:
+		  lower-case letters, digits, and hyphens.  No spaces.
+
+		Options:
+		  --harness claude|pi    Harness CLI.  Default: claude.
+		  --mux auto|herdr|tmux  Force a level.  Never above what the probe finds.
+		  --model M              Model.  Default: score.py --pick --role <class>.
+		  --effort E             off|minimal|low|medium|high|xhigh|max.
+		  --creator C:B:E        Consultant only.  C is user|executive|coordinator|standalone.
+		                         B is the creator's band.  E is the creator's effort.
+		  --specialty S          Consultant only.  Names a specialist consultant.
+		  --first-prompt FILE    Send FILE as the first prompt.
+		  --resume ID            Resume a session (Pi: --session ID).
+		  --dry-run              Print the level and the exact command.  Start nothing.
+		  -h, --help             Show this text.
+		  --                     Send every later argument to the harness CLI untouched.
+
+		Consultant model rule (extends design section 5):
+		  With --creator executive|coordinator|standalone, the consultant gets one band
+		  and one effort level above the creator.  The band stops at opus.  Effort may
+		  reach max.  The step is score.py --pick --consultant-for BAND:EFFORT.  Do not
+		  combine this with --model or --effort (exit 2).
+		  With --creator user, the consultant gets the mythos band at xhigh
+		  (score.py --pick --band mythos --user-named).  --model or --effort overrides.
+		  Without --creator, the consultant takes --model and --effort as given, or
+		  score.py --pick --role consultant.
+
+		Executive:
+		  Runs in your own pane.  The command relabels your Herdr tab `executive` and
+		  your Herdr workspace <domain> (HERDR_TAB_ID, HERDR_WORKSPACE_ID), or renames
+		  your tmux window `executive`.  Then it replaces itself with the harness
+		  (`exec`).  No new tab or window.  With no multiplexer it exits 3.
+		  A coordinator or consultant opens a new tab or window.
+
+		Class rules:
+		  The harness gets the class file as an appended system prompt.  An executive
+		  also gets its domain amendment file, if one exists.
+		Consultant tools (Claude Code): no Bash.  Read, Grep, Glob, WebFetch, WebSearch,
+		  and only the MCP servers context7, deepwiki, and paper-search, plus the Hugging
+		  Face tools hf_fs, hub_repo_search, hub_repo_details, and hf_whoami.  Denied:
+		  the paper-search download tools and the Hugging Face image tool.  The command
+		  copies those servers from ~/.claude.json (AGENT_LAUNCH_MCP_SOURCE) into a 0600
+		  file and loads it with --strict-mcp-config.  It copies no secret.  It writes
+		  ${VAR} references for headers and env values, and omits a key whose variable
+		  is unset.  It leaves out a server with no usable secret, warns, and denies it.
+		  Pi: read, grep, find, ls, and the same MCP tools (--tools exact names, since
+		  a glob matches nothing, with --exclude-tools for the rest).
+		Paper cache (consultant): the command creates ${XDG_CACHE_HOME:-~/.cache}/agents/papers
+		  (0700 if new; not on --dry-run, which prints it) and tells the consultant in
+		  its system prompt to pass that path as `save_path` on every paper-search call.
+
+		Levels (printed on every run):
+		  herdr  HERDR_ENV=1, HERDR_WORKSPACE_ID set, and a read-only Herdr call works.
+		  tmux   TMUX is set and `tmux ls` works.
+		  none   Nothing is started.  Print the in-process fallback.  Exit 3.
+
+		Exit codes: 0 ok, 2 usage, 3 no multiplexer, 4 input or tool problem,
+		5 the multiplexer refused the start or a relabel, or a coordinator or
+		consultant tab name is taken.
+	EOF
+}
+
+_die() {
+	echo "${SELF_NAME}: error: $1" >&2
+	exit "${2:-1}"
+}
+
+_usage_fail() {
+	echo "${SELF_NAME}: error: $1" >&2
+	echo "Try: ${SELF_NAME} --help" >&2
+	exit "${EX_USAGE}"
+}
+
+_need_cmd() {
+	command -v "$1" > /dev/null 2>&1 || _die "cannot find \`$1\`.  Install it and retry." "${EX_INPUT}"
+}
+
+_in_list() {
+	local _x="$1" _i
+	shift
+	for _i in "$@"; do
+		[ "${_i}" = "${_x}" ] && return 0
+	done
+	return 1
+}
+
+_is_slug() {
+	[[ "$1" =~ ^[a-z][a-z0-9]*(-[a-z0-9]+)*$ ]]
+}
+
+# --- argument parsing ---------------------------------------------------
+
+# Store the value of a flag in the named variable.  Reject a missing
+# value, and a value that looks like another flag.
+_take() {
+	local _var="$1"
+	shift
+	[ "$#" -ge 2 ] && [[ "$2" != -* ]] || _usage_fail "$1 needs a value"
+	printf -v "${_var}" '%s' "$2"
+}
+
+_positional() {
+	if [ -z "${_class}" ]; then
+		_class="$1"
+	elif [ -z "${_domain}" ]; then
+		_domain="$1"
+	else
+		_usage_fail "unexpected argument: $1"
+	fi
+}
+
+# Split --opt=value into two words.  Stop at the first bare `--`.
+_normalize_args() {
+	local _a _seen=0
+	_argv=()
+	for _a in "$@"; do
+		if [ "${_seen}" = 0 ] && [[ "${_a}" == --*=* ]]; then
+			_argv+=("${_a%%=*}" "${_a#*=}")
+			continue
+		fi
+		[ "${_a}" != -- ] || _seen=1
+		_argv+=("${_a}")
+	done
+}
+
+_parse_args() {
+	local _arg
+	while [ "$#" -gt 0 ]; do
+		_arg="$1"
+		case "${_arg}" in
+			-h | --help)
+				_usage
+				exit 0
+				;;
+			--harness) _take _harness "$@" && shift ;;
+			--mux) _take _mux "$@" && shift ;;
+			--model) _take _model "$@" && shift ;;
+			--effort) _take _effort "$@" && shift ;;
+			--creator) _take _creator "$@" && shift ;;
+			--first-prompt) _take _first "$@" && shift ;;
+			--resume) _take _resume "$@" && shift ;;
+			--specialty) _take _specialty "$@" && shift ;;
+			--dry-run) _dry=1 ;;
+			--)
+				shift
+				_pass=("$@")
+				return 0
+				;;
+			-*) _usage_fail "unknown option: ${_arg}" ;;
+			*) _positional "${_arg}" ;;
+		esac
+		shift
+	done
+}
+
+# --- validation -----------------------------------------------------------
+
+_validate_creator() {
+	local _extra
+	[ -n "${_creator}" ] || return 0
+	[ "${_class}" = consultant ] || _usage_fail '--creator applies to a consultant only'
+	IFS=: read -r _creator_class _creator_band _creator_effort _extra <<< "${_creator}"
+	_in_list "${_creator_class}" user executive coordinator standalone \
+		|| _usage_fail "bad creator class: ${_creator_class}"
+	[ "${_creator_class}" != user ] || return 0
+	[ -z "${_extra:-}" ] || _usage_fail "bad --creator (use CLASS:BAND:EFFORT): ${_creator}"
+	[[ "${_creator_band}" =~ ^[a-z]+$ ]] || _usage_fail "bad creator band: ${_creator_band}"
+	_in_list "${_creator_effort}" "${EFFORTS[@]}" || _usage_fail "bad creator effort: ${_creator_effort}"
+	if [ -n "${_model}" ] || [ -n "${_effort}" ]; then
+		_usage_fail '--creator with an agent class cannot combine with --model or --effort'
+	fi
+}
+
+_validate_options() {
+	_in_list "${_harness}" claude pi || _usage_fail "bad --harness: ${_harness}"
+	_in_list "${_mux}" auto herdr tmux || _usage_fail "bad --mux: ${_mux}"
+	[ -z "${_effort}" ] || _in_list "${_effort}" "${EFFORTS[@]}" || _usage_fail "bad --effort: ${_effort}"
+	[ -z "${_model}" ] || [[ "${_model}" =~ ^[A-Za-z0-9][A-Za-z0-9._/:@+-]*$ ]] \
+		|| _usage_fail "bad --model: ${_model}"
+	[ -z "${_resume}" ] || [[ "${_resume}" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] \
+		|| _usage_fail "bad --resume: ${_resume}"
+	[ -z "${_specialty}" ] || [ "${_class}" = consultant ] || _usage_fail '--specialty applies to a consultant only'
+	[ -z "${_specialty}" ] || _is_slug "${_specialty}" || _usage_fail "bad --specialty: ${_specialty}"
+}
+
+_validate() {
+	[ -n "${_class}" ] || _usage_fail 'missing class'
+	_in_list "${_class}" "${CLASSES[@]}" || _usage_fail "unknown class: ${_class}"
+	[ -n "${_domain}" ] || _usage_fail 'missing domain'
+	_is_slug "${_domain}" || _usage_fail "bad domain (use a-z, 0-9, and hyphens): ${_domain}"
+	_validate_options
+	_validate_creator
+}
+
+_check_inputs() {
+	_need_cmd jq
+	_class_file="${CLASS_DIR}/${_class}.md"
+	[ -f "${_class_file}" ] || _die "class file not found: ${_class_file}" "${EX_INPUT}"
+	[ -z "${_first}" ] || [ -f "${_first}" ] || _die "first prompt file not found: ${_first}" "${EX_INPUT}"
+	[ -z "${_first}" ] || [[ "${_first}" == /* ]] || _first="${PWD}/${_first}"
+}
+
+# --- model and effort -------------------------------------------------------
+
+_pick() {
+	[ -x "${SCORE}" ] || _die "cannot run score.py: ${SCORE}" "${EX_INPUT}"
+	_pick_json="$("${SCORE}" "$@")" || _die "score.py failed: $*" "${EX_INPUT}"
+}
+
+_pick_field() {
+	jq -r "$1" <<< "${_pick_json}" || _die 'score.py printed bad JSON' "${EX_INPUT}"
+}
+
+_fill_from_pick() {
+	local _m _e
+	if [ -z "${_model}" ]; then
+		if [ "${_harness}" = pi ]; then
+			_m="$(_pick_field '.pick.model_ref // .pick.id // empty')"
+		else
+			_m="$(_pick_field '.pick.model_param // .pick.id // empty')"
+		fi
+		[ -n "${_m}" ] || _die 'score.py returned no model' "${EX_INPUT}"
+		_model="${_m}"
+	fi
+	if [ -z "${_effort}" ]; then
+		_e="$(_pick_field '.pick.effort // empty')"
+		[ -n "${_e}" ] || _die 'score.py returned no effort' "${EX_INPUT}"
+		_effort="${_e}"
+	fi
+}
+
+_resolve_user_creator() {
+	local _args=(--pick --band mythos --user-named)
+	if [ -z "${_model}" ]; then
+		[ -z "${_effort}" ] || _args+=(--effort "${_effort}")
+		_pick "${_args[@]}"
+		_fill_from_pick
+	fi
+	[ -n "${_effort}" ] || _effort=xhigh
+}
+
+_resolve_model() {
+	if [ "${_creator_class}" = user ]; then
+		_resolve_user_creator
+	elif [ -n "${_creator_class}" ]; then
+		_pick --pick --consultant-for "${_creator_band}:${_creator_effort}"
+		_fill_from_pick
+	elif [ -z "${_model}" ] || [ -z "${_effort}" ]; then
+		_pick --pick --role "${_class}"
+		_fill_from_pick
+	fi
+	[[ "${_model}" =~ ^[A-Za-z0-9][A-Za-z0-9._/:@+-]*$ ]] || _die "bad model from score.py: ${_model}" "${EX_INPUT}"
+}
+
+# Claude Code takes low|medium|high|xhigh|max.  Map the two lower levels.
+_claude_effort() {
+	case "${_effort}" in
+		off | minimal)
+			echo "${SELF_NAME}: warning: Claude Code has no effort '${_effort}'.  Using low." >&2
+			echo low
+			;;
+		*) echo "${_effort}" ;;
+	esac
+}
+
+# --- degradation probe -------------------------------------------------------
+
+_probe_herdr() {
+	[ "${HERDR_ENV:-}" = 1 ] && [ -n "${HERDR_WORKSPACE_ID:-}" ] \
+		&& herdr workspace list > /dev/null 2>&1
+}
+
+_probe_tmux() {
+	[ -n "${TMUX:-}" ] && tmux ls > /dev/null 2>&1
+}
+
+# Pick the highest working level.  --mux forces a level down, never up.
+_choose_level() {
+	local _h=0 _t=0
+	if _probe_herdr; then _h=1; fi
+	if _probe_tmux; then _t=1; fi
+	_level=none
+	if [ "${_mux}" != tmux ] && [ "${_h}" = 1 ]; then
+		_level=herdr
+	elif [ "${_t}" = 1 ]; then
+		_level=tmux
+	fi
+	echo "level: ${_level}"
+	if [ "${_mux}" != auto ] && [ "${_mux}" != "${_level}" ]; then
+		echo "note: --mux ${_mux} is not available.  Using level ${_level}."
+	fi
+}
+
+_print_fallback() {
+	echo 'fallback: no multiplexer.  Start nothing.'
+	case "${_class}" in
+		executive)
+			echo 'fallback: The executive works as its own coordinator and dispatches in-process workers.'
+			echo 'fallback: To run the executive here, run the command above in a terminal.'
+			;;
+		coordinator)
+			echo 'fallback: Start no coordinator.  The executive works as its own coordinator and dispatches in-process workers.'
+			;;
+		consultant)
+			echo 'fallback: Use an in-process background agent: SendMessage in Claude Code, a pi-subagents child in Pi.'
+			echo 'fallback: Workers ask through their dispatcher.'
+			;;
+	esac
+}
+
+# --- names ---------------------------------------------------------------------
+
+_existing_names() {
+	case "${_level}" in
+		herdr) herdr tab list --workspace "${HERDR_WORKSPACE_ID}" | jq -r '.result.tabs[].label' ;;
+		tmux) tmux list-windows -F '#{window_name}' ;;
+		*) return 0 ;;
+	esac
+}
+
+_has_name() {
+	[[ $'\n'"${_names}"$'\n' == *$'\n'"$1"$'\n'* ]]
+}
+
+_next_n() {
+	local _n=1
+	while _has_name "${_domain}-consultant-${_n}"; do
+		_n=$((_n + 1))
+	done
+	echo "${_n}"
+}
+
+_derive_names() {
+	[ "${_class}" = executive ] || _names="$(_existing_names)" || _die 'cannot list existing tabs' "${EX_START}"
+	case "${_class}" in
+		executive)
+			_session="${_domain}-executive"
+			_tab=executive
+			;;
+		coordinator)
+			_session="${_domain}-co"
+			_tab="${_session}"
+			;;
+		consultant)
+			if [ -n "${_specialty}" ]; then
+				_session="${_domain}-${_specialty}-consultant"
+			else
+				_session="${_domain}-consultant-$(_next_n)"
+			fi
+			_tab="${_session}"
+			;;
+	esac
+	if [ "${_class}" != executive ] && _has_name "${_tab}"; then
+		_die "a tab named '${_tab}' is already open.  Close it first." "${EX_START}"
+	fi
+}
+
+# --- command -------------------------------------------------------------------
+
+_collect_sources() {
+	_sources=("${_class_file}")
+	if [ "${_class}" = executive ] && [ -f "${AMEND_DIR}/${_domain}.md" ]; then
+		_sources+=("${AMEND_DIR}/${_domain}.md")
+	fi
+	_prompt_file="${TMPDIR:-/tmp}/agent-launch-$(id -u)/${_session}.prompt.md"
+	_mcp_file="${_prompt_file%.prompt.md}.mcp.json"
+	if [ "${_class}" = consultant ]; then
+		_papers_file="${_prompt_file%.prompt.md}.papers.md"
+	fi
+}
+
+# The one line the consultant's system prompt gets about downloaded papers.
+_papers_line() {
+	# shellcheck disable=SC2016  # the backticks are literal Markdown
+	printf 'Paper downloads: save every paper to %s.  Pass that path as `save_path` on every paper-search call.\n' "${PAPERS_DIR}"
+}
+
+# The deny list: the fixed set, then every server left out of the MCP file.
+_claude_deny() {
+	local _n
+	_deny=("${CLAUDE_DENY[@]}")
+	for _n in "${_mcp_dropped[@]+"${_mcp_dropped[@]}"}"; do
+		_deny+=("mcp__${_n}__*")
+	done
+}
+
+_build_claude() {
+	_cmd=("${CLAUDE_BIN}" --append-system-prompt-file "${_prompt_file}"
+		--model "${_model}" --effort "$(_claude_effort)" --name "${_session}")
+	if [ "${_class}" = consultant ]; then
+		_claude_deny
+		_cmd+=(--no-chrome --tools "${CLAUDE_TOOLS}" --strict-mcp-config --mcp-config "${_mcp_file}"
+			--allowedTools "${CLAUDE_ALLOW[@]}" --disallowedTools "${_deny[@]}")
+	fi
+	[ -z "${_resume}" ] || _cmd+=(--resume "${_resume}")
+}
+
+# Join PI_ALLOW with commas.
+_pi_tools() {
+	local IFS=,
+	printf '%s' "${PI_ALLOW[*]}"
+}
+
+_build_pi() {
+	local _f
+	_cmd=("${PI_BIN}")
+	for _f in "${_sources[@]}"; do
+		_cmd+=(--append-system-prompt "${_f}")
+	done
+	[ -z "${_papers_file}" ] || _cmd+=(--append-system-prompt "${_papers_file}")
+	_cmd+=(--model "${_model}" --thinking "${_effort}" --name "${_session}")
+	if [ "${_class}" = consultant ]; then
+		_cmd+=(--tools "$(_pi_tools)" --exclude-tools "${PI_EXCLUDE}")
+	fi
+	[ -z "${_resume}" ] || _cmd+=(--session "${_resume}")
+}
+
+# Quote a word for the pane shell.  Keep plain words readable.  Single-quote
+# words with glob or space characters.
+_quote() {
+	if [[ "$1" =~ ^[A-Za-z0-9_./:=@%+,-]+$ ]]; then
+		printf '%s' "$1"
+	elif [[ "$1" =~ ^[^\'[:cntrl:]]+$ ]]; then
+		printf "'%s'" "$1"
+	else
+		printf '%q' "$1"
+	fi
+}
+
+# Build the command line to type into the pane.  Quote each word.  The
+# first prompt goes last, after `--`, read from its file by the pane shell.
+_render() {
+	local _w
+	_typed=''
+	if [ "${_harness}" = pi ]; then _build_pi; else _build_claude; fi
+	_cmd+=("${_pass[@]+"${_pass[@]}"}")
+	for _w in "${_cmd[@]}"; do
+		_typed+="$(_quote "${_w}") "
+	done
+	_typed="${_typed% }"
+	if [ -n "${_first}" ]; then
+		_typed+=" -- \"\$(cat $(_quote "${_first}"))\""
+	fi
+}
+
+_report() {
+	echo "class: ${_class}"
+	echo "session: ${_session}"
+	echo "tab: ${_tab}"
+	echo "model: ${_model}"
+	echo "effort: ${_effort}"
+	echo "sources: ${_sources[*]}"
+	[ -z "${_papers_file}" ] || echo "papers: ${PAPERS_DIR}"
+	if [ "${_class}" = executive ]; then
+		echo "command: exec ${_typed}"
+	else
+		echo "command: ${_typed}"
+	fi
+}
+
+# --- start -------------------------------------------------------------------
+
+# Write the one-file system prompt Claude Code needs, with the papers line
+# for a consultant.  Pi reads the class files in place and gets the papers
+# line as its own file.  Keep the files: the pane shell reads them after this
+# script ends.
+_write_prompt() {
+	[ "${_harness}" = claude ] || [ -n "${_papers_file}" ] || return 0
+	mkdir -p "$(dirname "${_prompt_file}")"
+	chmod 0700 "$(dirname "${_prompt_file}")"
+	[ -z "${_papers_file}" ] || _papers_line > "${_papers_file}"
+	[ "${_harness}" = claude ] || return 0
+	{
+		cat "${_sources[@]}"
+		if [ -n "${_papers_file}" ]; then
+			echo
+			cat "${_papers_file}"
+		fi
+	} > "${_prompt_file}.tmp"
+	mv "${_prompt_file}.tmp" "${_prompt_file}"
+}
+
+# Create the paper cache for a consultant, 0700 when new.
+_make_papers_dir() {
+	# shellcheck disable=SC2174  # only the leaf is ours; its parents are the cache tree
+	[ -z "${_papers_file}" ] || mkdir -p -m 0700 "${PAPERS_DIR}"
+}
+
+# Run one relabel step, or print it on a dry run.
+_relabel_step() {
+	if [ "${_dry}" = 1 ]; then
+		echo "relabel: $*"
+	else
+		"$@" > /dev/null 2>&1 || _die "relabel failed: $*" "${EX_START}"
+	fi
+}
+
+# Relabel the caller's own tab and workspace (Herdr) or window (tmux).
+_relabel() {
+	local _pane_arg=()
+	if [ "${_level}" = herdr ]; then
+		if [ -n "${HERDR_TAB_ID:-}" ]; then
+			_relabel_step herdr tab rename "${HERDR_TAB_ID}" executive
+		else
+			echo "${SELF_NAME}: warning: HERDR_TAB_ID is unset.  Tab not relabeled." >&2
+		fi
+		_relabel_step herdr workspace rename "${HERDR_WORKSPACE_ID}" "${_domain}"
+	elif [ "${_level}" = tmux ]; then
+		[ -z "${TMUX_PANE:-}" ] || _pane_arg=(-t "${TMUX_PANE}")
+		_relabel_step tmux rename-window "${_pane_arg[@]+"${_pane_arg[@]}"}" executive
+	fi
+}
+
+# Replace this process with the harness.  The pane shell stays its parent.
+_exec_harness() {
+	if [ -n "${_first}" ]; then
+		exec "${_cmd[@]}" -- "$(cat "${_first}")"
+	fi
+	exec "${_cmd[@]}"
+}
+
+# jq program.  Keep each allowed server from the user config.  Copy no
+# secret: each header and env value becomes a `${NAME}` reference when the
+# launcher's environment has NAME.  A key with no variable is omitted.  A
+# server is left out when it has secrets and no variable, when a secret may
+# sit in its URL or arguments, or when the source lacks it.  Only these
+# fields are copied: type, url, command, args, headers, env.
+_mcp_filter() {
+	cat <<- 'EOF'
+		def secretish: test("(token|key|secret|password|auth)[^&]*="; "i");
+		def refs: with_entries(select(($ENV[.key] // "") != "") | .value = "${" + .key + "}");
+		def inline: ((.url // "") | secretish) or ((.args // []) | map(tostring | secretish) | any);
+		(.mcpServers // {}) as $all
+		| [ $names[] as $n | ($all[$n] // null) as $s
+		  | if $s == null then {name: $n, ok: false, reason: "it is not in the source"}
+		    else ($s.headers // {}) as $h | ($s.env // {}) as $e
+		      | ($h | refs) as $hr | ($e | refs) as $er
+		      | if ($s | inline) then {name: $n, ok: false, reason: "a secret may sit in its URL or arguments"}
+		        elif (($h | length) + ($e | length)) > 0 and (($hr | length) + ($er | length)) == 0
+		        then {name: $n, ok: false, reason: "no environment variable holds its secrets"}
+		        else {name: $n, ok: true,
+		          entry: ($s | {type, url, command, args} | with_entries(select(.value != null))
+		            + (if ($h | length) > 0 then {headers: $hr} else {} end)
+		            + (if ($e | length) > 0 then {env: $er} else {} end)),
+		          omitted: (([$h, $e] | map(keys) | add) - ([$hr, $er] | map(keys) | add))}
+		        end end ]
+		| {config: {mcpServers: (map(select(.ok)) | map({key: .name, value: .entry}) | from_entries)},
+		   dropped: map(select(.ok | not) | {name, reason}),
+		   omitted: map(select(.ok) | .name as $n | .omitted[] | {server: $n, key: .})}
+	EOF
+}
+
+# Build the MCP allow-list config for a Claude consultant, before the command
+# is rendered.  Warn about each server or key left out.  Write no file.
+_prepare_mcp() {
+	local _res _line
+	[ "${_harness}" = claude ] && [ "${_class}" = consultant ] || return 0
+	[ -f "${MCP_SOURCE}" ] || _die "MCP source not found: ${MCP_SOURCE}" "${EX_INPUT}"
+	_res="$(jq --argjson names "${MCP_SERVERS}" "$(_mcp_filter)" "${MCP_SOURCE}")" \
+		|| _die "cannot read MCP source: ${MCP_SOURCE}" "${EX_INPUT}"
+	_mcp_json="$(jq '.config' <<< "${_res}")"
+	mapfile -t _mcp_dropped < <(jq -r '.dropped[].name' <<< "${_res}")
+	while IFS= read -r _line; do
+		echo "${SELF_NAME}: warning: MCP server ${_line}" >&2
+	done < <(jq -r '.dropped[] | "\(.name) left out: \(.reason).  Its tools are denied."' <<< "${_res}")
+	while IFS= read -r _line; do
+		echo "${SELF_NAME}: warning: MCP server ${_line}" >&2
+	done < <(jq -r '.omitted[] | "\(.server): env var \(.key) is unset.  Entry omitted."' <<< "${_res}")
+}
+
+# Write the config from _prepare_mcp.  It holds references, not secrets, but
+# make it 0600 anyway.
+_write_mcp_config() {
+	[ "${_harness}" = claude ] && [ "${_class}" = consultant ] || return 0
+	(
+		umask 077
+		printf '%s\n' "${_mcp_json}" > "${_mcp_file}.tmp"
+	)
+	mv "${_mcp_file}.tmp" "${_mcp_file}"
+}
+
+_start_herdr() {
+	local _out _pane
+	_out="$(herdr tab create --workspace "${HERDR_WORKSPACE_ID}" --cwd "${PWD}" \
+		--label "${_tab}" --no-focus)" || _die 'herdr tab create failed' "${EX_START}"
+	_pane="$(jq -er '.result.root_pane.pane_id' <<< "${_out}")" \
+		|| _die 'herdr tab create printed no pane id' "${EX_START}"
+	herdr pane run "${_pane}" "${_typed}" > /dev/null || _die 'herdr pane run failed' "${EX_START}"
+}
+
+_start_tmux() {
+	local _pane
+	_pane="$(tmux new-window -P -F '#{pane_id}' -n "${_tab}" -c "${PWD}")" \
+		|| _die 'tmux new-window failed' "${EX_START}"
+	tmux send-keys -t "${_pane}" -l -- "${_typed}" || _die 'tmux send-keys failed' "${EX_START}"
+	tmux send-keys -t "${_pane}" Enter || _die 'tmux send-keys failed' "${EX_START}"
+}
+
+# A dry run prints the relabel commands and starts nothing.  An executive
+# relabels, then execs.  Other classes open a new tab or window.
+_launch() {
+	if [ "${_dry}" = 1 ]; then
+		if [ "${_class}" = executive ]; then _relabel; fi
+		return 0
+	fi
+	_make_papers_dir
+	_write_prompt
+	_write_mcp_config
+	if [ "${_class}" = executive ]; then
+		_relabel
+		_exec_harness
+	fi
+	if [ "${_level}" = herdr ]; then _start_herdr; else _start_tmux; fi
+	echo "started: ${_session}"
+}
+
+# --- completions ----------------------------------------------------------------
+
+_completions_zsh() {
+	cat <<- 'EOF'
+		# agent-launch zsh completion.  Load after compinit:
+		#   eval "$(agent-launch completions zsh)"
+		_agent_launch_domains_list() {
+			local dir="${AGENT_LAUNCH_AMEND_DIR:-${XDG_DATA_HOME:-$HOME/.local/share}/agents/executives}"
+			local -a files
+			files=("$dir"/*.md(N))
+			(( ${#files} )) && print -rl -- ${files:t:r}
+			return 0
+		}
+
+		_agent_launch_domains() {
+			local -a names
+			names=(${(f)"$(_agent_launch_domains_list)"})
+			if (( ${#names} )); then
+				_describe -t domains 'domain' names
+			else
+				_message 'domain'
+			fi
+		}
+
+		_agent_launch() {
+			local curcontext="$curcontext" state ret=1
+			local -a line classes
+			_arguments -C \
+				'(- *)'{-h,--help}'[show help]' \
+				'--harness=[harness CLI]:harness:(claude pi)' \
+				'--mux=[multiplexer level]:mux:(auto herdr tmux)' \
+				'--model=[model]:model:' \
+				'--effort=[effort level]:effort:(off minimal low medium high xhigh max)' \
+				'--creator=[creator of a consultant, class\:band\:effort]:creator:' \
+				'--specialty=[specialty of a consultant]:specialty:' \
+				'--first-prompt=[first prompt file]:file:_files' \
+				'--resume=[session id to resume]:session id:' \
+				'--dry-run[print the level and command, start nothing]' \
+				'1:class:->class' \
+				'2:domain:->domain' \
+				'*:harness argument:_default' && ret=0
+			case $state in
+				class)
+					classes=(
+						'executive:standing executive for a domain'
+						'coordinator:coordinator chartered by an executive'
+						'consultant:read-only consultant'
+						'completions:print a shell completion function'
+					)
+					_describe -t classes 'class' classes && ret=0
+					;;
+				domain)
+					if [[ ${line[1]} == completions ]]; then
+						_values 'shell' zsh && ret=0
+					else
+						_agent_launch_domains && ret=0
+					fi
+					;;
+			esac
+			return ret
+		}
+
+		(( $+functions[compdef] )) && compdef _agent_launch agent-launch
+	EOF
+}
+
+_cmd_completions() {
+	[ "$#" -eq 1 ] || _usage_fail 'completions needs a shell name: zsh'
+	case "$1" in
+		zsh) _completions_zsh ;;
+		*) _usage_fail "unsupported shell: $1.  Use zsh." ;;
+	esac
+}
+
+# --- main ------------------------------------------------------------------------
+
+main() {
+	if [ "${1:-}" = completions ]; then
+		shift
+		_cmd_completions "$@"
+		return 0
+	fi
+	_normalize_args "$@"
+	_parse_args "${_argv[@]+"${_argv[@]}"}"
+	_validate
+	_check_inputs
+	_choose_level
+	_resolve_model
+	_derive_names
+	_collect_sources
+	_prepare_mcp
+	_render
+	_report
+	if [ "${_level}" = none ]; then
+		_print_fallback
+		exit "${EX_NOMUX}"
+	fi
+	_launch
+}
+
+main "$@"
