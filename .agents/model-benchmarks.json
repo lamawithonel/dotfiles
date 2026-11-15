@@ -81,16 +81,24 @@
       },
       "herdr": "env",
       "pi_models_store": {
-        "checked_at": "2026-11-09T15:41:48Z",
-        "count": 121
+        "checked_at": "2026-11-14T16:50:54Z",
+        "count": 128
       },
-      "probed_at": "2026-11-12T06:33:38Z",
+      "probed_at": "2026-11-15T05:00:06Z",
       "probed_with": {
-        "claude": "2.1.322 (Claude Code)",
-        "pi": "1.5.1"
+        "claude": "2.1.323 (Claude Code)",
+        "pi": "1.5.2"
       },
       "roster": {
         "anthropic/claude-fable-5-1[1m]": {
+          "context_window": 1000000,
+          "enabled": true,
+          "harness": "claude-code",
+          "model_param": "fable",
+          "model_ref": null,
+          "rosters": []
+        },
+        "anthropic/claude-fable-5-2[1m]": {
           "context_window": 1000000,
           "enabled": true,
           "harness": "claude-code",
@@ -282,8 +290,8 @@
             "max"
           ],
           "price": {
-            "input": 2.55,
-            "output": 12.75
+            "input": 3,
+            "output": 15
           },
           "rosters": [
             "pi-zdr",
@@ -402,8 +410,8 @@
             "max"
           ],
           "price": {
-            "input": 0.84,
-            "output": 2.64
+            "input": 0.98,
+            "output": 3.08
           },
           "rosters": [
             "pi-zdr",
@@ -422,8 +430,8 @@
             "max"
           ],
           "price": {
-            "input": 0.1125,
-            "output": 0.375
+            "input": 0.15,
+            "output": 0.5
           },
           "rosters": [
             "pi-zdr",
@@ -541,12 +549,12 @@
       },
       "display_name": "Claude Fable 5.1 (Adaptive Reasoning, Max Effort, Default Fallback)",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_omniscience": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
-        "aa_page_healthbench": "2026-11-12",
-        "aa_page_lcr": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_omniscience": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
+        "aa_page_lcr": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -558,9 +566,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "claude-fable-5-1",
@@ -698,6 +706,175 @@
       },
       "vendor": "anthropic"
     },
+    "anthropic/claude-fable-5-2[1m]": {
+      "aa_pricing": {
+        "input": 8,
+        "output": 40
+      },
+      "boards": {
+        "aa_3d": {
+          "as_of": "2026-11-13",
+          "ci": 25.47,
+          "effort": "max",
+          "score": 1271.4151,
+          "votes": null
+        },
+        "arena_webdev": {
+          "as_of": "2026-11-13",
+          "ci": 20.538708508679292,
+          "effort": "xhigh",
+          "score": 1837.808306458596,
+          "votes": 1215
+        },
+        "design_arena": {
+          "as_of": "2026-11-13",
+          "ci": null,
+          "effort": null,
+          "score": 1353.0,
+          "votes": null
+        }
+      },
+      "display_name": "Claude Fable 5.2",
+      "last_seen": {
+        "aa_free": "2026-11-15",
+        "aa_omniscience": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
+        "aa_page_lcr": "2026-11-15",
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15"
+      },
+      "match": {
+        "aa_slug": "claude-fable-5-2",
+        "board": [
+          "anthropic/claude-fable-5-2",
+          "claude-fable-5-2",
+          "claude-fable-5-2"
+        ],
+        "openrouter": "anthropic/claude-fable-5-2"
+      },
+      "pricing": {
+        "input": 8,
+        "output": 40,
+        "source": "aa_free"
+      },
+      "provider": "anthropic",
+      "variants": {
+        "high": {
+          "aa_slug": "claude-fable-5-2-high",
+          "aai": 61.8,
+          "aai_source": "aa_free",
+          "band": "opus",
+          "confidence": "high",
+          "domains": {
+            "business": 62.38,
+            "economics": 62.7,
+            "fin_acct": 62.7,
+            "health_med": null,
+            "legal": 60.3,
+            "strat_ops": 63.8
+          },
+          "index_cost_usd": 7105.77,
+          "page": {
+            "aa_cyber": null,
+            "healthbench": null,
+            "lcr": null,
+            "tb4": null
+          }
+        },
+        "low": {
+          "aa_slug": "claude-fable-5-2-low",
+          "aai": 53.9,
+          "aai_source": "aa_free",
+          "band": "opus",
+          "confidence": "high",
+          "domains": {
+            "business": 58.85,
+            "economics": 58.5,
+            "fin_acct": 58.4,
+            "health_med": null,
+            "legal": 57.2,
+            "strat_ops": 61.3
+          },
+          "index_cost_usd": 2861.78,
+          "page": {
+            "aa_cyber": null,
+            "healthbench": null,
+            "lcr": null,
+            "tb4": null
+          }
+        },
+        "max": {
+          "aa_slug": "claude-fable-5-2",
+          "aai": 64.6,
+          "aai_source": "aa_free",
+          "band": "opus",
+          "confidence": "high",
+          "domains": {
+            "business": 65.47,
+            "economics": 66.5,
+            "fin_acct": 64.7,
+            "health_med": 65.4,
+            "legal": 63.3,
+            "strat_ops": 67.4
+          },
+          "index_cost_usd": 22191.42,
+          "page": {
+            "aa_cyber": null,
+            "factuality": 0.4265,
+            "healthbench": 0.5955742028993666,
+            "lcr": 0.833333333333333,
+            "omniscience": 66.7666666666667,
+            "tb4": 0.595959595959596
+          }
+        },
+        "medium": {
+          "aa_slug": "claude-fable-5-2-medium",
+          "aai": 56.4,
+          "aai_source": "aa_free",
+          "band": "opus",
+          "confidence": "high",
+          "domains": {
+            "business": 60.2,
+            "economics": 60.3,
+            "fin_acct": 60,
+            "health_med": null,
+            "legal": 58.4,
+            "strat_ops": 62.1
+          },
+          "index_cost_usd": 3359.66,
+          "page": {
+            "aa_cyber": null,
+            "healthbench": null,
+            "lcr": null,
+            "tb4": null
+          }
+        },
+        "xhigh": {
+          "aa_slug": "claude-fable-5-2-xhigh",
+          "aai": 62.2,
+          "aai_source": "aa_free",
+          "band": "opus",
+          "confidence": "high",
+          "domains": {
+            "business": 63.62,
+            "economics": 64,
+            "fin_acct": 63.3,
+            "health_med": null,
+            "legal": 61.8,
+            "strat_ops": 65.4
+          },
+          "index_cost_usd": 11741.62,
+          "page": {
+            "aa_cyber": null,
+            "healthbench": null,
+            "lcr": null,
+            "tb4": null
+          }
+        }
+      },
+      "vendor": "anthropic"
+    },
     "anthropic/claude-haiku-4.5": {
       "aa_pricing": null,
       "boards": {
@@ -718,9 +895,9 @@
       },
       "display_name": null,
       "last_seen": {
-        "design_arena": "2026-11-12",
-        "eq_bench": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "design_arena": "2026-11-15",
+        "eq_bench": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "claude-haiku-4-5",
@@ -834,11 +1011,11 @@
       },
       "display_name": "Claude Haiku 5.5 (Max)",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_omniscience": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_healthbench": "2026-11-12",
-        "aa_page_lcr": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_omniscience": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
+        "aa_page_lcr": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_french": "2026-11-12",
@@ -848,9 +1025,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "claude-haiku-5-5",
@@ -1095,7 +1272,7 @@
       },
       "display_name": "Claude Opus 5 (Adaptive Reasoning, Max Effort)",
       "last_seen": {
-        "aa_free": "2026-11-12",
+        "aa_free": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -1107,10 +1284,10 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "eq_bench": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "eq_bench": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "claude-opus-5",
@@ -1360,12 +1537,12 @@
       },
       "display_name": "Claude Opus 5.5 (Max, Default Fallback)",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_omniscience": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
-        "aa_page_healthbench": "2026-11-12",
-        "aa_page_lcr": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_omniscience": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
+        "aa_page_lcr": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -1377,10 +1554,10 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "eq_bench": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "eq_bench": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "claude-opus-5-5",
@@ -1637,10 +1814,10 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "eq_bench": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "eq_bench": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "claude-sonnet-5",
@@ -1906,11 +2083,11 @@
       },
       "display_name": "Claude Sonnet 5.5 (Max, Default Fallback)",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_omniscience": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_healthbench": "2026-11-12",
-        "aa_page_lcr": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_omniscience": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
+        "aa_page_lcr": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -1922,9 +2099,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "claude-sonnet-5-5",
@@ -2079,9 +2256,9 @@
       "display_name": "DeepSeek V4 Flash 0731 (Reasoning, Max Effort)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "deepseek-v4-flash",
@@ -2225,7 +2402,7 @@
       },
       "display_name": "DeepSeek V4 Pro 0813 (Reasoning, Max Effort)",
       "last_seen": {
-        "aa_free": "2026-11-12",
+        "aa_free": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -2237,9 +2414,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "deepseek-v4-pro",
@@ -2257,6 +2434,28 @@
       },
       "provider": "deepseek",
       "variants": {
+        "high": {
+          "aa_slug": "deepseek-v4-pro-high",
+          "aai": 20.8,
+          "aai_source": "aa_free",
+          "band": null,
+          "confidence": "high",
+          "domains": {
+            "business": 29.85,
+            "economics": 28.5,
+            "fin_acct": 28,
+            "health_med": null,
+            "legal": 26.3,
+            "strat_ops": 36.6
+          },
+          "index_cost_usd": 878.95,
+          "page": {
+            "aa_cyber": null,
+            "healthbench": null,
+            "lcr": null,
+            "tb4": null
+          }
+        },
         "max": {
           "aa_slug": "deepseek-v4-pro",
           "aai": 23.1,
@@ -2323,11 +2522,11 @@
       "display_name": "DeepSeek V4.1 Flash (Reasoning, Max Effort)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "aa_page_cyber": "2026-11-12",
-        "aa_page_healthbench": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "aa_page_cyber": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "deepseek-v4-1-flash",
@@ -2506,9 +2705,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "gemini-3-7-flash",
@@ -2705,11 +2904,11 @@
       },
       "display_name": "Gemini 3.8 Flash (high)",
       "last_seen": {
-        "aa_free": "2026-11-12",
+        "aa_free": "2026-11-15",
         "aa_omniscience": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
-        "aa_page_healthbench": "2026-11-12",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
         "aa_page_lcr": "2026-11-12",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
@@ -2722,9 +2921,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "gemini-3-8-flash",
@@ -2821,8 +3020,8 @@
       "boards": {},
       "display_name": null,
       "last_seen": {
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "gemma-4-26b-a4b-it",
@@ -2855,9 +3054,9 @@
       },
       "display_name": null,
       "last_seen": {
-        "eq_bench": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "eq_bench": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "gemma-4-31b-it",
@@ -2890,8 +3089,8 @@
       },
       "display_name": null,
       "last_seen": {
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "muse-glimmer-30b",
@@ -3018,9 +3217,9 @@
       },
       "display_name": "Muse Spark 1.3 (max)",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -3032,9 +3231,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "muse-spark-1-3",
@@ -3216,9 +3415,9 @@
       },
       "display_name": "MiniMax-M3",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -3230,11 +3429,11 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "eq_bench": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "eq_bench": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "minimax-m3",
@@ -3392,11 +3591,11 @@
       },
       "display_name": "Kimi K3 (max)",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
-        "aa_page_healthbench": "2026-11-12",
-        "aa_page_lcr": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
+        "aa_page_lcr": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -3408,11 +3607,11 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "eq_bench": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "eq_bench": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "kimi-k3",
@@ -3424,8 +3623,8 @@
         "openrouter": "moonshotai/kimi-k3"
       },
       "pricing": {
-        "input": 2.55,
-        "output": 12.75,
+        "input": 3,
+        "output": 15,
         "source": "openrouter-key"
       },
       "provider": "moonshotai",
@@ -3487,9 +3686,9 @@
       "boards": {},
       "display_name": "Nemotron 3.5 Lightning",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "aa_free": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "nemotron-3-5-lightning",
@@ -3645,10 +3844,10 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "eq_bench": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "design_arena": "2026-11-15",
+        "eq_bench": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "gpt-5-6-sol",
@@ -3905,21 +4104,21 @@
           "votes": 8425
         },
         "design_arena": {
-          "as_of": "2026-11-11",
+          "as_of": "2026-11-12",
           "ci": null,
           "effort": null,
-          "score": 1331.0,
+          "score": 1341.0,
           "votes": null
         }
       },
       "display_name": "GPT-6 Astra (max)",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_omniscience": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
-        "aa_page_healthbench": "2026-11-12",
-        "aa_page_lcr": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_omniscience": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
+        "aa_page_lcr": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -3931,10 +4130,10 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "gpt-6-astra",
@@ -4077,8 +4276,8 @@
       "boards": {},
       "display_name": "OpenAI: GPT-6 Astra Pro",
       "last_seen": {
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "gpt-6-astra-pro",
@@ -4107,8 +4306,8 @@
       "display_name": "Qwen3.6 35B A3B (Reasoning)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "qwen3-6-35b-a3b",
@@ -4184,8 +4383,8 @@
       "display_name": "Qwen3.8 2.4T A95B",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "aa_page_cyber": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "aa_page_cyber": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "qwen3-8-2-4t-a95b",
@@ -4322,10 +4521,10 @@
       },
       "display_name": "Qwen3.8 27B (xhigh)",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_omniscience": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
-        "aa_page_lcr": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_omniscience": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
+        "aa_page_lcr": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -4337,9 +4536,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "qwen3-8-27b",
@@ -4547,7 +4746,7 @@
       },
       "display_name": "Grok 4.6 (high)",
       "last_seen": {
-        "aa_free": "2026-11-12",
+        "aa_free": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -4559,8 +4758,8 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "grok-4-6",
@@ -4793,10 +4992,10 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "design_arena": "2026-11-12",
-        "eq_bench": "2026-11-12",
-        "openrouter": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "design_arena": "2026-11-15",
+        "eq_bench": "2026-11-15",
+        "openrouter": "2026-11-15"
       },
       "match": {
         "aa_slug": "glm-5-2",
@@ -4963,12 +5162,12 @@
       },
       "display_name": "GLM-5.3 (max)",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_omniscience": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
-        "aa_page_healthbench": "2026-11-12",
-        "aa_page_lcr": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_omniscience": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
+        "aa_page_healthbench": "2026-11-15",
+        "aa_page_lcr": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -4980,9 +5179,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "glm-5-3",
@@ -4994,8 +5193,8 @@
         "openrouter": "z-ai/glm-5.3"
       },
       "pricing": {
-        "input": 0.84,
-        "output": 2.64,
+        "input": 0.98,
+        "output": 3.08,
         "source": "openrouter-key"
       },
       "provider": "z-ai",
@@ -5151,9 +5350,9 @@
       },
       "display_name": "GLM-5.3-Flash",
       "last_seen": {
-        "aa_free": "2026-11-12",
-        "aa_page_3d": "2026-11-12",
-        "aa_page_cyber": "2026-11-12",
+        "aa_free": "2026-11-15",
+        "aa_page_3d": "2026-11-15",
+        "aa_page_cyber": "2026-11-15",
         "arena_chinese": "2026-11-12",
         "arena_creative_writing": "2026-11-12",
         "arena_european_mean": "2026-11-12",
@@ -5165,9 +5364,9 @@
         "arena_polish": "2026-11-12",
         "arena_russian": "2026-11-12",
         "arena_spanish": "2026-11-12",
-        "arena_webdev": "2026-11-12",
-        "openrouter": "2026-11-12",
-        "openrouter_key": "2026-11-12"
+        "arena_webdev": "2026-11-15",
+        "openrouter": "2026-11-15",
+        "openrouter_key": "2026-11-15"
       },
       "match": {
         "aa_slug": "glm-5-3-flash",
@@ -5179,8 +5378,8 @@
         "openrouter": "z-ai/glm-5.3-flash"
       },
       "pricing": {
-        "input": 0.1125,
-        "output": 0.375,
+        "input": 0.15,
+        "output": 0.5,
         "source": "openrouter-key"
       },
       "provider": "z-ai",
@@ -5570,19 +5769,19 @@
       "url": "https://artificialanalysis.ai/api/v2/data/llms/models"
     },
     "aa_free": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "GET ?page=N with x-api-key header until pagination.has_more is false; AAI, index cost, domain indexes, pricing; effort from slug or name",
       "fetched_by": "lama-pc-01",
-      "matched": 16,
+      "matched": 17,
       "name": "aa_free",
       "row_minimum": 600,
-      "rows": 122,
+      "rows": 128,
       "status": "ok",
       "url": "https://artificialanalysis.ai/api/v2/language/models/free"
     },
     "aa_omniscience": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "one GET; embedded omniscience and hallucinationRate (stored as factuality)",
       "fetched_by": "lama-pc-01",
@@ -5594,11 +5793,11 @@
       "url": "https://artificialanalysis.ai/evaluations/omniscience"
     },
     "aa_page_3d": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "one GET; aa3dElo plus its 95% interval, board aa_3d",
       "fetched_by": "lama-pc-01",
-      "matched": 11,
+      "matched": 12,
       "name": "aa_page_3d",
       "row_minimum": 15,
       "rows": 25,
@@ -5606,7 +5805,7 @@
       "url": "https://artificialanalysis.ai/evaluations/aa-3d"
     },
     "aa_page_cyber": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "one GET; embedded cyberIndex (aa_cyber) per model record",
       "fetched_by": "lama-pc-01",
@@ -5618,11 +5817,11 @@
       "url": "https://artificialanalysis.ai/evaluations/artificial-analysis-cyber-index"
     },
     "aa_page_healthbench": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "one GET; embedded healthbench per model record",
       "fetched_by": "lama-pc-01",
-      "matched": 9,
+      "matched": 10,
       "name": "aa_page_healthbench",
       "row_minimum": 8,
       "rows": 15,
@@ -5630,7 +5829,7 @@
       "url": "https://artificialanalysis.ai/evaluations/healthbench"
     },
     "aa_page_lcr": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "one GET; embedded fields terminalBench40 (tb4) and lcr per model record",
       "fetched_by": "lama-pc-01",
@@ -5643,142 +5842,142 @@
     },
     "arena_chinese": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "HTTPError: HTTP Error 501: Not Implemented",
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_chinese",
       "row_minimum": 236,
       "rows": 395,
-      "status": "ok",
+      "status": "failed",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_creative_writing": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "HTTPError: HTTP Error 501: Not Implemented",
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_creative_writing",
       "row_minimum": 250,
       "rows": 419,
-      "status": "ok",
+      "status": "failed",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_european_mean": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "FeedMinRowsError: arena_european_mean: 0 rows, minimum 100",
       "fetch": "mean of French, German, Spanish, Polish, Russian Arena boards",
       "fetched_by": "lama-pc-01",
       "matched": 18,
       "name": "arena_european_mean",
       "row_minimum": 100,
       "rows": 220,
-      "status": "ok",
+      "status": "failed",
       "url": null
     },
     "arena_french": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "HTTPError: HTTP Error 501: Not Implemented",
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_french",
       "row_minimum": 180,
       "rows": 301,
-      "status": "ok",
+      "status": "failed",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_german": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "HTTPError: HTTP Error 501: Not Implemented",
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 18,
       "name": "arena_german",
       "row_minimum": 190,
       "rows": 320,
-      "status": "ok",
+      "status": "failed",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_japanese": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "HTTPError: HTTP Error 501: Not Implemented",
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_japanese",
       "row_minimum": 170,
       "rows": 288,
-      "status": "ok",
+      "status": "failed",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_korean": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "HTTPError: HTTP Error 501: Not Implemented",
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_korean",
       "row_minimum": 170,
       "rows": 289,
-      "status": "ok",
+      "status": "failed",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_lang_mean": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "FeedMinRowsError: arena_lang_mean: 0 rows, minimum 100",
       "fetch": "mean of the cached Arena language boards (at least 5 present)",
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_lang_mean",
       "row_minimum": 100,
       "rows": 301,
-      "status": "ok",
+      "status": "failed",
       "url": null
     },
     "arena_polish": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "HTTPError: HTTP Error 501: Not Implemented",
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_polish",
       "row_minimum": 145,
       "rows": 244,
-      "status": "ok",
+      "status": "failed",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_russian": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "HTTPError: HTTP Error 501: Not Implemented",
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_russian",
       "row_minimum": 230,
       "rows": 385,
-      "status": "ok",
+      "status": "failed",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_spanish": {
       "as_of": "2026-11-12",
-      "error": null,
+      "error": "HTTPError: HTTP Error 501: Not Implemented",
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_spanish",
       "row_minimum": 180,
       "rows": 303,
-      "status": "ok",
+      "status": "failed",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_webdev": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
-      "matched": 18,
+      "matched": 19,
       "name": "arena_webdev",
       "row_minimum": 90,
       "rows": 155,
@@ -5786,11 +5985,11 @@
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=webdev"
     },
     "claude_roster": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "candidates: old roster + additionalModelOptionsCache + overrides.*.probe; truth: claude -p probe",
       "fetched_by": "lama-pc-01",
-      "matched": 7,
+      "matched": 8,
       "name": "Claude Code deployment roster",
       "status": "ok",
       "url": "file://~/.claude.json"
@@ -5807,19 +6006,19 @@
       "url": "https://deepswe.datacurve.ai/"
     },
     "design_arena": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "POST {arenaType:models, category:website}; .data[] {modelId, elo}",
       "fetched_by": "lama-pc-01",
-      "matched": 19,
+      "matched": 20,
       "name": "design_arena",
       "row_minimum": 40,
-      "rows": 207,
+      "rows": 209,
       "status": "ok",
       "url": "https://www.designarena.ai/api/leaderboard"
     },
     "eq_bench": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "GET; strip 'const EQBENCH4_DATA = ' and trailing ';'; .models[] {model, elo}",
       "fetched_by": "lama-pc-01",
@@ -5831,40 +6030,40 @@
       "url": "https://eqbench.com/eqbench4/eqbench4_data.js"
     },
     "openrouter": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "GET; .data[].pricing USD per token x1e6; negative = alias sentinel, skipped",
       "fetched_by": "lama-pc-01",
       "matched": 29,
       "name": "openrouter",
       "row_minimum": 275,
-      "rows": 460,
+      "rows": 462,
       "status": "ok",
       "url": "https://openrouter.ai/api/v1/models"
     },
     "openrouter_key": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "local read; openrouter.models[].cost input/output, the price this key pays",
       "fetched_by": "lama-pc-01",
       "matched": 14,
       "name": "openrouter_key",
       "row_minimum": 72,
-      "rows": 116,
+      "rows": 121,
       "status": "ok",
       "url": "file://~/.pi/agent/models-store.json"
     },
     "pi_roster": {
-      "as_of": "2026-11-12",
+      "as_of": "2026-11-15",
       "error": null,
       "fetch": "enabledModels[] intersected with openrouter.models[].id (pi-zdr); enabledModels alone (pi-enabled)",
       "fetched_by": "lama-pc-01",
       "matched": 15,
       "name": "Pi enabledModels and models-store",
-      "rows": 121,
+      "rows": 128,
       "status": "ok",
       "url": "file://~/.pi/agent/{settings,models-store}.json"
     }
   },
-  "updated_at": "2026-11-12T06:33:38Z"
+  "updated_at": "2026-11-15T05:00:06Z"
 }
