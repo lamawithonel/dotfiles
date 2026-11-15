@@ -10,7 +10,7 @@ never restates the rules, because they change often.
 | Slot family | Source |
 | --- | --- |
 | Position, supervisor, who may message whom | `~/.agents/AGENTS.md` ("Role Classes") and `~/.agents/ROLES.md` |
-| Commissioning, depth limit, escalation, lateral messages, lifecycle | `~/.agents/ROLES.md` |
+| Commissioning, depth limit, escalation, lateral messages, holds, gates, audit, lifecycle | `~/.agents/ROLES.md` |
 | Model, effort, work breakdown structure, worker guards | `~/.agents/skills/model-router/SKILL.md` and its `references/effort.md` |
 | Brief tags and envelopes | `~/.agents/skills/model-router/references/brief.md` |
 | Shape, level, onboarding, isolation | `~/.agents/skills/vcs-workflow/SKILL.md` |
@@ -57,9 +57,11 @@ Only an orchestrator commissions a coordinator.  A coordinator
 commission also states: its orchestrator as supervisor, its own Herdr
 tab in the orchestrator's workspace, that it asks the orchestrator for
 any new peer coordinator instead of creating one, escalation of
-out-of-domain requests to the orchestrator, and brokered introduction
-for first contact with any other orchestrator.  A prompt for a session
-the user will start describes an independent session, never a
+out-of-domain requests to the orchestrator, brokered introduction for
+first contact with any other orchestrator, an onboarding digest in
+place of files to read in full, and any milestone where it must wait
+instead of going on (`ROLES.md`, "Commissioning").  A prompt for a
+session the user will start describes an independent session, never a
 coordinator; only the user declares an orchestrator.
 
 ## Repository slots
