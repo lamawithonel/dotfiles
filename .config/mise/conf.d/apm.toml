@@ -1,0 +1,21 @@
+# apm check for the agent harnesses.  Copy to ~/.config/mise/conf.d/apm.toml
+# (or merge the task into any mise config).
+
+# Prove that no secret value landed in ~/.claude.json.  apm bakes a plain
+# ${VAR} into the harness config at install time; only ${VAR:-} passes
+# through.  Prints server and key names only, never a value.  Exit 1 when any
+# env or header value is not a ${VAR} or ${VAR:-default} reference.
+[tasks.apm-mcp-check]
+description = "Check that ~/.claude.json MCP env and headers hold only ${VAR:-} references"
+run = '''
+set -eu
+f="${HOME}/.claude.json"
+jq -r '
+  (.mcpServers // {}) | to_entries[] | .key as $s
+  | ((.value.env // {}) + (.value.headers // {})) | to_entries[]
+  | "\($s)\t\(.key)\t" + (
+      if (.value | tostring | test("^\\$\\{[A-Za-z0-9_]+(:-[^}]*)?\\}$"))
+      then "ref" else "LITERAL" end)
+' "$f" | tee /dev/stderr | { ! grep -q 'LITERAL$'; }
+printf 'apm-mcp-check: ok\n'
+'''
