@@ -4,7 +4,6 @@ version: 0.0.0
 targets:
   - agent-skills
   - claude
-  - codex
 dependencies:
   apm:
     - anthropics/skills/skills/skill-creator
@@ -17,6 +16,13 @@ dependencies:
     - modular/skills/mojo-syntax
     - shadcn/improve
   mcp:
+    # Write each secret as ${VAR:-}.  apm resolves a plain ${VAR} to its
+    # value at install time and writes that value into the harness config;
+    # the ${VAR:-} form passes through unchanged and Claude Code expands it
+    # at launch.  Keep codex out of `targets`: apm cannot write this form
+    # into a Codex config.  Pi reads these entries through its claude-code
+    # import; after an install, run `/mcp-adapter` in Pi to refresh them.
+
     # DeepWiki -- Free hosted Q&A and code search over any public GitHub repo
     # https://deepwiki.com
     - name: deepwiki
@@ -31,7 +37,7 @@ dependencies:
       transport: streamable-http
       url: https://mcp.context7.com/mcp
       headers:
-        CONTEXT7_API_KEY: ${env:CONTEXT7_API_KEY}
+        CONTEXT7_API_KEY: ${CONTEXT7_API_KEY:-}
 
     # paper-search -- Local MCP search service for scholarly papers
     # https://github.com/openags/paper-search-mcp
@@ -40,13 +46,13 @@ dependencies:
       transport: stdio
       command: paper-search-mcp
       env:
-        PAPER_SEARCH_MCP_CORE_API_KEY: '${PAPER_SEARCH_MCP_CORE_API_KEY}'
-        PAPER_SEARCH_MCP_DOAJ_API_KEY: '${PAPER_SEARCH_MCP_DOAJ_API_KEY}'
-        PAPER_SEARCH_MCP_IEEE_API_KEY: '${PAPER_SEARCH_MCP_IEEE_API_KEY}'
-        PAPER_SEARCH_MCP_OPENALEX_API_KEY: '${PAPER_SEARCH_MCP_OPENALEX_API_KEY}'
-        PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: '${PAPER_SEARCH_MCP_UNPAYWALL_EMAIL}'
-        PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: '${PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY}'
-        PAPER_SEARCH_MCP_ZENODO_ACCESS_TOKEN: '${PAPER_SEARCH_MCP_ZENODO_ACCESS_TOKEN}'
+        PAPER_SEARCH_MCP_CORE_API_KEY: '${PAPER_SEARCH_MCP_CORE_API_KEY:-}'
+        PAPER_SEARCH_MCP_DOAJ_API_KEY: '${PAPER_SEARCH_MCP_DOAJ_API_KEY:-}'
+        PAPER_SEARCH_MCP_IEEE_API_KEY: '${PAPER_SEARCH_MCP_IEEE_API_KEY:-}'
+        PAPER_SEARCH_MCP_OPENALEX_API_KEY: '${PAPER_SEARCH_MCP_OPENALEX_API_KEY:-}'
+        PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: '${PAPER_SEARCH_MCP_UNPAYWALL_EMAIL:-}'
+        PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: '${PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY:-}'
+        PAPER_SEARCH_MCP_ZENODO_ACCESS_TOKEN: '${PAPER_SEARCH_MCP_ZENODO_ACCESS_TOKEN:-}'
 
     # Hugging Face -- Repository tools
     # https://huggingface.co/mcp
@@ -55,6 +61,6 @@ dependencies:
       transport: http
       url: https://huggingface.co/mcp?login
       env:
-        HF_TOKEN: '${HF_TOKEN}'
+        HF_TOKEN: '${HF_TOKEN:-}'
 includes: auto
 scripts: {}
