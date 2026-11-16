@@ -14,6 +14,9 @@ dependencies:
     - microsoft/playwright-cli/skills/playwright-cli
     - modular/skills/mojo-python-interop
     - modular/skills/mojo-syntax
+    # Reverse Engineer Anything.  Keep this tag, the `rea` MCP server below,
+    # and `npm:rea-agents` in ~/.config/mise/config.toml on one version.
+    - morluto/rea/.agents/skills/reverse-engineer-anything#rea-agents-6.9.0
     - shadcn/improve
   mcp:
     # Write each secret as ${VAR:-}.  apm resolves a plain ${VAR} to its
@@ -62,5 +65,21 @@ dependencies:
       url: https://huggingface.co/mcp?login
       env:
         HF_TOKEN: '${HF_TOKEN:-}'
+
+    # Reverse Engineer Anything -- stdio MCP server from the mise-installed
+    # `rea` binary (npm:rea-agents).  Output schemas are 92% of the default
+    # catalog (4.6 MB); `compact` plus this family list gives 174 tools at
+    # about 460 KB.  Add a family here when a job needs it (frida, pcap, ...).
+    # https://github.com/morluto/rea
+    - name: rea
+      registry: false
+      transport: stdio
+      command: rea
+      args:
+        - mcp
+      env:
+        REA_MCP_TOOL_FAMILIES: session,enhanced,native,electron,application,android,apktool,adb,artifact
+        REA_MCP_INPUT_SCHEMA_PROFILE: compact
+        REA_MCP_OUTPUT_SCHEMA_PROFILE: compact
 includes: auto
 scripts: {}

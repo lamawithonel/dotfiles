@@ -4,7 +4,8 @@
 # Prove that no secret value landed in ~/.claude.json.  apm bakes a plain
 # ${VAR} into the harness config at install time; only ${VAR:-} passes
 # through.  Prints server and key names only, never a value.  Exit 1 when any
-# env or header value is not a ${VAR} or ${VAR:-default} reference.
+# env or header value is not a ${VAR} or ${VAR:-default} reference.  The
+# REA_MCP_* keys are tool-catalog settings, not credentials, and are skipped.
 [tasks.apm-mcp-check]
 description = "Check that ~/.claude.json MCP env and headers hold only ${VAR:-} references"
 run = '''
@@ -13,6 +14,7 @@ f="${HOME}/.claude.json"
 jq -r '
   (.mcpServers // {}) | to_entries[] | .key as $s
   | ((.value.env // {}) + (.value.headers // {})) | to_entries[]
+  | select(.key | startswith("REA_MCP_") | not)
   | "\($s)\t\(.key)\t" + (
       if (.value | tostring | test("^\\$\\{[A-Za-z0-9_]+(:-[^}]*)?\\}$"))
       then "ref" else "LITERAL" end)
