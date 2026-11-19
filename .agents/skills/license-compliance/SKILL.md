@@ -101,3 +101,36 @@ Use these reference methods during Stage 1/Stage 2 checks depending on the stack
 *   **Python:** Inspect `pyproject.toml` or `pip list`. Audit with `pip-licenses --summary`.
 *   **POSIX Shell / Bash:** Inspect file header comments for `SPDX-License-Identifier: <ID>` tags or run `reuse lint`.
 *   **Mojo:** Inspect package `pixi.toml` / `environment.yml` dependencies, check source file SPDX headers, or run `reuse lint`.
+
+## Third-party skill updates
+
+Treat every changed third-party skill as untrusted code until a person has
+read its diff.  A clean scan, a green `apm audit`, or an `apm outdated`
+listing is never the review: none of them shows content, and `apm audit`
+does not flag prompt-injection text.
+
+`apm-review` is the review step.  It gates `apm install -g` and verifies
+the result.  Run the commands in this order:
+
+1. `apm-review list` (agent or user).  Shows the locked and upstream
+   commit per dependency.  Read-only.
+2. `apm-review snapshot DIR` (agent or user).  Copies the lock, apm.yml,
+   and deployed skills into DIR under `$TMPDIR` before any install.
+3. `apm-review diff DEP` or `--all` (agent or user).  Clones under
+   `$TMPDIR`, writes the full diff to the state directory, and prints a
+   summary of flags.  The summary is a pointer, not a verdict.
+4. `apm-review ack DEP` (user only).  Needs a terminal.  The user reads the
+   diff in the pager and types the first 8 characters of the new SHA.  An
+   agent cannot run this step.
+5. `apm-review pin DEP --write` (user, or an agent the user directs).
+   Writes `#<full SHA>` on the dependency's apm.yml line so the install
+   cannot drift past the reviewed commit.  It refuses if upstream moved
+   after the ack or the diff file changed.
+6. `apm install -g` (user only).  The sandbox denies agents writes to
+   `~/.agents/skills`.
+7. `apm-review verify DIR` (agent or user).  Reports files apm removed and
+   symlinks that apm deployed as regular files.  It restores nothing.  To
+   roll back, the user runs the restore commands it prints.
+
+Never skip step 4.  If `apm-review diff` flags a symlink, an executable, a
+binary, or a file outside SKILL.md and `scripts/`, read that file first.

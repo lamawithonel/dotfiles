@@ -184,6 +184,15 @@ uses a dual-layer strategy:
   `~/.agents/agents/`.  These installed packages are untracked by yadm and get
   overwritten during `apm update`.  Hand-authored skills and agents in those
   directories remain yadm-tracked.
+- Each lock entry holds a full commit SHA, so a plain `apm install -g`
+  keeps the reviewed commit.  An update passes through
+  `~/.local/bin/apm-review`: it writes the diff between the locked and
+  the new commit, the user reads and acknowledges it at a terminal, and
+  the new SHA is pinned in `apm.yml` before the user installs.  A
+  post-install `verify` catches what a source diff misses (dereferenced
+  symlinks and silently removed files).  An automated scan is never the
+  review.  `addons-co` owns the procedure; the steps are in the
+  `license-compliance` skill.
 - Third-party package lifecycle hooks are blocked by a user-scope deny rule in
   the yadm-tracked `~/.apm/config.json` because hooks require
   `CLAUDE_PLUGIN_ROOT`.
@@ -218,7 +227,18 @@ uses a dual-layer strategy:
    - *Tier 1 (Turn-by-Turn)*: Fast, zero-friction native compiler/linter checks
      (`cargo check/clippy`, `tsc` + `eslint`, `ruff` + `pyright`, `gofmt`).
    - *Tier 2 (Pre-Commit / Milestone)*: Heavy project-wide graph and dead-code
-     audits (`knip`, `depcruise`, `cargo audit`, `bats-core`).
+     audits (`knip`, `depcruise`, `cargo audit`, `bats-core`).  Add
+     `/doctor prompt-audit` for agent text (`CLAUDE.md`, `AGENTS.md`,
+     rules, skills, commands, subagents, and output styles), paired with
+     the skills validator.
+   - *Model upgrade audit*: on each model upgrade, grep the own agent text
+     (`AGENTS.md`, `CLAUDE.md`, rules, and own skills) for CRITICAL, MUST,
+     NEVER, ALWAYS, anti-laziness lines, and lines that discourage tool
+     use.  Propose softening a line only where the new model's default
+     behavior is as good.  Keep safety and gate rules.  Send each proposed
+     line change to the user and edit nothing before the user answers.
+     Emphasis written for an older model can make a newer one over-apply a
+     rule.
 4. **Scope Containment**: Diff-bounded verification restricts fixes strictly
    to the active changeset (zero unsolicited churn on legacy code).
 5. **Universal XDG Default (v0.8)**: All CLI tools, backend daemons, and scripts

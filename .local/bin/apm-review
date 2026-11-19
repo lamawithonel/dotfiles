@@ -1,0 +1,473 @@
+#!/usr/bin/env bash
+# apm-review -- make a human read the diff of each changed third-party skill
+# before `apm install -g` keeps it.  A summary is never the review.
+#
+# Usage:
+#   apm-review list
+#   apm-review diff <dep>|--all
+#   apm-review ack <dep>
+#   apm-review pin <dep> [--write]
+#   apm-review snapshot <dir>
+#   apm-review verify <dir>
+#
+# Environment:
+#   APM_REVIEW_HOME         home holding .apm/ (default: $HOME)
+#   APM_REVIEW_STATE        diff and ack store
+#                           (default: ${XDG_STATE_HOME:-~/.local/state}/agents/apm-review)
+#   APM_REVIEW_REMOTE_BASE  clone from BASE/<repo_url>.git instead of the
+#                           lock's host (test override)
+#   PAGER                   pager for `ack` (default: less)
+#
+# Exit codes: 0 success, 1 failure or refusal, 2 usage error.
+# Needs: bash, git, yq, jq, diff, sha256sum, a pager.
+
+set -o errexit
+set -o nounset
+set -o pipefail
+
+HOME_DIR="${APM_REVIEW_HOME:-${HOME}}"
+readonly HOME_DIR
+readonly LOCK="${HOME_DIR}/.apm/apm.lock.yaml"
+readonly MANIFEST="${HOME_DIR}/.apm/apm.yml"
+readonly STATE="${APM_REVIEW_STATE:-${XDG_STATE_HOME:-${HOME}/.local/state}/agents/apm-review}"
+readonly ACKS="${STATE}/acks.tsv"
+readonly FS=$'\x1f'
+export GIT_TERMINAL_PROMPT=0
+
+WORK="$(mktemp -d "${TMPDIR:-/tmp}/apm-review.XXXXXX")"
+readonly WORK
+_cleanup() { rm -rf "$WORK"; }
+trap _cleanup EXIT INT TERM HUP
+
+_fail() {
+	printf 'apm-review: %s\n' "$*" >&2
+	exit "${FAIL_CODE:-1}"
+}
+
+_usage() {
+	cat <<- EOF
+		Usage: apm-review <command>
+		  list                  locked vs upstream commit per dependency
+		  diff <dep>|--all      write the full diff and print a summary
+		  ack <dep>             read the diff and type the new SHA (terminal only)
+		  pin <dep> [--write]   pin the acknowledged SHA on its apm.yml line
+		  snapshot <dir>        copy the lock, apm.yml, and deployed skills
+		  verify <dir>          compare the live tree with a snapshot
+	EOF
+}
+
+# Dependency state, filled by _resolve.
+D_NAME='' D_REPO='' D_HOST='' D_OLD='' D_VPATH='' D_PORT=''
+D_SPEC='' D_REF='' D_URL='' D_NEW=''
+# Manifest line state, filled by _manifest_scan.
+M_LINE='' M_PREFIX='' M_PIN='' M_TRAIL=''
+
+_usage_err() {
+	_usage >&2
+	exit 2
+}
+
+# Create a private directory; mkdir -m would only cover the leaf.
+_mkprivate() {
+	mkdir -p "$1"
+	chmod 0700 "$1"
+}
+
+_need_files() {
+	[ -r "$LOCK" ] || _fail "cannot read ${LOCK}"
+	[ -r "$MANIFEST" ] || _fail "cannot read ${MANIFEST}"
+}
+
+_lock_json() { yq -o=json '.' "$LOCK"; }
+
+_dep_names() { _lock_json | jq -r '.dependencies[].name'; }
+
+_valid_name() {
+	[[ $1 =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || _fail "invalid dependency name: $1"
+}
+
+_remote_url() {
+	if [ -n "${APM_REVIEW_REMOTE_BASE:-}" ]; then
+		printf '%s/%s.git' "$APM_REVIEW_REMOTE_BASE" "$D_REPO"
+	elif [ -n "$D_PORT" ]; then
+		printf 'https://%s:%s/%s.git' "$D_HOST" "$D_PORT" "$D_REPO"
+	else
+		printf 'https://%s/%s.git' "$D_HOST" "$D_REPO"
+	fi
+}
+
+# Find the manifest list item for SPEC.  The item may carry a #ref pin and a
+# trailing comment.  A longer name that merely starts with SPEC is skipped.
+_manifest_scan() {
+	local spec=$1 n=0 line rest tail pin
+	local item_re='^([[:space:]]*-[[:space:]]+)(.*)$'
+	M_LINE='' M_PREFIX='' M_PIN='' M_TRAIL=''
+	while IFS= read -r line || [ -n "$line" ]; do
+		n=$((n + 1))
+		[[ $line =~ $item_re ]] || continue
+		rest="${BASH_REMATCH[2]}"
+		[[ $rest == "$spec"* ]] || continue
+		tail="${rest#"$spec"}"
+		pin=''
+		case "$tail" in
+			'' | [[:space:]]*) ;;
+			'#'*) pin="${tail%%[[:space:]]*}" ;;
+			*) continue ;;
+		esac
+		M_LINE=$n M_PREFIX="${BASH_REMATCH[1]}" M_PIN="${pin#\#}" M_TRAIL="${tail#"$pin"}"
+		return 0
+	done < "$MANIFEST"
+}
+
+# Pick the commit from ls-remote output, preferring a peeled tag.
+_pick_sha() {
+	awk '$2 ~ /\^\{\}$/ { print $1; found = 1; exit }
+		NR == 1 { first = $1 }
+		END { if (!found && first != "") print first }'
+}
+
+# Print the upstream commit for REF at URL, or fail when unreachable.
+_upstream_sha() {
+	local url=$1 ref=$2 out sha
+	if [[ $ref =~ ^[0-9a-f]{40}$ ]]; then
+		printf '%s\n' "$ref"
+		return 0
+	fi
+	if [ -z "$ref" ]; then
+		out="$(git ls-remote "$url" HEAD 2> /dev/null)" || return 1
+	else
+		out="$(git ls-remote "$url" "refs/tags/${ref}" "refs/tags/${ref}^{}" "refs/heads/${ref}" 2> /dev/null)" || return 1
+	fi
+	sha="$(printf '%s\n' "$out" | _pick_sha)"
+	[ -n "$sha" ] || return 1
+	printf '%s\n' "$sha"
+}
+
+_resolve() {
+	local row
+	_valid_name "$1"
+	row="$(_lock_json | jq -r --arg n "$1" '
+		.dependencies[] | select(.name == $n)
+		| [.name, .repo_url, (.host // "github.com"), .resolved_commit,
+			(.virtual_path // ""), ((.port // "") | tostring)]
+		| join("\u001f")')"
+	[ -n "$row" ] || _fail "unknown dependency: $1"
+	IFS="$FS" read -r D_NAME D_REPO D_HOST D_OLD D_VPATH D_PORT <<< "$row"
+	D_SPEC="$D_REPO${D_VPATH:+/${D_VPATH}}"
+	_manifest_scan "$D_SPEC"
+	D_REF="$M_PIN"
+	D_URL="$(_remote_url)"
+	D_NEW="$(_upstream_sha "$D_URL" "$D_REF")" || D_NEW=''
+}
+
+_status() {
+	if [ -z "$D_NEW" ]; then
+		printf 'unreachable'
+	elif [ "$D_NEW" = "$D_OLD" ]; then
+		printf 'current'
+	else
+		printf 'changed'
+	fi
+}
+
+_diff_file() { printf '%s/%s-%s-%s.diff' "$STATE" "$D_NAME" "${D_OLD:0:8}" "${D_NEW:0:8}"; }
+
+cmd_list() {
+	local name new
+	_need_files
+	printf '%-28s %-8s %-8s %s\n' DEPENDENCY LOCKED UPSTREAM STATUS
+	while IFS= read -r name; do
+		_resolve "$name"
+		new="${D_NEW:0:8}"
+		printf '%-28s %-8s %-8s %s\n' "$D_NAME" "${D_OLD:0:8}" "${new:--}" "$(_status)"
+	done < <(_dep_names)
+}
+
+# Per-class path lists for the summary.
+F_SYM=() F_EXE=() F_BIN=() F_OOS=() PATHSPEC=()
+N_ALL=0 N_ADD=0 N_DEL=0 N_REN=0
+
+_in_scope() {
+	local rel=$1
+	[ -n "$D_VPATH" ] && rel="${rel#"${D_VPATH}"/}"
+	[ "$rel" = 'SKILL.md' ] || [[ $rel == scripts/* ]]
+}
+
+_classify() {
+	local om=$1 nm=$2 st=$3 path=$4
+	N_ALL=$((N_ALL + 1))
+	case "$st" in
+		A) N_ADD=$((N_ADD + 1)) ;;
+		D) N_DEL=$((N_DEL + 1)) ;;
+		R*) N_REN=$((N_REN + 1)) ;;
+	esac
+	if [ "$om" = 120000 ] || [ "$nm" = 120000 ]; then F_SYM+=("$path"); fi
+	if [ "$st" != D ] && [ "$om" != "$nm" ] && { [ "$om" = 100755 ] || [ "$nm" = 100755 ]; }; then
+		F_EXE+=("$path")
+	fi
+	_in_scope "$path" || F_OOS+=("$path")
+}
+
+_collect() {
+	local gd=$1 meta p1 p2 om nm st a b p
+	F_SYM=() F_EXE=() F_BIN=() F_OOS=()
+	N_ALL=0 N_ADD=0 N_DEL=0 N_REN=0
+	while IFS=$'\t' read -r meta p1 p2; do
+		read -r om nm _ _ st <<< "${meta#:}"
+		_classify "$om" "$nm" "$st" "${p2:-$p1}"
+	done < <(git -C "$gd" -c core.quotepath=false diff --raw --no-abbrev -M "$D_OLD" "$D_NEW" "${PATHSPEC[@]}")
+	while IFS=$'\t' read -r a b p; do
+		[ "$a" = '-' ] && [ "$b" = '-' ] && F_BIN+=("$p")
+	done < <(git -C "$gd" -c core.quotepath=false diff --numstat --no-renames "$D_OLD" "$D_NEW" "${PATHSPEC[@]}")
+}
+
+_print_flag() {
+	local label=$1 p
+	shift
+	for p in "$@"; do printf '  %s: %s\n' "$label" "$p"; done
+}
+
+_print_summary() {
+	local nflags=$((${#F_SYM[@]} + ${#F_EXE[@]} + ${#F_BIN[@]} + ${#F_OOS[@]}))
+	printf '%s: %s -> %s\n' "$D_NAME" "${D_OLD:0:8}" "${D_NEW:0:8}"
+	printf 'Files changed: %d  added: %d  deleted: %d  renamed: %d\n' \
+		"$N_ALL" "$N_ADD" "$N_DEL" "$N_REN"
+	printf 'Flags raised: %d\n' "$nflags"
+	_print_flag 'symlink (mode 120000)' "${F_SYM[@]}"
+	_print_flag 'executable bit set or changed' "${F_EXE[@]}"
+	_print_flag 'binary' "${F_BIN[@]}"
+	_print_flag 'outside SKILL.md and scripts/' "${F_OOS[@]}"
+}
+
+# Clone bare and filtered, make sure both commits are present.
+_clone() {
+	local dir=$1 c
+	git clone --quiet --bare --filter=blob:none "$D_URL" "$dir" 2> "${dir}.err" \
+		|| _fail "clone failed for ${D_NAME}: $(head -n 1 "${dir}.err")"
+	for c in "$D_OLD" "$D_NEW"; do
+		git -C "$dir" cat-file -e "${c}^{commit}" 2> /dev/null \
+			|| git -C "$dir" fetch --quiet origin "$c" 2> /dev/null \
+			|| _fail "commit ${c:0:8} is not reachable in ${D_URL}"
+	done
+}
+
+_make_diff() {
+	local gd="${WORK}/${D_NAME}.git" out
+	PATHSPEC=()
+	[ -z "$D_VPATH" ] || PATHSPEC=(-- "$D_VPATH")
+	_clone "$gd"
+	out="$(_diff_file)"
+	_mkprivate "$STATE"
+	git -C "$gd" -c core.quotepath=false diff -M --no-color --no-ext-diff --no-textconv \
+		"$D_OLD" "$D_NEW" "${PATHSPEC[@]}" > "${out}.tmp"
+	mv "${out}.tmp" "$out"
+	_collect "$gd"
+	_print_summary
+	printf 'Diff file: %s\n' "$out"
+	printf 'Read the diff.  The summary is not the review.\n'
+}
+
+_diff_one() {
+	_resolve "$1"
+	case "$(_status)" in
+		current) printf '%s: locked and upstream commits match; nothing to review.\n' "$D_NAME" ;;
+		unreachable)
+			printf '%s: upstream unreachable (%s)\n' "$D_NAME" "$D_URL" >&2
+			return 1
+			;;
+		*) _make_diff ;;
+	esac
+}
+
+cmd_diff() {
+	local rc=0 name
+	[ "$#" -eq 1 ] || _usage_err
+	_need_files
+	if [ "$1" = '--all' ]; then
+		while IFS= read -r name; do
+			_diff_one "$name" || rc=1
+			printf '\n'
+		done < <(_dep_names)
+	else
+		_diff_one "$1" || rc=1
+	fi
+	return "$rc"
+}
+
+_require_changed() {
+	_resolve "$1"
+	[ "$(_status)" = changed ] || _fail "${D_NAME} is $(_status); nothing to review or pin"
+}
+
+cmd_ack() {
+	local diff typed
+	local -a pager
+	[ "$#" -eq 1 ] || _usage_err
+	_need_files
+	_require_changed "$1"
+	diff="$(_diff_file)"
+	[ -f "$diff" ] || _fail "no diff file for ${D_NAME} ${D_OLD:0:8}..${D_NEW:0:8}; run: apm-review diff ${D_NAME}"
+	{ [ -t 0 ] && [ -t 1 ]; } || _fail 'ack needs a terminal on stdin and stdout; a person must read the diff'
+	read -r -a pager <<< "${PAGER:-less}"
+	"${pager[@]}" "$diff" || true
+	read -r -p "Type the first 8 characters of the new SHA (${D_NAME}) to acknowledge: " typed
+	[ "$typed" = "${D_NEW:0:8}" ] || _fail 'SHA does not match; nothing recorded'
+	_mkprivate "$STATE"
+	printf '%s\t%s\t%s\t%s\t%s\n' "$D_NAME" "$D_OLD" "$D_NEW" \
+		"$(sha256sum "$diff" | cut -d' ' -f1)" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$ACKS"
+	printf 'Recorded acknowledgement for %s %s..%s\n' "$D_NAME" "${D_OLD:0:8}" "${D_NEW:0:8}"
+}
+
+# Print the recorded diff hash for the current dep, old, and new; fail if none.
+_ack_hash() {
+	local dep old new hash _rest found=''
+	[ -r "$ACKS" ] || return 1
+	while IFS=$'\t' read -r dep old new hash _rest; do
+		if [ "$dep" = "$D_NAME" ] && [ "$old" = "$D_OLD" ] && [ "$new" = "$D_NEW" ]; then
+			found="$hash"
+		fi
+	done < "$ACKS"
+	[ -n "$found" ] || return 1
+	printf '%s\n' "$found"
+}
+
+_check_ack() {
+	local want diff have
+	want="$(_ack_hash)" || _fail "no ack for ${D_NAME} ${D_OLD:0:8}..${D_NEW:0:8} (upstream may have moved); run diff and ack again"
+	diff="$(_diff_file)"
+	[ -f "$diff" ] || _fail "diff file missing: ${diff}"
+	have="$(sha256sum "$diff" | cut -d' ' -f1)"
+	[ "$have" = "$want" ] || _fail "diff file hash does not match the ack: ${diff}"
+}
+
+# Rewrite line N of the manifest in place, keeping every other byte.
+_replace_line() {
+	local n=$1 new=$2 i=0 line eol tmp="${WORK}/manifest.new"
+	while :; do
+		if IFS= read -r line; then
+			eol=$'\n'
+		else
+			[ -n "$line" ] || break
+			eol=''
+		fi
+		i=$((i + 1))
+		[ "$i" -ne "$n" ] || line="$new"
+		printf '%s%s' "$line" "$eol"
+	done < "$MANIFEST" > "$tmp"
+	cat "$tmp" > "$MANIFEST"
+}
+
+cmd_pin() {
+	local write=0 old_line new_line
+	[ "$#" -ge 1 ] || _usage_err
+	[ "${2:-}" != '--write' ] || write=1
+	[ "$#" -le 1 ] || [ "$write" -eq 1 ] || _usage_err
+	_need_files
+	_require_changed "$1"
+	_check_ack
+	[ -n "$M_LINE" ] || _fail "no plain list item for ${D_SPEC} in ${MANIFEST}; pin by hand"
+	old_line="${M_PREFIX}${D_SPEC}${M_PIN:+#${M_PIN}}${M_TRAIL}"
+	new_line="${M_PREFIX}${D_SPEC}#${D_NEW}${M_TRAIL}"
+	printf '%s line %d:\n- %s\n+ %s\n' "$MANIFEST" "$M_LINE" "$old_line" "$new_line"
+	[ "$write" -eq 1 ] || return 0
+	_replace_line "$M_LINE" "$new_line"
+	printf 'Written.  Now run as the user: apm install -g\n'
+}
+
+# Top-level paths of the deployed files recorded in the lock.
+_roots() {
+	_lock_json | jq -r '
+		[.dependencies[].deployed_files // [] | .[]] | unique as $all
+		| $all[] | . as $p
+		| ($p | split("/") | .[:-1] | join("/")) as $d
+		| select(any($all[]; . == $d) | not)'
+}
+
+cmd_snapshot() {
+	local dir="${1:-}" root
+	[ "$#" -eq 1 ] || _usage_err
+	_need_files
+	if [ -e "$dir" ]; then
+		[ -d "$dir" ] && [ -z "$(ls -A "$dir")" ] || _fail "snapshot dir exists and is not empty: ${dir}"
+	fi
+	_mkprivate "$dir/home"
+	cp -a "$LOCK" "${dir}/apm.lock.yaml"
+	cp -a "$MANIFEST" "${dir}/apm.yml"
+	_roots > "${dir}/roots.txt"
+	while IFS= read -r root; do
+		[ -e "${HOME_DIR}/${root}" ] || [ -L "${HOME_DIR}/${root}" ] || continue
+		mkdir -p "$(dirname "${dir}/home/${root}")"
+		cp -a "${HOME_DIR}/${root}" "${dir}/home/${root}"
+	done < "${dir}/roots.txt"
+	printf 'Snapshot written to %s (%d roots)\n' "$dir" "$(wc -l < "${dir}/roots.txt")"
+}
+
+_classify_diff_line() {
+	local line=$1 snap=$2 re_only='^Only in (.*): (.*)$'
+	local re_link='^File (.*) is a symbolic link while file (.*) is a regular file$'
+	if [[ $line =~ $re_only ]]; then
+		if [[ ${BASH_REMATCH[1]} == "$snap"* ]]; then
+			printf 'REMOVED: %s/%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+		else
+			printf 'ADDED: %s/%s\n' "${BASH_REMATCH[1]}" "${BASH_REMATCH[2]}"
+		fi
+	elif [[ $line =~ $re_link ]]; then
+		printf 'SYMLINK-TO-FILE: %s\n' "${BASH_REMATCH[2]}"
+	else
+		printf 'CHANGED: %s\n' "$line"
+	fi
+}
+
+_verify_root() {
+	local snap=$1 root=$2 line
+	while IFS= read -r line; do
+		_classify_diff_line "$line" "${snap}/home"
+	done < <(diff -rq --no-dereference "${snap}/home/${root}" "${HOME_DIR}/${root}" 2>&1 || true)
+}
+
+_print_restore() {
+	local snap=$1 root
+	printf '\nNothing was restored.  To restore by hand, run as the user:\n'
+	printf 'cp -a %q %q\n' "${snap}/apm.lock.yaml" "$LOCK"
+	printf 'cp -a %q %q\n' "${snap}/apm.yml" "$MANIFEST"
+	while IFS= read -r root; do
+		printf 'rm -rf %q && cp -a %q %q\n' "${HOME_DIR}/${root}" "${snap}/home/${root}" "${HOME_DIR}/${root}"
+	done < "${snap}/roots.txt"
+}
+
+cmd_verify() {
+	local snap="${1:-}" root f
+	[ "$#" -eq 1 ] || _usage_err
+	[ -f "${snap}/roots.txt" ] || _fail "not a snapshot: ${snap}"
+	_need_files
+	for f in apm.lock.yaml apm.yml; do
+		if ! cmp -s "${snap}/${f}" "${HOME_DIR}/.apm/${f}"; then
+			printf 'CHANGED: %s\n' "${HOME_DIR}/.apm/${f}"
+		fi
+	done
+	while IFS= read -r root; do
+		_verify_root "$snap" "$root"
+	done < "${snap}/roots.txt"
+	printf '\nFor detail: diff -ru --no-dereference %q %q\n' "${snap}/home/.agents" "${HOME_DIR}/.agents"
+	_print_restore "$snap"
+}
+
+main() {
+	local cmd="${1:-}"
+	[ "$#" -eq 0 ] || shift
+	case "$cmd" in
+		list) cmd_list "$@" ;;
+		diff) cmd_diff "$@" ;;
+		ack) cmd_ack "$@" ;;
+		pin) cmd_pin "$@" ;;
+		snapshot) cmd_snapshot "$@" ;;
+		verify) cmd_verify "$@" ;;
+		-h | --help | help) _usage ;;
+		*)
+			_usage >&2
+			exit 2
+			;;
+	esac
+}
+
+main "$@"
