@@ -52,41 +52,26 @@ load test_helper
 	[ -z "$output" ]
 }
 
-# -- valid: persona is free-form and optional --------------------------
+# -- valid: persona is required, named, and free-form -----------------
+# Only an agent definition, a charter, and a consultation carry a persona.
+# The name is always present.  The content may be empty.
 
+@test "valid: agent-definition with an empty named persona" { assert_valid_fixture agent-definition-empty-persona; }
+@test "valid: charter with an empty named persona" { assert_valid_fixture charter-empty-persona; }
+@test "valid: consultation with an empty named persona" { assert_valid_fixture consultation-empty-persona; }
+@test "valid: agent-definition with a prose persona" { assert_valid_fixture agent-definition-with-persona; }
+@test "valid: charter with a prose persona" { assert_valid_fixture charter-with-persona; }
+@test "valid: consultation with a prose persona" { assert_valid_fixture consultation-with-persona; }
 @test "valid: persona as plain text" { assert_valid_fixture persona-plain-text; }
 @test "valid: persona holding arbitrary child elements" { assert_valid_fixture persona-child-elements; }
-# The old attribute name and its codes are spelled in pieces so that the
-# repository never carries the retired vocabulary as a literal.
-@test "valid: persona holding the four-part persona elements and attribute" {
-	local attr='quadr' codes=(U L U R L L L R) i=0 part doc="$BATS_TEST_TMPDIR/old-parts.pact"
-	attr+='ant'
-	{
-		printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' \
-			'<prompt xmlns="urn:pact:taxonomy:1.0" version="1.0">' \
-			'  <persona name="Release Editor">'
-		for part in perception demeanor ethos structure; do
-			printf '    <%s %s="%s%s">You write for the reader.</%s>\n' \
-				"$part" "$attr" "${codes[i]}" "${codes[i + 1]}" "$part"
-			i=$((i + 2))
-		done
-		printf '%s\n' '  </persona>' \
-			'  <objective>Rewrite the release notes in short imperative bullets.</objective>' \
-			'</prompt>'
-	} > "$doc"
-	run -0 "$LINT" "$doc"
-	[ -z "$output" ]
-}
 @test "valid: persona mixing text and child elements" { assert_valid_fixture persona-mixed-with-parts; }
 @test "valid: prompt without persona" { assert_valid_fixture prompt-no-persona; }
 @test "valid: worker-brief without persona" { assert_valid_fixture worker-brief-no-persona; }
-@test "valid: charter without persona" { assert_valid_fixture charter-no-persona; }
-@test "valid: consultation without persona" { assert_valid_fixture consultation-no-persona; }
-@test "valid: agent-definition without persona" { assert_valid_fixture agent-definition-no-persona; }
-@test "valid: worker-brief with persona" { assert_valid_fixture worker-brief-with-persona; }
-@test "valid: charter with persona" { assert_valid_fixture charter-with-persona; }
-@test "valid: consultation with persona" { assert_valid_fixture consultation-with-persona; }
-@test "valid: agent-definition with persona" { assert_valid_fixture agent-definition-with-persona; }
+
+@test "valid: agent definition in .md with an empty named persona" {
+	run -0 "$LINT" "$FIXTURES/agent-definition-empty-persona.md"
+	[ -z "$output" ]
+}
 
 @test "valid: working directory does not matter" {
 	run -0 env -C / "$LINT" "$EXAMPLES/charter.pact"
@@ -119,12 +104,6 @@ load test_helper
 			return 1
 		}
 	done
-}
-
-@test "suite: schemas and lint script declare no persona parts" {
-	run grep -E -i 'name="(perception|demeanor|ethos|structure)"|quadr[a]nt|PersonaAttrs' \
-		"$SCHEMA_DIR"/*.xsd "$LINT"
-	[ "$status" -eq 1 ]
 }
 
 @test "suite: no schema reaches for the network" {
@@ -271,6 +250,80 @@ load test_helper
 
 @test "invalid: message with a persona" {
 	assert_rejected message-with-persona "Element 'persona': This element is not expected"
+}
+
+# -- invalid: persona required, named, and confined ------------------
+
+@test "invalid: agent-definition without persona" {
+	assert_rejected agent-definition-no-persona 'agent-definition: missing required element <persona>'
+}
+
+@test "invalid: charter without persona" {
+	assert_rejected charter-no-persona 'charter: missing required element <persona>'
+}
+
+@test "invalid: consultation without persona" {
+	assert_rejected consultation-no-persona 'consultation: missing required element <persona>'
+}
+
+@test "invalid: agent definition in .md without persona" {
+	assert_rejected agent-definition-md-no-persona.md 'agent-definition: missing required element <persona>'
+}
+
+@test "invalid: persona without a name" {
+	assert_rejected persona-no-name "Element 'persona'.*attribute 'name'"
+}
+
+@test "invalid: persona with an empty name" {
+	assert_rejected persona-name-empty "Element 'persona', attribute 'name'"
+}
+
+@test "invalid: persona with an all-space name" {
+	assert_rejected persona-name-blank "Element 'persona', attribute 'name'"
+}
+
+@test "invalid: persona name with an unfilled placeholder" {
+	assert_rejected persona-name-placeholder "Element 'persona', attribute 'name'"
+}
+
+@test "invalid: persona name with an opening placeholder fragment" {
+	assert_rejected persona-name-half-placeholder "Element 'persona', attribute 'name'"
+}
+
+@test "invalid: persona name with a closing placeholder fragment" {
+	assert_rejected persona-name-closing-braces "Element 'persona', attribute 'name'"
+}
+
+@test "invalid: charter persona with an empty name" {
+	assert_rejected charter-persona-empty-name "Element 'persona', attribute 'name'"
+}
+
+@test "invalid: consultation persona with a placeholder name" {
+	assert_rejected consultation-persona-placeholder-name "Element 'persona', attribute 'name'"
+}
+
+@test "invalid: prompt with a persona" {
+	assert_rejected prompt-with-persona "Element 'persona': This element is not expected"
+}
+
+@test "invalid: worker-brief with a persona" {
+	assert_rejected worker-brief-with-persona "Element 'persona': This element is not expected"
+}
+
+@test "invalid: free-form pact container with a persona" {
+	assert_rejected pact-with-persona "Element 'persona': This element is not expected"
+}
+
+@test "invalid: freeze with a persona" {
+	assert_rejected freeze-with-persona "Element 'persona': This element is not expected"
+}
+
+@test "invalid: relay with a persona" {
+	assert_rejected relay-with-persona "Element 'persona': This element is not expected"
+}
+
+@test "invalid: agent-definition with the retired name attribute" {
+	assert_rejected agent-definition-name-attribute "attribute 'name'"
 }
 
 # -- invalid: cross-type rules ----------------------------------------

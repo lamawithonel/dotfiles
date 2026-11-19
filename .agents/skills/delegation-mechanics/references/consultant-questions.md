@@ -12,7 +12,8 @@ channel.
 ## Rules
 
 - Type the question as a PACT `question` document (`pact-use.md`).
-  Give it a unique id.
+  Give it a unique id.  A question carries no persona: only agent
+  definitions, charters, and consultations do (`pact-use.md`).
 - Never put the end marker in the question.  The marker is the line
   `=== ANSWER-END ===`.
   Reason: the pane echoes your question.  A marker in the echo ends

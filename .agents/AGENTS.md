@@ -156,10 +156,11 @@ To recover from crashes or paused sessions...
 ## Agent Prompt Style
 
 Write every instruction for another agent as a PACT message: XML,
-imperative.  Add a `<persona>` only for creative work where a
-distinctive voice or divergent output matters, and omit it otherwise
-(provisional).  The `delegation-mechanics` skill holds the PACT types
-and their use.  The schemas are in `~/.agents/schemas/`.
+imperative.  Agent definitions, charters, and consultations carry a named
+`<persona name="...">`, empty unless the agent does creative work
+(provisional rule for content).  No other document carries a persona.
+The `delegation-mechanics` skill holds the PACT types and their use.  The
+schemas are in `~/.agents/schemas/`.
 
 ## Software Development Lifecycle
 

@@ -13,9 +13,9 @@ The examples are the authority on element names.
 
 | Type | Sender to receiver | Use it to | Persona |
 | --- | --- | --- | --- |
-| charter | executive to coordinator | found a coordinator position | optional |
-| worker brief | dispatcher to worker | give one work package | optional |
-| consultation | creator to consultant | state the consultant's domain and purpose | optional |
+| charter | executive to coordinator | found a coordinator position | named |
+| worker brief | dispatcher to worker | give one work package | none |
+| consultation | creator to consultant | state the consultant's domain and purpose | named |
 | question | any asker to a consultant | ask one question | none |
 | freeze | supervisor, or a resource executive, to its reports | stop some work for a time | none |
 | ruling | executive to several agents | tell all of them one decision | none |
@@ -43,13 +43,16 @@ The examples are the authority on element names.
 ## Write a PACT document
 
 - Start from the example of the type.
-- Add a `<persona>` only for creative work where a distinctive voice
-  or divergent output matters: art, design, creative marketing, and
-  voice-driven writing.  A persona is free-form text, and its child
-  elements are free too.  Omit it for analysis, engineering, review,
-  research, coordination, and mechanical work, and state the role in
-  the `<role>` element instead.  This rule is provisional until the
-  persona research reports.
+- Write a `<persona name="...">` in an agent definition, a charter, and
+  a consultation, and in no other document.  The name is required: not
+  blank, and no `{{` or `}}`.  Leave the persona empty
+  (`<persona name="..."/>`) unless the agent does creative work where a
+  distinctive voice or divergent output matters: art, design, creative
+  marketing, and voice-driven writing.  Then write free-form text, and
+  free child elements.  Give a creative worker its persona through an
+  agent definition, never through a worker brief.  State the role of a
+  non-creative agent in the `<role>` element.  The content rule is
+  provisional until the persona research reports.
 - Write in STE: short imperative sentences.  Declare technical names
   and verbs in the glossary (`glossary` and `term`).
 - Write `priority="critical"` with `required="true"` for a rule that

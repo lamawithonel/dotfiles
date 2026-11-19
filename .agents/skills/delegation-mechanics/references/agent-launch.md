@@ -25,7 +25,9 @@ agent-launch completions zsh
   consultant runs one band and one effort level above it.  The band
   stops at opus.  Effort may reach `max`.
 - `--first-prompt FILE` is the first prompt.  A coordinator gets its
-  charter there.  A consultant gets its consultation there.
+  charter there.  A consultant gets its consultation there.  Each
+  carries a named persona, empty unless the agent does creative work
+  (`pact-use.md`).
 - `--resume ID` resumes a session.  Use it to relaunch a coordinator
   after a class-file update.
 - `agent-launch completions zsh` prints zsh completion code.

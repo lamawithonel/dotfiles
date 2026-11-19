@@ -7,6 +7,8 @@
 #   1. The file is well-formed XML.
 #   2. The root element is a known PACT document type.
 #   3. Every element that the type requires is present (one line each).
+#      A charter, a consultation, and an agent definition require a
+#      persona.  The schema checks its name: non-blank, no braces.
 #   4. The file validates against the PACT schema for its namespace.
 #   5. Rules that XSD 1.0 cannot state: a critical constraint carries
 #      required="true"; no unicode em-dash; a worker brief carries no
@@ -140,10 +142,10 @@ _required_for() {
 	sed -n -e "s/^${1} //p" <<- 'EOF'
 		prompt c:objective
 		message c:summary
-		agent-definition c:role c:instructions
-		charter o:position o:supervisor c:objective o:milestones o:model o:onboarding
+		agent-definition c:persona c:role c:instructions
+		charter c:persona o:position o:supervisor c:objective o:milestones o:model o:onboarding
 		worker-brief c:role c:objective c:tasks o:verification
-		consultation o:position o:creator c:objective o:ends-when o:model
+		consultation c:persona o:position o:creator c:objective o:ends-when o:model
 		question o:from o:ask
 		freeze o:issuer o:reason o:scope o:end o:lifter o:covers-dispatch
 		relay o:relayer o:source o:quote

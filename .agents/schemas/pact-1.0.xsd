@@ -10,11 +10,14 @@
     glossary, term, and task elements.  Each structured element appears
     only where a document type lists it.  Free-form elements stay in the
     pact:node substitution group.
-  - persona is free-form and optional.  It holds text, child elements of
-    any name, or both, so a writer may describe a character in any way
-    that serves the work.  Add one only for creative work where a
-    distinctive voice or divergent output matters.  A document type that
-    allows a persona never requires one.
+  - persona is required in an agent definition and in the startup
+    prompts that the profile defines (charter and consultation).  No
+    other document type carries one.  It always has a non-blank name
+    that holds no braces, so an unfilled {{...}} placeholder fails.  Its
+    content is free-form: text, child elements of any name, or both, and
+    it may be empty.  Write persona text only for creative work where a
+    distinctive voice or divergent output matters.  A non-creative agent
+    gets an empty persona that carries only its name.
   - priority="critical" with required="true" replaces priority="MUST".
     The required attribute has no default.  A constraint states it.
     XSD 1.0 cannot test "critical implies required"; pact-lint.sh does.
@@ -62,6 +65,16 @@
       <xs:enumeration value="model"/>
       <xs:enumeration value="orchestrator"/>
       <xs:enumeration value="both"/>
+    </xs:restriction>
+  </xs:simpleType>
+
+  <!-- Persona name: a token (whitespace collapses, so an all-space
+       name is empty) with at least one character and no brace, so an
+       unfilled {{...}} placeholder never passes. -->
+  <xs:simpleType name="PersonaNameType">
+    <xs:restriction base="xs:token">
+      <xs:minLength value="1"/>
+      <xs:pattern value="[^{}]+"/>
     </xs:restriction>
   </xs:simpleType>
 
@@ -164,16 +177,18 @@
   <!-- 4. STRUCTURED TYPES                                                 -->
   <!-- =================================================================== -->
 
-  <!-- Persona: free-form character text for creative work.  Text and
-       child elements of any name, in any order.  Child elements are not
-       declared here, so each one is checked only when a schema for its
-       namespace is available (lax processing). -->
+  <!-- Persona: a named character.  The name is required.  The content
+       is free-form and may be empty: text and child elements of any
+       name, in any order.  Child elements are not declared here, so each
+       one is checked only when a schema for its namespace is available
+       (lax processing).  Only agent-definition and the startup prompts
+       of a profile list this element. -->
   <xs:complexType name="PersonaType" mixed="true">
     <xs:sequence>
       <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
-    <xs:attribute name="name" type="xs:string" use="required"/>
-    <xs:attribute name="id"   type="xs:ID"     use="optional"/>
+    <xs:attribute name="name" type="pact:PersonaNameType" use="required"/>
+    <xs:attribute name="id"   type="xs:ID"               use="optional"/>
     <xs:attributeGroup ref="pact:XmlStandardAttrs"/>
   </xs:complexType>
 
@@ -353,13 +368,12 @@
   <!-- xs:all means any order, each element at most once.                  -->
   <!-- =================================================================== -->
 
-  <!-- Free-form container.  No required parts.  Kept for notes and
-       drafts.  Use a typed document where one fits. -->
+  <!-- Free-form container.  No required parts and no persona.  Kept for
+       notes and drafts.  Use a typed document where one fits. -->
   <xs:element name="pact">
     <xs:complexType mixed="true">
       <xs:choice minOccurs="0" maxOccurs="unbounded">
         <xs:element ref="pact:node"/>
-        <xs:element ref="pact:persona"/>
         <xs:element ref="pact:tasks"/>
         <xs:element ref="pact:constraints"/>
         <xs:element ref="pact:glossary"/>
@@ -369,10 +383,9 @@
     </xs:complexType>
   </xs:element>
 
-  <!-- prompt: a generic instruction document.  Persona is optional. -->
+  <!-- prompt: a generic instruction document.  No persona. -->
   <xs:complexType name="PromptType">
     <xs:all>
-      <xs:element ref="pact:persona"      minOccurs="0"/>
       <xs:element ref="pact:role"         minOccurs="0"/>
       <xs:element ref="pact:objective"/>
       <xs:element ref="pact:context"      minOccurs="0"/>
@@ -401,13 +414,14 @@
 
   <xs:element name="message" type="pact:MessageType"/>
 
-  <!-- agent-definition: a specialist persona any class may use.  The
-       harness frontmatter (name, description, tools, model, effort)
-       stays outside this body.  Role and instructions are required.
-       Persona is optional. -->
+  <!-- agent-definition: a specialist any class may use.  The harness
+       frontmatter (name, description, tools, model, effort) stays
+       outside this body, and so does the agent's name.  Persona, role,
+       and instructions are required.  The persona carries the name.
+       Its content stays empty unless the agent does creative work. -->
   <xs:complexType name="AgentDefinitionType">
     <xs:all>
-      <xs:element ref="pact:persona"      minOccurs="0"/>
+      <xs:element ref="pact:persona"/>
       <xs:element ref="pact:role"/>
       <xs:element ref="pact:instructions"/>
       <xs:element ref="pact:description"  minOccurs="0"/>
@@ -419,7 +433,6 @@
       <xs:element ref="pact:output"       minOccurs="0"/>
     </xs:all>
     <xs:attributeGroup ref="pact:DocumentAttrs"/>
-    <xs:attribute name="name" type="xs:NCName" use="optional"/>
   </xs:complexType>
 
   <xs:element name="agent-definition" type="pact:AgentDefinitionType"/>
