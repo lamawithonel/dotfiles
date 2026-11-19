@@ -10,9 +10,11 @@
     glossary, term, and task elements.  Each structured element appears
     only where a document type lists it.  Free-form elements stay in the
     pact:node substitution group.
-  - persona has four required quadrant elements, in this order:
-    perception (UL, "You think"), demeanor (UR, "You behave"),
-    ethos (LL, "You relate"), and structure (LR, "You participate").
+  - persona is free-form and optional.  It holds text, child elements of
+    any name, or both, so a writer may describe a character in any way
+    that serves the work.  Add one only for creative work where a
+    distinctive voice or divergent output matters.  A document type that
+    allows a persona never requires one.
   - priority="critical" with required="true" replaces priority="MUST".
     The required attribute has no default.  A constraint states it.
     XSD 1.0 cannot test "critical implies required"; pact-lint.sh does.
@@ -71,37 +73,6 @@
     </xs:restriction>
   </xs:simpleType>
 
-  <xs:simpleType name="QuadrantType">
-    <xs:restriction base="xs:token">
-      <xs:enumeration value="UL"/>
-      <xs:enumeration value="UR"/>
-      <xs:enumeration value="LL"/>
-      <xs:enumeration value="LR"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:simpleType name="AxisType">
-    <xs:restriction base="xs:token">
-      <xs:enumeration value="S/N"/>
-      <xs:enumeration value="I/E"/>
-      <xs:enumeration value="F/T"/>
-      <xs:enumeration value="P/J"/>
-    </xs:restriction>
-  </xs:simpleType>
-
-  <xs:simpleType name="PoleType">
-    <xs:restriction base="xs:token">
-      <xs:enumeration value="S"/>
-      <xs:enumeration value="N"/>
-      <xs:enumeration value="I"/>
-      <xs:enumeration value="E"/>
-      <xs:enumeration value="F"/>
-      <xs:enumeration value="T"/>
-      <xs:enumeration value="P"/>
-      <xs:enumeration value="J"/>
-    </xs:restriction>
-  </xs:simpleType>
-
   <!-- Kind of glossary entry: a technical name or a verb. -->
   <xs:simpleType name="TermKindType">
     <xs:restriction base="xs:token">
@@ -137,11 +108,6 @@
     <xs:attribute name="audience"  type="pact:AudienceType"  use="optional" default="model"/>
     <xs:attribute name="condition" type="xs:string"          use="optional"/>
     <xs:attribute name="cache"     type="pact:CacheHintType" use="optional"/>
-  </xs:attributeGroup>
-
-  <xs:attributeGroup name="PersonaAttrs">
-    <xs:attribute name="axis" type="pact:AxisType" use="optional"/>
-    <xs:attribute name="pole" type="pact:PoleType" use="optional"/>
   </xs:attributeGroup>
 
   <xs:attributeGroup name="FormatAttrs">
@@ -198,35 +164,16 @@
   <!-- 4. STRUCTURED TYPES                                                 -->
   <!-- =================================================================== -->
 
-  <!-- Persona: four required quadrants in fixed order. -->
-  <xs:complexType name="UlTextType" mixed="true">
-    <xs:attribute name="quadrant" type="pact:QuadrantType" fixed="UL"/>
-  </xs:complexType>
-  <xs:complexType name="UrTextType" mixed="true">
-    <xs:attribute name="quadrant" type="pact:QuadrantType" fixed="UR"/>
-  </xs:complexType>
-  <xs:complexType name="LlTextType" mixed="true">
-    <xs:attribute name="quadrant" type="pact:QuadrantType" fixed="LL"/>
-  </xs:complexType>
-  <xs:complexType name="LrTextType" mixed="true">
-    <xs:attribute name="quadrant" type="pact:QuadrantType" fixed="LR"/>
-  </xs:complexType>
-
-  <xs:element name="perception" type="pact:UlTextType"/>
-  <xs:element name="demeanor"   type="pact:UrTextType"/>
-  <xs:element name="ethos"      type="pact:LlTextType"/>
-  <xs:element name="structure"  type="pact:LrTextType"/>
-
-  <xs:complexType name="PersonaType">
+  <!-- Persona: free-form character text for creative work.  Text and
+       child elements of any name, in any order.  Child elements are not
+       declared here, so each one is checked only when a schema for its
+       namespace is available (lax processing). -->
+  <xs:complexType name="PersonaType" mixed="true">
     <xs:sequence>
-      <xs:element ref="pact:perception"/>
-      <xs:element ref="pact:demeanor"/>
-      <xs:element ref="pact:ethos"/>
-      <xs:element ref="pact:structure"/>
+      <xs:any processContents="lax" minOccurs="0" maxOccurs="unbounded"/>
     </xs:sequence>
     <xs:attribute name="name" type="xs:string" use="required"/>
     <xs:attribute name="id"   type="xs:ID"     use="optional"/>
-    <xs:attributeGroup ref="pact:PersonaAttrs"/>
     <xs:attributeGroup ref="pact:XmlStandardAttrs"/>
   </xs:complexType>
 
@@ -422,10 +369,10 @@
     </xs:complexType>
   </xs:element>
 
-  <!-- prompt: a generic instruction document.  Persona is required. -->
+  <!-- prompt: a generic instruction document.  Persona is optional. -->
   <xs:complexType name="PromptType">
     <xs:all>
-      <xs:element ref="pact:persona"/>
+      <xs:element ref="pact:persona"      minOccurs="0"/>
       <xs:element ref="pact:role"         minOccurs="0"/>
       <xs:element ref="pact:objective"/>
       <xs:element ref="pact:context"      minOccurs="0"/>
@@ -456,11 +403,11 @@
 
   <!-- agent-definition: a specialist persona any class may use.  The
        harness frontmatter (name, description, tools, model, effort)
-       stays outside this body.  Persona, role, and instructions are
-       required. -->
+       stays outside this body.  Role and instructions are required.
+       Persona is optional. -->
   <xs:complexType name="AgentDefinitionType">
     <xs:all>
-      <xs:element ref="pact:persona"/>
+      <xs:element ref="pact:persona"      minOccurs="0"/>
       <xs:element ref="pact:role"/>
       <xs:element ref="pact:instructions"/>
       <xs:element ref="pact:description"  minOccurs="0"/>

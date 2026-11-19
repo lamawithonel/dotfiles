@@ -8,7 +8,6 @@
     <org:milestone id="m2">Class files and skills drafted in staging.</org:milestone>
   </org:milestones>
   <org:model band="sonnet" effort="high"/>
-  <org:onboarding digest="/home/lucas/.local/share/agents/research/delegation-revamp/design.md"/>
   <constraints>
     <constraint priority="critical" required="true">Write only in the staging root.</constraint>
     <constraint priority="normal">Name a model and an effort in every dispatch.</constraint>

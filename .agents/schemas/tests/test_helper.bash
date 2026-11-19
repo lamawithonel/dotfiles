@@ -9,12 +9,21 @@ SCHEMA_DIR="$(cd "$(dirname "$BATS_TEST_FILENAME")/.." && pwd)"
 LINT="$SCHEMA_DIR/pact-lint.sh"
 EXAMPLES="$SCHEMA_DIR/examples"
 INVALID="$SCHEMA_DIR/tests/invalid"
+VALID="$SCHEMA_DIR/tests/valid"
 FIXTURES="$SCHEMA_DIR/tests/fixtures"
-export SCHEMA_DIR LINT EXAMPLES INVALID FIXTURES
+export SCHEMA_DIR LINT EXAMPLES INVALID VALID FIXTURES
 
 # assert_valid TYPE -- the example for TYPE passes with no output.
 assert_valid() {
 	run "$LINT" "$EXAMPLES/$1.pact"
+	[ "$status" -eq 0 ]
+	[ -z "$output" ]
+}
+
+# assert_valid_fixture NAME -- the valid fixture NAME passes with no
+# output.
+assert_valid_fixture() {
+	run "$LINT" "$VALID/$1.pact"
 	[ "$status" -eq 0 ]
 	[ -z "$output" ]
 }

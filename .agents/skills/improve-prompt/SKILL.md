@@ -129,11 +129,15 @@ trades clarity for perceived depth).
 **Persona is not role**: a *persona* conditions how the model thinks and
 speaks (cognitive framing, voice); a *role* states the functional
 assignment and its scope of responsibility.  Most prompts need only
-one; when the prompt assigns work, give both, as separate elements.
-When a genre does warrant a persona, build it with the four-quadrant
-recipe in `references/genre-recipes.md`.  PACT requires a persona in a
-worker brief, a charter, a consultation, and a `prompt`: write it for
-those, as behavioral framing only.
+a role; add a persona as a separate element only when the genre calls for one.
+When a genre does warrant a persona, write it as short free-form prose
+(see `references/genre-recipes.md`).  PACT makes a persona optional in
+every type that allows one.  Include it only for creative work where a
+distinctive voice or divergent output matters, such as art, design,
+creative marketing, and voice-driven writing.  Omit it for analysis,
+engineering, review, research, coordination, and mechanical work, and
+state the role in the `<role>` element instead.  This rule is
+provisional until the persona research reports.
 
 **Target model family filters every genre choice**:
 

@@ -9,8 +9,10 @@
   Vocabulary follows design section 2: executive, coordinator,
   consultant, worker, charter, final report, freeze, standalone session.
 
-  Persona is required in charter, worker-brief, and consultation.  It is
-  not allowed in question, freeze, relay, ruling, or escalation.
+  Persona is free-form and optional in charter, worker-brief, and
+  consultation.  Include one only for creative work where a distinctive
+  voice or divergent output matters.  It is not allowed in question,
+  freeze, relay, ruling, or escalation.
 
   The worker-brief type has no guard elements: no stall watchdog, scope
   limit, final report contract, or raw-quotes rule.  Those rules live in
@@ -217,10 +219,10 @@
   <!-- =================================================================== -->
 
   <!-- charter: an executive charters a coordinator (or the user
-       charters an executive).  Persona is required. -->
+       charters an executive).  Persona is optional. -->
   <xs:complexType name="CharterDocType">
     <xs:all>
-      <xs:element ref="pact:persona"/>
+      <xs:element ref="pact:persona"      minOccurs="0"/>
       <xs:element name="position" type="org:CharterPositionType"/>
       <xs:element ref="org:supervisor"/>
       <xs:element ref="pact:objective"/>
@@ -237,11 +239,11 @@
   <xs:element name="charter" type="org:CharterDocType"/>
 
   <!-- worker-brief: a dispatcher briefs a worker for one work package.
-       Persona is required.  No guard elements.  Model and effort go in
+       Persona is optional.  No guard elements.  Model and effort go in
        the dispatch call, not in the brief. -->
   <xs:complexType name="WorkerBriefDocType">
     <xs:all>
-      <xs:element ref="pact:persona"/>
+      <xs:element ref="pact:persona"      minOccurs="0"/>
       <xs:element ref="pact:role"/>
       <xs:element ref="pact:objective"/>
       <xs:element ref="pact:tasks"/>
@@ -257,11 +259,11 @@
   <xs:element name="worker-brief" type="org:WorkerBriefDocType"/>
 
   <!-- consultation: the first prompt of a consultant.  Persona is
-       required.  A consultant answers questions and makes no work
+       optional.  A consultant answers questions and makes no work
        product. -->
   <xs:complexType name="ConsultationDocType">
     <xs:all>
-      <xs:element ref="pact:persona"/>
+      <xs:element ref="pact:persona"      minOccurs="0"/>
       <xs:element name="position" type="org:ConsultantPositionType"/>
       <xs:element ref="org:creator"/>
       <xs:element ref="pact:objective"/>

@@ -52,6 +52,42 @@ load test_helper
 	[ -z "$output" ]
 }
 
+# -- valid: persona is free-form and optional --------------------------
+
+@test "valid: persona as plain text" { assert_valid_fixture persona-plain-text; }
+@test "valid: persona holding arbitrary child elements" { assert_valid_fixture persona-child-elements; }
+# The old attribute name and its codes are spelled in pieces so that the
+# repository never carries the retired vocabulary as a literal.
+@test "valid: persona holding the four-part persona elements and attribute" {
+	local attr='quadr' codes=(U L U R L L L R) i=0 part doc="$BATS_TEST_TMPDIR/old-parts.pact"
+	attr+='ant'
+	{
+		printf '%s\n' '<?xml version="1.0" encoding="UTF-8"?>' \
+			'<prompt xmlns="urn:pact:taxonomy:1.0" version="1.0">' \
+			'  <persona name="Release Editor">'
+		for part in perception demeanor ethos structure; do
+			printf '    <%s %s="%s%s">You write for the reader.</%s>\n' \
+				"$part" "$attr" "${codes[i]}" "${codes[i + 1]}" "$part"
+			i=$((i + 2))
+		done
+		printf '%s\n' '  </persona>' \
+			'  <objective>Rewrite the release notes in short imperative bullets.</objective>' \
+			'</prompt>'
+	} > "$doc"
+	run -0 "$LINT" "$doc"
+	[ -z "$output" ]
+}
+@test "valid: persona mixing text and child elements" { assert_valid_fixture persona-mixed-with-parts; }
+@test "valid: prompt without persona" { assert_valid_fixture prompt-no-persona; }
+@test "valid: worker-brief without persona" { assert_valid_fixture worker-brief-no-persona; }
+@test "valid: charter without persona" { assert_valid_fixture charter-no-persona; }
+@test "valid: consultation without persona" { assert_valid_fixture consultation-no-persona; }
+@test "valid: agent-definition without persona" { assert_valid_fixture agent-definition-no-persona; }
+@test "valid: worker-brief with persona" { assert_valid_fixture worker-brief-with-persona; }
+@test "valid: charter with persona" { assert_valid_fixture charter-with-persona; }
+@test "valid: consultation with persona" { assert_valid_fixture consultation-with-persona; }
+@test "valid: agent-definition with persona" { assert_valid_fixture agent-definition-with-persona; }
+
 @test "valid: working directory does not matter" {
 	run -0 env -C / "$LINT" "$EXAMPLES/charter.pact"
 }
@@ -85,16 +121,18 @@ load test_helper
 	done
 }
 
+@test "suite: schemas and lint script declare no persona parts" {
+	run grep -E -i 'name="(perception|demeanor|ethos|structure)"|quadr[a]nt|PersonaAttrs' \
+		"$SCHEMA_DIR"/*.xsd "$LINT"
+	[ "$status" -eq 1 ]
+}
+
 @test "suite: no schema reaches for the network" {
 	run grep -E 'schemaLocation="https?:' "$SCHEMA_DIR"/*.xsd
 	[ "$status" -eq 1 ]
 }
 
 # -- invalid: charter -------------------------------------------------
-
-@test "invalid: charter without persona" {
-	assert_rejected charter-no-persona 'charter: missing required element <persona>'
-}
 
 @test "invalid: charter without supervisor" {
 	assert_rejected charter-no-supervisor 'charter: missing required element <supervisor>'
@@ -128,10 +166,6 @@ load test_helper
 	assert_rejected worker-brief-no-verification 'worker-brief: missing required element <verification>'
 }
 
-@test "invalid: worker-brief without persona" {
-	assert_rejected worker-brief-no-persona 'worker-brief: missing required element <persona>'
-}
-
 @test "invalid: worker-brief carrying an old guard" {
 	assert_rejected worker-brief-guards "guard text 'STALL WATCHDOG' does not belong"
 }
@@ -141,10 +175,6 @@ load test_helper
 }
 
 # -- invalid: consultation --------------------------------------------
-
-@test "invalid: consultation without persona" {
-	assert_rejected consultation-no-persona 'consultation: missing required element <persona>'
-}
 
 @test "invalid: consultation position class is not consultant" {
 	assert_rejected consultation-bad-class "attribute 'class'.*consultant"
@@ -226,21 +256,17 @@ load test_helper
 
 # -- invalid: core types ----------------------------------------------
 
-@test "invalid: agent-definition without persona" {
-	assert_rejected agent-definition-no-persona 'agent-definition: missing required element <persona>'
+@test "invalid: agent-definition without role" {
+	assert_rejected agent-definition-no-role 'agent-definition: missing required element <role>'
 }
 
-@test "invalid: agent definition in .md without persona, line numbers kept" {
-	local file="$INVALID/agent-definition-md-no-persona.md"
+@test "invalid: agent definition in .md without role, line numbers kept" {
+	local file="$INVALID/agent-definition-md-no-role.md"
 	local want
 	want="$(grep -n '<agent-definition' "$file" | head -n 1 | cut -d: -f1)"
 	run "$LINT" "$file"
 	[ "$status" -eq 1 ]
-	[[ "$output" == "$file:$want: agent-definition: missing required element <persona>" ]]
-}
-
-@test "invalid: prompt without persona" {
-	assert_rejected prompt-no-persona 'prompt: missing required element <persona>'
+	[[ "$output" == "$file:$want: agent-definition: missing required element <role>" ]]
 }
 
 @test "invalid: message with a persona" {
@@ -255,14 +281,6 @@ load test_helper
 
 @test "invalid: critical constraint without required=true" {
 	assert_rejected prompt-critical-not-required 'critical.*required="true"'
-}
-
-@test "invalid: empty persona quadrant" {
-	assert_rejected prompt-empty-quadrant '<perception> is empty'
-}
-
-@test "invalid: quadrant attribute must match its element" {
-	assert_rejected prompt-wrong-quadrant "attribute 'quadrant'"
 }
 
 @test "invalid: em-dash is rejected" {

@@ -9,9 +9,9 @@
 #   3. Every element that the type requires is present (one line each).
 #   4. The file validates against the PACT schema for its namespace.
 #   5. Rules that XSD 1.0 cannot state: a critical constraint carries
-#      required="true"; no persona quadrant is empty; no unicode
-#      em-dash; a worker brief carries no old guard text; a relay
-#      quote matches the freeze file that its source names.
+#      required="true"; no unicode em-dash; a worker brief carries no
+#      old guard text; a relay quote matches the freeze file that its
+#      source names.
 #
 # A file may start with YAML frontmatter (a harness .md file).  The
 # frontmatter is skipped and line numbers stay true.  Leave out the XML
@@ -138,12 +138,12 @@ _known_type() {
 # table in step with the xs:all lists in the two schemas.
 _required_for() {
 	sed -n -e "s/^${1} //p" <<- 'EOF'
-		prompt c:persona c:objective
+		prompt c:objective
 		message c:summary
-		agent-definition c:persona c:role c:instructions
-		charter c:persona o:position o:supervisor c:objective o:milestones o:model o:onboarding
-		worker-brief c:persona c:role c:objective c:tasks o:verification
-		consultation c:persona o:position o:creator c:objective o:ends-when o:model
+		agent-definition c:role c:instructions
+		charter o:position o:supervisor c:objective o:milestones o:model o:onboarding
+		worker-brief c:role c:objective c:tasks o:verification
+		consultation o:position o:creator c:objective o:ends-when o:model
 		question o:from o:ask
 		freeze o:issuer o:reason o:scope o:end o:lifter o:covers-dispatch
 		relay o:relayer o:source o:quote
@@ -207,16 +207,6 @@ _check_critical() {
 	if [ "${n:-0}" != '0' ]; then
 		_problem '' "${n} element(s) with priority=\"critical\" lack required=\"true\""
 	fi
-}
-
-_check_quadrants() {
-	local name n
-	for name in perception demeanor ethos structure; do
-		n="$(_xp "count(//*[namespace-uri()='${NS_CORE}'][local-name()='${name}'][normalize-space(.)=''])")"
-		if [ "${n:-0}" != '0' ]; then
-			_problem '' "persona quadrant <${name}> is empty"
-		fi
-	done
 }
 
 _check_em_dash() {
@@ -296,7 +286,6 @@ _lint_typed() {
 	_check_required
 	_check_schema
 	_check_critical
-	_check_quadrants
 	_check_guards
 	_check_relay
 }

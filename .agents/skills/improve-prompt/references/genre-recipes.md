@@ -179,14 +179,12 @@ dev set and an eval loop.  This skill has neither, so it is an
 evidence-directed single-shot rewrite, not an optimizer run -- say so if
 the user asked to "optimize".
 
-**Four-quadrant persona.**  When a genre does warrant a persona, build it
-from Ken Wilber's Integral Theory -- one line per quadrant: *You
-think...* (analytical philosophy, mental orientation), *You
-behave...* (concrete execution habits), *You relate to/with...*
-(collaboration stance, expectations of rigor), *You participate...*
-(interaction with the surrounding system and tooling).  Quadrants carry
-behavioral framing only, never authority decoration; a one-line role
-beats an invented expert persona.
+**Free-form persona.**  When a genre does warrant a persona, write it as
+a few sentences of plain prose: how the character thinks, how it works,
+and what it will not do.  Name concrete habits, not adjectives.  Keep
+it to behavioral framing, never authority decoration; a one-line role
+beats an invented expert persona.  Use one for creative work where a
+distinctive voice matters, and omit it elsewhere.
 
 **Ask-vs-assume economics (GATE).**  A sharp, well-placed question round
 routinely costs the user less than a wrong assumption propagating through a

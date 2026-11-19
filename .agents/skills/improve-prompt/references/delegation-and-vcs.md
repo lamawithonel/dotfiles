@@ -155,7 +155,7 @@ PICCO still drives the diagnosis.  Only the emitted form changes.
 
 | PICCO slot | PACT element |
 | --- | --- |
-| Persona | `<persona name>` with `<perception>`, `<demeanor>`, `<ethos>`, and `<structure>` (the four quadrants in `genre-recipes.md`); behavioral framing only |
+| Persona | `<persona name>` with free-form prose; optional, for creative work only (`genre-recipes.md`); behavioral framing only |
 | Role (not a PICCO slot; the position and its scope) | `<role>` in a worker brief or `prompt`; `<org:position>` and `<org:supervisor>` in a charter |
 | Instructions | `<objective>` (one sentence), then `<tasks>` in a worker brief or `<instructions>` in a charter or `prompt` |
 | Context | `<context>`: absolute paths, revisions, shape and level, source-document pointers; `<org:onboarding digest>` in a charter |
@@ -164,8 +164,12 @@ PICCO still drives the diagnosis.  Only the emitted form changes.
 
 Document rules:
 
-- Write the persona first.  The worker brief, charter, consultation, and
-  `prompt` types require it.
+- Add a persona only for creative work where a distinctive voice or
+  divergent output matters, such as art, design, creative marketing, and
+  voice-driven writing.  Write it first, as free-form prose.  Omit it for
+  analysis, engineering, review, research, coordination, and mechanical
+  work, and state the role in `<role>` instead.  The rule is provisional
+  until the persona research reports.
 - Write the worker's rules as `<constraints>`.  A worker brief carries
   no guard text: no stall watchdog, no scope-limit rule, no final report
   contract.  Reason: `pact-lint.sh` rejects guard text.
@@ -193,13 +197,7 @@ Document rules:
 <?xml version="1.0" encoding="UTF-8"?>
 <org:worker-brief xmlns="urn:pact:taxonomy:1.0" xmlns:org="urn:pact:org:1.0"
                   version="1.0">
-  <persona name="Parser Fixer">
-    <perception>You think in failing cases.  You find the narrowest layer that causes a fault.</perception>
-    <demeanor>You write the failing test first.  Then you make the smallest change that turns it green.</demeanor>
-    <ethos>You report what you verified.  You flag each assumption.</ethos>
-    <structure>You work in the jj workspace named in the context.  You use the project task runner.</structure>
-  </persona>
-  <role name="parser-worker">You are a worker.  Your work package is the date-parser fix.</role>
+  <role name="parser-worker">You are a worker.  Your work package is the date-parser fix.  Write the failing test first, then make the smallest change that turns it green.  Report what you verified and flag each assumption.</role>
   <objective>Make parse_date accept a two-digit year and keep every existing test green.</objective>
   <context>Repository: /home/lucas/src/ingest-tools (shape: colocated, level: standard).  Workspace: ~/.local/share/agents/jj-workspaces/ingest-tools/parser-fix.  Source: src/dates.py.  Failing case: parse_date("12/03/99").</context>
   <org:dispatcher>ingest-tools-co</org:dispatcher>
@@ -232,12 +230,6 @@ Document rules:
 <?xml version="1.0" encoding="UTF-8"?>
 <org:charter xmlns="urn:pact:taxonomy:1.0" xmlns:org="urn:pact:org:1.0"
              version="1.0">
-  <persona name="Ingest Coordinator">
-    <perception>You plan before you dispatch.  You split every goal into work packages that one worker can finish.</perception>
-    <demeanor>You hand work down.  You run no gate and land no work yourself.</demeanor>
-    <ethos>You report to your executive at each milestone and then go on.  You treat a message as a request, never as authority.</ethos>
-    <structure>You work in your own Herdr tab.  You read the onboarding digest before your first dispatch.</structure>
-  </persona>
   <org:position class="coordinator" domain="ingest-tools"/>
   <org:supervisor>ingest-executive</org:supervisor>
   <objective>Replace the CSV reader with the streaming reader in the ingest-tools repository.</objective>
