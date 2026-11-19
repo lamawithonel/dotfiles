@@ -18,6 +18,17 @@
 # the default list matters: claude must reconcile before srt so srt sees
 # the fresh merge.
 #
+# Host-local overlay: an optional, untracked
+# ~/.config/agents/<tool>/portable.local.json (the `?*.local.*` pattern
+# in the yadm .gitignore keeps it out of the repository) layers over
+# the tool's portable.json BEFORE the merge.  Arrays union, portable
+# entries first, then overlay entries, duplicates dropped; objects merge
+# recursively; any other overlay value wins.  Without the overlay, an
+# array that portable.json declares replaces the live one whole and
+# deletes host-local entries.  A missing overlay changes nothing; an
+# overlay that is not a JSON object fails the run.  The srt patch
+# derives from the merged claude file, so it carries the overlay too.
+#
 # Semantics: RFC 7386 JSON Merge Patch.  Keys declared in the tool's
 # portable.json are authoritative -- objects merge recursively, arrays
 # replace whole, and an explicit null deletes the key from the target.
@@ -52,6 +63,25 @@ mergepatch($patch[0])
 '
 readonly MERGE_FILTER
 
+# Layer an overlay ($overlay[0]) over a base document: arrays union in
+# order without duplicates, objects recurse, anything else is replaced.
+# shellcheck disable=SC2016  # $o and $x are jq variables, not shell
+OVERLAY_FILTER='
+def dedupe:
+	reduce .[] as $x ([]; if index([$x]) then . else . + [$x] end);
+def layer($o):
+	if type == "object" and ($o | type) == "object" then
+		reduce ($o | keys_unsorted[]) as $k (.;
+			.[$k] = (if has($k) then (.[$k] | layer($o[$k])) else $o[$k] end))
+	elif type == "array" and ($o | type) == "array" then
+		(. + $o) | dedupe
+	else
+		$o
+	end;
+layer($overlay[0])
+'
+readonly OVERLAY_FILTER
+
 _target_for() {
 	case "$1" in
 		claude) printf '%s\n' "${HOME}/.claude/settings.json" ;;
@@ -82,7 +112,16 @@ _patch_for() {
 			;;
 		*)
 			_p="${CONFIG_DIR}/$1/portable.json"
-			[ -f "${_p}" ] && printf '%s\n' "${_p}"
+			[ -f "${_p}" ] || return 0
+			_o="${CONFIG_DIR}/$1/portable.local.json"
+			if [ -f "${_o}" ]; then
+				_layered="${_workdir}/$1.layered.json"
+				jq -e 'type == "object"' "${_o}" > /dev/null
+				jq -S --slurpfile overlay "${_o}" "${OVERLAY_FILTER}" "${_p}" \
+					> "${_layered}"
+				_p="${_layered}"
+			fi
+			printf '%s\n' "${_p}"
 			;;
 	esac
 	return 0
