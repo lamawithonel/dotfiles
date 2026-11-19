@@ -20,6 +20,28 @@
           }
         ],
         "matcher": "Agent"
+      },
+      {
+        "hooks": [
+          {
+            "command": "/home/lucas/.claude/hooks/gate-bash.py",
+            "timeout": 15,
+            "type": "command"
+          }
+        ],
+        "matcher": "Bash"
+      }
+    ],
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "command": "/home/lucas/.claude/hooks/compact-reminder.sh",
+            "timeout": 5,
+            "type": "command"
+          }
+        ],
+        "matcher": "compact"
       }
     ],
     "PostToolUse": [
@@ -54,6 +76,7 @@
   "preferredNotifChannel": "ghostty",
   "promptSuggestionEnabled": false,
   "sandbox": {
+    "failIfUnavailable": true,
     "credentials": {
       "envVars": [
         {
@@ -771,6 +794,7 @@
         "mcp.context7.com",
         "media.githubusercontent.com",
         "npmjs.com",
+        "api.openrouter.ai",
         "openrouter.ai",
         "otlp-gateway-prod-us-central-0.grafana.net",
         "otlp-gateway-prod-us-central-1.grafana.net",

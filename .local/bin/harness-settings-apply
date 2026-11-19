@@ -12,11 +12,11 @@
 #
 # The srt target chains off the claude one: portable.json merges
 # into ~/.claude/settings.json, then that merged file's `sandbox`
-# object (minus the Claude-Code-only autoAllowBashIfSandboxed key)
-# becomes the patch for ~/.srt-settings.json, which Pi reads through
-# the ~/.pi/agent/sandbox.json symlink.  Order in the default list
-# matters: claude must reconcile before srt so srt sees the fresh
-# merge.
+# object (minus the Claude-Code-only autoAllowBashIfSandboxed and
+# failIfUnavailable keys) becomes the patch for ~/.srt-settings.json,
+# which Pi reads through the ~/.pi/agent/sandbox.json symlink.  Order in
+# the default list matters: claude must reconcile before srt so srt sees
+# the fresh merge.
 #
 # Semantics: RFC 7386 JSON Merge Patch.  Keys declared in the tool's
 # portable.json are authoritative -- objects merge recursively, arrays
@@ -75,7 +75,7 @@ _patch_for() {
 			_derived="${_workdir}/srt.patch.json"
 			if jq -e '.sandbox
 					| select(type == "object")
-					| del(.autoAllowBashIfSandboxed)' \
+					| del(.autoAllowBashIfSandboxed, .failIfUnavailable)' \
 				"${_src}" > "${_derived}" 2> /dev/null; then
 				printf '%s\n' "${_derived}"
 			fi
