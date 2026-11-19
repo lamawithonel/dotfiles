@@ -64,6 +64,39 @@ class LogDispatchTests(unittest.TestCase):
             return []
         return [json.loads(line) for line in self.log.read_text().splitlines()]
 
+    def send_agent(
+        self, transcript_path: Path | None, agent_id: str | None, **tool_input: Any
+    ) -> list[dict[str, Any]]:
+        """An Agent call with the fields a PostToolUse payload carries."""
+        payload: dict[str, Any] = {
+            "session_id": "s1",
+            "tool_name": "Agent",
+            "tool_input": {"model": "opus", "effort": "high", **tool_input},
+        }
+        if transcript_path is not None:
+            payload["transcript_path"] = str(transcript_path)
+        if agent_id is not None:
+            payload["tool_response"] = {"agentId": agent_id, "status": "done"}
+        proc = self.run_hook(json.dumps(payload))
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        return [json.loads(line) for line in self.log.read_text().splitlines()]
+
+    def transcript(self, *models: str | None, junk: bool = False) -> Path:
+        """A synthetic session transcript with a worker transcript beside it."""
+        root = self.log.parent
+        session = root / "proj" / "sess"
+        (session / "subagents").mkdir(parents=True, exist_ok=True)
+        lines = [json.dumps({"type": "user", "message": {"role": "user"}})]
+        for model in models:
+            msg = {"role": "assistant", "content": "SECRET-CONTENT"}
+            if model is not None:
+                msg["model"] = model
+            lines.append(json.dumps({"type": "assistant", "message": msg}))
+        if junk:
+            lines.insert(1, "not json")
+        (session / "subagents" / "agent-abc123.jsonl").write_text("\n".join(lines))
+        return root / "proj" / "sess.jsonl"
+
     def test_agent_call_logs_model_and_effort(self) -> None:
         recs = self.send("Agent", model="sonnet", effort="medium", prompt="x")
         self.assertEqual(len(recs), 1)
@@ -126,6 +159,63 @@ class LogDispatchTests(unittest.TestCase):
         for cmd in ("ls -la", "pi --help", "pip --model x", "api --model x"):
             self.assertEqual(self.send("Bash", command=cmd), [], cmd)
         self.assertFalse(self.log.exists())
+
+    def test_served_model_comes_from_the_worker_transcript(self) -> None:
+        path = self.transcript("claude-opus-5-5")
+        rec = self.send_agent(path, "abc123")[0]
+        self.assertEqual(rec["model"], "opus")
+        self.assertEqual(rec["served_model"], "claude-opus-5-5")
+        self.assertEqual(rec["agent_id"], "abc123")
+
+    def test_the_last_real_model_in_the_transcript_is_the_served_one(self) -> None:
+        path = self.transcript("claude-fable-5-2", "<synthetic>", "claude-opus-5-5")
+        self.assertEqual(
+            self.send_agent(path, "abc123")[0]["served_model"], "claude-opus-5-5"
+        )
+        path = self.transcript("claude-opus-5-5", "<synthetic>", None)
+        self.assertEqual(
+            self.send_agent(path, "abc123")[1]["served_model"], "claude-opus-5-5"
+        )
+
+    def test_unreadable_lines_in_the_transcript_are_skipped(self) -> None:
+        path = self.transcript("claude-haiku-5-5", junk=True)
+        self.assertEqual(
+            self.send_agent(path, "abc123")[0]["served_model"], "claude-haiku-5-5"
+        )
+
+    def test_a_worker_still_running_logs_the_transcript_path_only(self) -> None:
+        path = self.transcript()  # no assistant turns yet
+        rec = self.send_agent(path, "abc123")[0]
+        self.assertNotIn("served_model", rec)
+        self.assertTrue(
+            rec["agent_transcript"].endswith("subagents/agent-abc123.jsonl")
+        )
+
+    def test_no_transcript_file_logs_no_served_model(self) -> None:
+        path = self.log.parent / "proj" / "gone.jsonl"
+        rec = self.send_agent(path, "abc123")[0]
+        self.assertNotIn("served_model", rec)
+
+    def test_no_agent_id_or_transcript_adds_no_fields(self) -> None:
+        for path, agent in ((None, None), (self.transcript("m"), None), (None, "a1")):
+            rec = self.send_agent(path, agent)[-1]
+            with self.subTest(path=path, agent=agent):
+                self.assertNotIn("served_model", rec)
+                self.assertNotIn("agent_transcript", rec)
+
+    def test_an_agent_id_with_path_characters_is_ignored(self) -> None:
+        path = self.transcript("claude-opus-5-5")
+        for agent in ("../abc123", "a/b", "", "a b"):
+            rec = self.send_agent(path, agent)[-1]
+            with self.subTest(agent=agent):
+                self.assertNotIn("served_model", rec)
+                self.assertNotIn("agent_id", rec)
+
+    def test_bash_dispatch_gets_no_served_fields(self) -> None:
+        rec = self.send("Bash", command=PI_CMD)[0]
+        self.assertEqual(
+            set(rec), {"ts", "session_id", "tool", "harness", "model", "effort"}
+        )
 
     def test_appends_to_existing_log(self) -> None:
         self.send("Agent", model="haiku", effort="low")

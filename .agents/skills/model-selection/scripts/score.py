@@ -1057,12 +1057,42 @@ def mix_bands(order: Sequence[str], key: str) -> list[str]:
     return [base[base.index(key)]]
 
 
+def served_model(path: Any) -> str | None:
+    """The model of the last assistant turn in a worker transcript, if any.
+
+    Keep in step with `served_model` in the log-dispatch hook.
+    """
+    if not isinstance(path, str):
+        return None
+    found = None
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    msg = json.loads(line).get("message")
+                except (ValueError, AttributeError):
+                    continue
+                model = msg.get("model") if isinstance(msg, dict) else None
+                if isinstance(model, str) and model != "<synthetic>":
+                    found = model
+    except OSError:
+        return None
+    return found
+
+
 def mix_report(ctx: Ctx, records: Sequence[Reg]) -> Reg:
     order = ctx.policy["bands"]["order"]
     bands = dict.fromkeys([*order, "unknown"], 0)
     unknown: list[str] = []
+    served_count = 0
     for rec in records:
-        mid = resolve_model(ctx, str(rec["model"]), rec.get("harness"))
+        # The model that answered counts; a fallback can differ from the alias.
+        served = rec.get("served_model") or served_model(rec.get("agent_transcript"))
+        mid = served and resolve_model(ctx, str(served), rec.get("harness"))
+        if mid:
+            served_count += 1
+        else:
+            mid = resolve_model(ctx, str(rec["model"]), rec.get("harness"))
         band = None
         if mid:
             band = counted_band(
@@ -1086,6 +1116,7 @@ def mix_report(ctx: Ctx, records: Sequence[Reg]) -> Reg:
     return {
         "bands": bands,
         "basis": basis,
+        "served": served_count,
         "mix": mix,
         "unknown_models": dedupe(unknown),
     }

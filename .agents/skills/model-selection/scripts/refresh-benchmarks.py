@@ -86,10 +86,11 @@ ARENA_DATASET_API: Final = (
     "https://huggingface.co/api/datasets/lmarena-ai/leaderboard-dataset"
 )
 HF_HOST: Final = "huggingface.co"
-# Feed keys that differ from the ID-derived default (OpenRouter's real IDs).
-MATCH_DEFAULTS: Final[dict[str, dict[str, str]]] = {
-    "anthropic/claude-fable-5-1[1m]": {"openrouter": "anthropic/claude-fable-5.1"},
-}
+# OpenRouter names a Fable version with dots (claude-fable-5.2); the
+# roster ID has dashes.  Any version maps by rule, with no per-release edit.
+FABLE_ID: Final = re.compile(
+    r"^(anthropic/claude-fable-)(\d+(?:-\d+)*)(?:\[[^\]]*\])?$"
+)
 RETIRED: Final = {
     "aa_api": "retired: replaced by aa_free (v4)",
     "deep_swe": "retired: values kept, never used (v4)",
@@ -396,7 +397,9 @@ def derive_match(mid: str, override: Mapping[str, Any] | None = None) -> dict[st
         "aa_slug": dashed,
         "board": [f"{vendor}/{base}", base, dashed],
     }
-    m.update(MATCH_DEFAULTS.get(mid, {}))
+    fable = FABLE_ID.match(mid)
+    if fable:
+        m["openrouter"] = fable[1] + fable[2].replace("-", ".")
     for k, v in ((override or {}).get("match") or {}).items():
         if v is not None:
             m[k] = v

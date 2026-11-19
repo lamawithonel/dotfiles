@@ -8,7 +8,7 @@ Registry JSON is untyped at this boundary, hence the `Any` mappings.
 
 import json
 import re
-from collections.abc import Mapping
+from collections.abc import Iterable, Mapping
 from typing import Any, Final
 
 SCHEMA_VERSION: Final = 4
@@ -47,10 +47,28 @@ def canonical_id(model_id: str) -> str:
     return base.replace(".", "-")
 
 
+def is_mythos(model_id: str, entries: Iterable[str]) -> bool:
+    """Whether a policy `mythos` entry names the model.
+
+    An entry is an exact ID, or a family that ends in `*`
+    (`anthropic/claude-fable-*`): the family covers every later version
+    with no edit to the policy.
+    """
+    have = canonical_id(model_id)
+    for entry in entries:
+        want = canonical_id(entry)
+        if want.endswith("*"):
+            if have.startswith(want[:-1]):
+                return True
+        elif have == want:
+            return True
+    return False
+
+
 def band_of(aai: float | None, model_id: str, policy: Json) -> str | None:
     """Band for one variant: mythos by name, else the highest floor met."""
     bands = policy["bands"]
-    if canonical_id(model_id) in {canonical_id(m) for m in bands["mythos"]}:
+    if is_mythos(model_id, bands["mythos"]):
         return "mythos"
     if aai is None:
         return None

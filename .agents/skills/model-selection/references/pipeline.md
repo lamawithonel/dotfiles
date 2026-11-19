@@ -126,8 +126,9 @@ remain visible.
   of today's row count.  `apply_feed` then records
   `status: failed` and keeps old values.
 - **DeepSWE:** Retired.  Values are kept and never used.
-- **Fable:** An override matches `anthropic/claude-fable-5-1[1m]` to
-  OpenRouter `anthropic/claude-fable-5.1`.
+- **Fable:** `derive_match` maps any `anthropic/claude-fable-N-M[1m]`
+  to OpenRouter `anthropic/claude-fable-N.M` by rule (`FABLE_ID`).  A
+  new version needs no edit here.
 - **Pi roster:** `pi-zdr` is `enabledModels` intersected with
   `~/.pi/agent/models-store.json` `openrouter.models[].id`; a store
   older than 7 days warns.  Strip a `:<thinking>` suffix; skip

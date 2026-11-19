@@ -27,6 +27,7 @@ HAIKU = "anthropic/claude-haiku-5.5"
 SONNET = "anthropic/claude-sonnet-5.5"
 OPUS = "anthropic/claude-opus-5.5"
 FABLE = "anthropic/claude-fable-5-1[1m]"
+FABLE2 = "anthropic/claude-fable-5-2[1m]"
 GLM = "z-ai/glm-5.3"
 DSEEK = "deepseek/ds-flash"
 GPTX = "openai/gpt-x"
@@ -661,6 +662,36 @@ class MythosTests(ScoreCase):
         named = self.pick("--band", "sonnet", "--user-named")
         self.assertEqual(named.code, 0)
         self.assertEqual(named.data, plain.data)
+
+
+class FableFamilyTests(ScoreCase):
+    """A new Fable version is mythos with no edit to the policy list."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.reg["policy"]["bands"]["mythos"] = ["anthropic/claude-fable-*"]
+        self.reg["models"][FABLE2] = _model(
+            {"high": _variant(64.0, 1500), "xhigh": _variant(66.0, 1800)},
+            CLAUDE_PRICE,
+        )
+        for host in self.reg["hosts"].values():
+            host["roster"][FABLE2] = _claude_entry("fable")
+
+    def test_user_named_mythos_picks_the_newest_fable(self) -> None:
+        res = self.pick("--band", "mythos", "--user-named", "--effort", "xhigh")
+        self.assertEqual(res.code, 0, res.err)
+        self.assertEqual(res.data["pick"]["id"], FABLE2)
+
+    def test_new_fable_is_never_auto_picked_though_its_score_tops_opus(self) -> None:
+        for band, want in (("opus", OPUS), ("sonnet", SONNET)):
+            with self.subTest(band=band):
+                self.assertEqual(self.pick("--band", band).data["pick"]["id"], want)
+
+    def test_listing_ranks_both_fables_and_picks_none(self) -> None:
+        res = self.pick("--band", "mythos")
+        self.assertEqual(res.code, 3)
+        self.assertEqual({r["id"] for r in res.data["ranked"]}, {FABLE, FABLE2})
+        self.assertIsNone(res.data["pick"])
 
 
 class ConsultantTests(ScoreCase):

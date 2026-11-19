@@ -46,7 +46,7 @@ CONTRACT_POLICY: dict[str, Any] = {
             "bulk": {"rule": "0.70 x haiku anchor"},
         },
         "mythos": [
-            "anthropic/claude-fable-5-1[1m]",
+            "anthropic/claude-fable-*",
             "openai/gpt-6-astra",
             "openai/gpt-6-astra-pro",
         ],
@@ -193,6 +193,28 @@ class BandOf(unittest.TestCase):
                 self.assertEqual(
                     registry.band_of(30.0, alias, CONTRACT_POLICY), "mythos"
                 )
+
+    def test_mythos_family_pattern_covers_every_fable_version(self) -> None:
+        for alias in (
+            "anthropic/claude-fable-5-1[1m]",
+            "anthropic/claude-fable-5-2[1m]",
+            "anthropic/claude-fable-5.2",
+            "anthropic/claude-fable-6",
+            "Anthropic/Claude-Fable-7-0:thinking",
+        ):
+            with self.subTest(alias=alias):
+                self.assertEqual(
+                    registry.band_of(60.0, alias, CONTRACT_POLICY), "mythos"
+                )
+
+    def test_mythos_family_pattern_does_not_swallow_neighbours(self) -> None:
+        for alias, want in (
+            ("anthropic/claude-fablex-1", "opus"),
+            ("anthropic/claude-opus-5.5", "opus"),
+            ("other/claude-fable-5-2", "opus"),
+        ):
+            with self.subTest(alias=alias):
+                self.assertEqual(registry.band_of(60.0, alias, CONTRACT_POLICY), want)
 
     def test_mythos_alias_rule_does_not_swallow_neighbours(self) -> None:
         got = registry.band_of(30.0, "openai/gpt-6-astra-mini", CONTRACT_POLICY)
@@ -373,8 +395,15 @@ class StagedRegistry(unittest.TestCase):
                     self.assertEqual(v["band"], self.band(mid, eff))
 
     def test_mythos_models_exist(self) -> None:
-        for mid in self.reg["policy"]["bands"]["mythos"]:
-            self.assertIn(mid, self.reg["models"])
+        for entry in self.reg["policy"]["bands"]["mythos"]:
+            with self.subTest(entry=entry):
+                self.assertTrue(
+                    any(
+                        registry.band_of(None, mid, {"bands": {"mythos": [entry]}})
+                        == "mythos"
+                        for mid in self.reg["models"]
+                    )
+                )
 
     def test_pi_zdr_roster_at_migration(self) -> None:
         roster = self.reg["hosts"]["lama-pc-01"]["roster"]

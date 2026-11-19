@@ -307,6 +307,21 @@ class OpenRouter(unittest.TestCase):
         self.assertEqual(m["openrouter"], "anthropic/claude-fable-5.1")
         self.assertEqual(m["aa_slug"], "claude-fable-5-1")
 
+    def test_any_fable_version_maps_to_its_dotted_openrouter_id(self):
+        for mid, want in (
+            ("anthropic/claude-fable-5-2[1m]", "anthropic/claude-fable-5.2"),
+            ("anthropic/claude-fable-6-0[1m]", "anthropic/claude-fable-6.0"),
+            ("anthropic/claude-fable-5-1", "anthropic/claude-fable-5.1"),
+        ):
+            with self.subTest(mid=mid):
+                m = refresh.derive_match(mid)
+                self.assertEqual(m["openrouter"], want)
+                self.assertEqual(m["aa_slug"], want.split("/")[1].replace(".", "-"))
+
+    def test_non_fable_ids_keep_the_derived_openrouter_id(self):
+        m = refresh.derive_match("anthropic/claude-opus-5.5")
+        self.assertEqual(m["openrouter"], "anthropic/claude-opus-5.5")
+
     def test_fable_gets_openrouter_price(self):
         reg = v4_reg()
         mid = "anthropic/claude-fable-5-1[1m]"

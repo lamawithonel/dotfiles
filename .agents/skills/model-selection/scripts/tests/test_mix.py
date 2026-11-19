@@ -115,6 +115,65 @@ class BandRuleTests(MixCase):
         self.assertEqual(self.band_of(rec), "sonnet")
 
 
+class ServedModelTests(MixCase):
+    """The model that answered counts, not the alias that was requested."""
+
+    def transcript(self, *models: str) -> str:
+        path = os.path.join(os.path.dirname(self.path), "agent-x.jsonl")
+        with open(path, "w", encoding="utf-8") as f:
+            for m in models:
+                msg = {"role": "assistant", "model": m, "content": "SECRET-CONTENT"}
+                f.write(json.dumps({"type": "assistant", "message": msg}) + "\n")
+            f.write("not json\n")
+        return path
+
+    def bands(self, *records: dict[str, Any]) -> dict[str, int]:
+        self.write_log(*records)
+        res = self.mix()
+        self.assertEqual(res.code, 0, res.err)
+        self.last = res.data
+        return res.data["bands"]
+
+    def test_served_model_replaces_the_requested_alias(self) -> None:
+        got = self.bands(_rec("sonnet", "high", served_model="claude-opus-5-5"))
+        self.assertEqual((got["opus"], got["sonnet"]), (1, 0))
+        self.assertEqual(self.last["served"], 1)
+
+    def test_served_model_that_matches_the_request_changes_nothing(self) -> None:
+        got = self.bands(_rec("sonnet", "high", served_model="claude-sonnet-5-5"))
+        self.assertEqual((got["opus"], got["sonnet"]), (0, 1))
+
+    def test_unknown_served_model_falls_back_to_the_alias(self) -> None:
+        got = self.bands(_rec("sonnet", "high", served_model="claude-nova-9"))
+        self.assertEqual((got["sonnet"], got["unknown"]), (1, 0))
+        self.assertEqual(self.last["served"], 0)
+
+    def test_record_without_the_field_counts_by_alias(self) -> None:
+        got = self.bands(_rec("sonnet", "high"))
+        self.assertEqual(got["sonnet"], 1)
+        self.assertEqual(self.last["served"], 0)
+
+    def test_transcript_named_in_the_record_supplies_the_served_model(self) -> None:
+        path = self.transcript("claude-sonnet-5-5", "claude-opus-5-5")
+        got = self.bands(_rec("sonnet", "high", agent_transcript=path))
+        self.assertEqual((got["opus"], got["sonnet"]), (1, 0))
+        self.assertEqual(self.last["served"], 1)
+
+    def test_missing_transcript_falls_back_to_the_alias(self) -> None:
+        gone = os.path.join(os.path.dirname(self.path), "gone.jsonl")
+        got = self.bands(_rec("sonnet", "high", agent_transcript=gone))
+        self.assertEqual(got["sonnet"], 1)
+
+    def test_served_field_wins_over_the_transcript(self) -> None:
+        path = self.transcript("claude-opus-5-5")
+        got = self.bands(
+            _rec(
+                "sonnet", "high", served_model="claude-haiku-5-5", agent_transcript=path
+            )
+        )
+        self.assertEqual((got["haiku"], got["opus"]), (1, 0))
+
+
 class ReportTests(MixCase):
     def test_shares_targets_and_deviation(self) -> None:
         self.write_log(

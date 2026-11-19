@@ -26,7 +26,9 @@ older than `age_out_days` (90) are ignored, with a warning.
 A variant is a (model, effort) pair.  Each variant is banded on its own
 AAI at the `high`-effort floors: `bulk` 20.9, `haiku` 28.4, `sonnet`
 39.4, `opus` 49.2.  Below 20.9 is unbanded.  `mythos` is a named list,
-not a floor, and its models never enter an automatic pick.  Estimated
+not a floor, and its models never enter an automatic pick.  An entry is
+an exact ID or a family that ends in `*`: `anthropic/claude-fable-*`
+makes every Fable version `mythos` with no edit per release.  Estimated
 placements carry a confidence level; low or medium confidence on a pick
 warns.
 
@@ -126,7 +128,12 @@ error, 3 neither.
 
 ### Inline work: token-share.py
 
-`--mix` counts dispatches from the hook log.  `scripts/token-share.py`
+`--mix` counts dispatches from the hook log.  A line holds the alias
+that was requested (`model`).  When a fallback model answered, the
+hook's `served_model` (or the worker transcript in `agent_transcript`,
+which `--mix` reads at report time) names it, and `--mix` counts that
+model.  The report's `served` field is the number of lines counted this
+way.  `scripts/token-share.py`
 shows tokens spent inline by each session, including Workflow agents
 and work the log cannot see.  It reads usage fields only (model,
 timestamp, token counts, session names), never message content.

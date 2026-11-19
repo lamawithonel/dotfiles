@@ -9,6 +9,13 @@ $MODEL_SELECTION_DISPATCH_LOG, else
 $XDG_STATE_HOME/agents/model-selection/dispatches.jsonl.  `score.py --mix`
 reads the log and assigns bands at report time.
 
+`model` is the alias that was requested.  A fallback model can answer
+instead.  An `Agent` line therefore also holds `agent_id` and
+`agent_transcript` (the worker's transcript), and `served_model` (the
+model that answered, from that transcript) when the transcript already
+has an answer.  A background worker is still running when this hook
+fires, so `score.py --mix` reads `agent_transcript` later.
+
 The hook never blocks: it prints nothing on stdout and exits 0 always.
 Malformed input and write errors print a warning on stderr.  Workflow
 agents are not counted: PostToolUse fires once per Workflow call.
@@ -30,6 +37,7 @@ OPTION: Final = re.compile(
     r"--(model|thinking|effort)(?:=|\s+)(['\"]?)([^\s'\"()`<>;&|$]+)\2"
 )
 EFFORT_FLAG: Final = {"pi": "thinking", "claude": "effort"}
+AGENT_ID: Final = re.compile(r"[A-Za-z0-9_-]+")
 
 
 def _warn(text: str) -> None:
@@ -70,6 +78,44 @@ def dispatches(tool: str, tool_input: Mapping[str, Any]) -> list[dict[str, Any]]
     return []
 
 
+def served_model(path: str) -> str | None:
+    """The model of the last assistant turn in a transcript, if any.
+
+    Keep in step with `served_model` in score.py.
+    """
+    found = None
+    try:
+        with open(path, encoding="utf-8") as f:
+            for line in f:
+                try:
+                    msg = json.loads(line).get("message")
+                except (ValueError, AttributeError):
+                    continue
+                model = msg.get("model") if isinstance(msg, dict) else None
+                if isinstance(model, str) and model != "<synthetic>":
+                    found = model
+    except OSError:
+        return None
+    return found
+
+
+def agent_fields(data: Mapping[str, Any]) -> dict[str, Any]:
+    """`agent_id`, `agent_transcript`, and `served_model` for an Agent call."""
+    response = data.get("tool_response")
+    agent = response.get("agentId") if isinstance(response, dict) else None
+    if not isinstance(agent, str) or not AGENT_ID.fullmatch(agent):
+        return {}
+    fields: dict[str, Any] = {"agent_id": agent}
+    session = data.get("transcript_path")
+    if isinstance(session, str) and session.endswith(".jsonl"):
+        path = os.path.join(session[:-6], "subagents", f"agent-{agent}.jsonl")
+        fields["agent_transcript"] = path
+        served = served_model(path)
+        if served:
+            fields["served_model"] = served
+    return fields
+
+
 def append(path: str, lines: list[str]) -> None:
     os.makedirs(os.path.dirname(path) or ".", exist_ok=True)
     fd = os.open(path, os.O_WRONLY | os.O_APPEND | os.O_CREAT, 0o600)
@@ -94,7 +140,8 @@ def main() -> int:
         return 0
     ts = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
     base = {"ts": ts, "session_id": data.get("session_id"), "tool": data["tool_name"]}
-    lines = [json.dumps({**base, **d}) + "\n" for d in found]
+    extra = agent_fields(data) if data["tool_name"] == "Agent" else {}
+    lines = [json.dumps({**base, **d, **extra}) + "\n" for d in found]
     try:
         append(log_path(os.environ), lines)
     except OSError as err:

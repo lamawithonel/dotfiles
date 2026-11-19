@@ -31,7 +31,7 @@ Choose the lowest band that gets it right the first time.
 | `haiku` | Lookups, file:line location, test runs with a summary, final report digests, mechanical one-file edits |
 | `sonnet` | Default for real work: multi-file, synthesis, repro'd bugs, docs |
 | `opus` | No repro, cross-subsystem design, adversarial review, or sonnet failed |
-| `mythos` | Only when the user names the band or a mythos model.  Never auto-picked |
+| `mythos` | Only when the user names it, or when a user ruling recorded in the project authorizes it for that work.  Cite the ruling file in the dispatch.  Never auto-picked |
 
 - Send a package to `haiku` when it is read-only, touches three files
   or fewer, and has an answer the dispatcher can check.
@@ -59,9 +59,10 @@ Flags:
 - `--payload /abs/path/brief.md`: the brief file that a `herdr` or
   `shell` command reads.  Use an absolute path.
 - `--band mythos --user-named`: picks the best mythos variant, at
-  `xhigh` by default.  Use it only when the user named the mythos band
-  or a mythos model, for example through `/consultant`.  Without
-  `--user-named`, `--band mythos` lists the models and exits 3.
+  `xhigh` by default.  Use it only when the user names it (for example
+  through `/consultant`), or when a user ruling recorded in the project
+  authorizes it for that work.  Cite the ruling file in the dispatch.
+  Without `--user-named`, `--band mythos` lists the models and exits 3.
 - `--consultant-for BAND:EFFORT`: give the creator's band and effort.
   It picks one band up (stops at `opus`) and one effort up (stops at
   `max`).  Do not combine it with `--band`, `--role`, `--effort`, or
@@ -127,6 +128,8 @@ Rules for each harness: `references/effort.md`.
 - Herdr pane: pass the flags of the CLI inside the pane after `--`,
   for example `pi --model ... --thinking ...`.  Herdr has no model or
   effort flag.
+- Dispatch Fable by the alias `fable`, so it runs the latest version.
+  Never dispatch it by a version ID.
 - `CLAUDE_CODE_SUBAGENT_MODEL=sonnet` backs up a missed `model`.  Set
   `model` anyway.
 
@@ -136,7 +139,10 @@ Rules for each harness: `references/effort.md`.
   above.
 - Give a one-line reason for every `opus`-or-above dispatch.
 - Run `score.py --mix [--session ID] [--days N]` to see the measured
-  mix.  It needs the log-dispatch hook.
+  mix.  It needs the log-dispatch hook.  The log holds the alias that
+  you requested.  A fallback model can answer instead: the hook also
+  logs the model that answered (`served_model`), and `--mix` counts
+  that model and reports how many lines it did this for (`served`).
 - Run `~/.agents/skills/model-selection/scripts/token-share.py
   [--session ID] [--days N]` to see tokens by model, including inline
   work that the dispatch log cannot see.
