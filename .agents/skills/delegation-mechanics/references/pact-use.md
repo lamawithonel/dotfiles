@@ -53,8 +53,18 @@ The examples are the authority on element names.
 - Give paths, not file dumps.  Give one runnable verification command.
 - Keep a brief under 2,000 tokens.  Put no raw conversation history in
   it.
+- Cover four fields in a worker brief: objective, output format, tool
+  and source guidance, and boundaries.
+- Give each file one writer.  Keep tightly coupled changes in one
+  worker.
+- Give a research worker read-only tools, one named output file as its
+  only allowed write, and a cap on its summary.  It returns the summary
+  with the path.
 - Name the model and effort at dispatch.  The brief alone does not set
   them.
+- At `xhigh`, `max`, or `low` effort, copy the matching worker line
+  (rules 7 and 8 of the `model-selection` `references/effort.md`) into
+  the brief.
 - Lint before you send: `~/.agents/schemas/pact-lint.sh <file>`.  The lint runs
   `xmllint` and checks the required elements of the type.
   Reason: the writer owns validity.  A receiver never rejects a message
@@ -80,7 +90,8 @@ position ends.  Send only this, with `file:line` references.
     `cyber`, `bio`, `medical`, or `other`.
   - On `PARTIAL` or `REFUSED`, the receiver follows the refusal rules of
     the `model-selection` skill.
-- Verification command and its exit code.
+- Verification command and its exit code, with the counts of tests
+  passed and failed.
 - Modified or created files, with `file:line` references.
 - Summary of decisions.
 - A coordinator or executive adds its open items and its protocols.

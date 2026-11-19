@@ -30,6 +30,10 @@ dispatch names both.
    tool.  Never use a shell-out to pass a gate the user declined.
    Reason: a shell-out is an untracked process.  The harness cannot
    list, inspect, or cancel it, and its tokens count against no budget.
+7. Give every headless or `Workflow` run a turn or budget cap and a
+   stop condition.  Reason: an unattended run has no other end.
+8. After two failed fix attempts, the worker writes a handoff note and
+   ends.  The dispatcher starts a fresh worker from the note.
 
 ## Claude Code tools
 
