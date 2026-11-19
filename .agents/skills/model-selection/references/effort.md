@@ -23,14 +23,54 @@ sends.  Change a default only with a one-line reason.
 3. On a quality failure, raise effort to `high` first.  Above `high`,
    change band.  Opus at `high` beats Sonnet at `xhigh` on score and
    cost.  The change counts toward the higher band's share of the mix.
-4. Executives run `xhigh`.
+4. Executives run `xhigh`.  The executive `xhigh` default is a
+   candidate to test on local evals, not a measured result (see
+   section 2).
 5. Never use `max` as a Claude role default.  Use it on a user
    directive or for a final adversarial review.  A Pi pick may come
    back at `max` when that is the variant measured best in the band.
 6. Use `low` for mechanical work a script checks, and for wide
    fan-out.
+7. At `xhigh` or `max`, a worker stops once its checks pass and starts
+   no reviewer subagents.
+8. At `low` effort, a worker runs a check that exercises each change
+   before it reports done.
+9. Re-sweep effort at each model upgrade (see section 2).
 
-## 2. How each harness sets effort
+## 2. Vendor start efforts
+
+The vendor effort page gives a start effort for each model.[^vendor]
+The table is vendor advice, not a local measurement.  The role defaults
+in section 1 stay in force until a local eval shows a gain.
+
+| Model | Vendor start effort |
+| --- | --- |
+| Opus 5 | `high` |
+| Opus 5.5 | `medium` |
+| Fable 5.x | `high` |
+| Sonnet 5.5 | `high`; `medium` for well-specified agentic tasks |
+| Haiku 5.5 | `medium` |
+| Opus 4.7 and 4.8 | `xhigh` for coding and agentic work |
+
+- The vendor advice to use `xhigh` and `max` only where evals show a
+  gain applies to Sonnet 5.5 and Haiku 5.5, and to `xhigh` on Fable
+  5.2.  It does not apply to Opus 4.7 and 4.8, which start at `xhigh`.
+- Opus 5.5 and Fable 5.2 have vendor advice only.  No local eval
+  backs either row.
+- Re-sweep rule: at each model upgrade, run an effort sweep on local
+  evals before you change a default.  Keep the vendor start effort
+  until the sweep shows a better level.  A higher effort can solve
+  fewer tasks: one measured run solved 90 tasks at `high` and 85 at
+  `xhigh`.[^sweep]
+- The executive `xhigh` default is a candidate to test in the same
+  sweep.  Do not lower it before a sweep supports the change.
+
+[^vendor]: https://platform.claude.com/docs/en/build-with-claude/effort
+    (undated).
+[^sweep]: Sonnet 5 on DeepSWE, single run per level.
+    https://arxiv.org/html/2610.34491 (2026-10-25).
+
+## 3. How each harness sets effort
 
 | Harness | Per worker | Notes |
 | --- | --- | --- |
@@ -39,7 +79,7 @@ sends.  Change a default only with a one-line reason.
 | Pi | `--thinking <level>` on the command | Levels `off`, `minimal`, `low`, `medium`, `high`, `xhigh`, `max`.  See below |
 | Herdr pane | The pane program's own flag after `--` | Herdr has no effort flag |
 
-## 3. Pi thinking map and clamp
+## 4. Pi thinking map and clamp
 
 - Pi clamps `xhigh` and `max` to the `high` budget (16,384 tokens) for
   providers with a thinking-token budget (Anthropic, Bedrock, Google).

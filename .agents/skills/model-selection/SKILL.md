@@ -103,7 +103,8 @@ Details: `references/scoring.md`.
 
 ## 5. Class defaults and effort
 
-- Executive: `opus` at `xhigh`.
+- Executive: `opus` at `xhigh`.  The executive `xhigh` default is a
+  candidate to test on local evals.
 - Coordinator: `sonnet` at `high`.  An executive may charter an `opus`
   coordinator with a one-line reason.
 - Worker: `medium` effort at the band the package needs.
@@ -115,6 +116,12 @@ Details: `references/scoring.md`.
 - Raise effort to `high` before you change band.  Above `high`, change
   band.  Reason: `opus` at `high` beats `sonnet` at `xhigh` on score
   and cost.
+- Re-sweep effort on local evals at each model upgrade.  The vendor
+  start-effort table is in `references/effort.md`, section 2.
+- At `xhigh` or `max`, a worker stops once its checks pass and starts
+  no reviewer subagents.  At `low` effort, a worker runs a check that
+  exercises each change before it reports done.  State both lines in
+  the brief when the effort matches.
 - Bulk work from Claude Code stays on the subscription (zero marginal
   cost).
 
