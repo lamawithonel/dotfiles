@@ -76,8 +76,10 @@ Guardrails:
 - Take each model and effort from `model-selection`, or use the model
   the user named.  Never pick one from memory or from a fixed ranking.
 - Name `model` and `effort` on every dispatch, in every harness.
-- Run a `mythos`-band model only when the user names it.  Otherwise
-  use the band that `model-selection` picks.
+- Run a `mythos`-band model only when the user names it, or when a
+  user ruling recorded in the project authorizes it for that work.
+  Cite the ruling file in the dispatch.  Otherwise use the band that
+  `model-selection` picks.
 - Run a worker on the host's own harness with the harness's in-process
   tool.  Never run the host's own command-line interface (CLI) through
   a shell.  Run a model of another harness through the command that
