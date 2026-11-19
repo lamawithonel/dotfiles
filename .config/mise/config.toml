@@ -51,7 +51,6 @@ node = "lts"
 "npm:yaml-language-server" = "latest"
 "pipx:apm-cli" = "latest"
 "pipx:graphifyy" = "latest"
-"pipx:headroom-ai" = { version = "latest", extras = "all,vector" }
 "pipx:hf" = "latest"
 "pipx:pyright" = "latest"
 "pipx:radon" = { version = "latest", extras = "toml" }
