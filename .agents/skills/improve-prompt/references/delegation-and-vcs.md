@@ -155,7 +155,7 @@ PICCO still drives the diagnosis.  Only the emitted form changes.
 
 | PICCO slot | PACT element |
 | --- | --- |
-| Persona | `<persona name="...">` in an agent definition, a charter, or a consultation only; free-form prose for creative work (`genre-recipes.md`), empty otherwise; behavioral framing only |
+| Persona | `<persona name="...">` in an agent definition only; free-form prose for creative work (`genre-recipes.md`), empty otherwise; behavioral framing only |
 | Role (not a PICCO slot; the position and its scope) | `<role>` in a worker brief or `prompt`; `<org:position>` and `<org:supervisor>` in a charter |
 | Instructions | `<objective>` (one sentence), then `<tasks>` in a worker brief or `<instructions>` in a charter or `prompt` |
 | Context | `<context>`: absolute paths, revisions, shape and level, source-document pointers; `<org:onboarding digest>` in a charter |
@@ -164,14 +164,15 @@ PICCO still drives the diagnosis.  Only the emitted form changes.
 
 Document rules:
 
-- Write a named persona in an agent definition, a charter, and a
-  consultation, and in no other document.  Write it first.  Add text only
+- Write a named persona in an agent definition, and in no other
+  document.  Write it first.  Add text only
   for creative work where a distinctive voice or divergent output
   matters, such as art, design, creative marketing, and voice-driven
   writing.  Leave it empty (`<persona name="..."/>`) for analysis,
   engineering, review, research, coordination, and mechanical work, and
-  state the role in `<role>` instead.  A worker brief has no persona.
-  The content rule is provisional until the persona research reports.
+  state the role in `<role>` instead.  A charter, a consultation, and a
+  worker brief have no persona.  The content rule stays provisional
+  while the persona research continues.
 - Write the worker's rules as `<constraints>`.  A worker brief carries
   no guard text: no stall watchdog, no scope-limit rule, no final report
   contract.  Reason: `pact-lint.sh` rejects guard text.

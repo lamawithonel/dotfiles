@@ -9,11 +9,9 @@
   Vocabulary follows design section 2: executive, coordinator,
   consultant, worker, charter, final report, freeze, standalone session.
 
-  Persona is required in the two startup prompts, charter and
-  consultation, and carries a non-blank name.  Its content is free-form
-  and may be empty.  Write persona text only for creative work where a
-  distinctive voice or divergent output matters.  It is not allowed in
-  worker-brief, question, freeze, relay, ruling, or escalation.
+  No type in this profile carries a persona: not charter, consultation,
+  worker-brief, question, freeze, relay, ruling, or escalation.  Only an
+  agent definition (PACT core) carries one.
 
   The worker-brief type has no guard elements: no stall watchdog, scope
   limit, final report contract, or raw-quotes rule.  Those rules live in
@@ -220,10 +218,9 @@
   <!-- =================================================================== -->
 
   <!-- charter: an executive charters a coordinator (or the user
-       charters an executive).  A named persona is required. -->
+       charters an executive).  No persona. -->
   <xs:complexType name="CharterDocType">
     <xs:all>
-      <xs:element ref="pact:persona"/>
       <xs:element name="position" type="org:CharterPositionType"/>
       <xs:element ref="org:supervisor"/>
       <xs:element ref="pact:objective"/>
@@ -258,12 +255,10 @@
   </xs:complexType>
   <xs:element name="worker-brief" type="org:WorkerBriefDocType"/>
 
-  <!-- consultation: the first prompt of a consultant.  A named
-       persona is required.  A consultant answers questions and makes no
-       work product. -->
+  <!-- consultation: the first prompt of a consultant.  No persona.  A
+       consultant answers questions and makes no work product. -->
   <xs:complexType name="ConsultationDocType">
     <xs:all>
-      <xs:element ref="pact:persona"/>
       <xs:element name="position" type="org:ConsultantPositionType"/>
       <xs:element ref="org:creator"/>
       <xs:element ref="pact:objective"/>

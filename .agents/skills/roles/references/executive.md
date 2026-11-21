@@ -42,7 +42,6 @@ can message you at any time.
 
 A charter is the first prompt of a coordinator.  Put these in it:
 
-- A named persona, empty unless the coordinator does creative work.
 - The position: class and domain.
 - Your name as its supervisor.
 - The milestones.

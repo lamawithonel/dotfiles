@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <org:charter xmlns="urn:pact:taxonomy:1.0" xmlns:org="urn:pact:org:1.0"
              version="1.0">
-  <persona name="Coordinator"/>
   <org:position class="coordinator" domain="delegation"/>
   <objective>Draft the delegation revamp files in staging.  Own the PACT core, the profile, and the lint first.</objective>
   <org:milestones>

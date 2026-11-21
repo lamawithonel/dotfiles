@@ -132,15 +132,15 @@ assignment and its scope of responsibility.  Most prompts need only
 a role; add a persona as a separate element only when the genre calls for one.
 When a genre does warrant a persona, write it as short free-form prose
 (see `references/genre-recipes.md`).  PACT allows a persona only in an
-agent definition, a charter, and a consultation, and requires a named one
-there (`<persona name="..."/>`, empty is valid).  No other document
-carries a persona, so a worker brief or a generic prompt has none.  Write
+agent definition, and requires a named one there (`<persona name="..."/>`,
+empty is valid).  No other document carries a persona, so a charter, a
+consultation, a worker brief, and a generic prompt have none.  Write
 persona text only for creative work where a distinctive voice or
 divergent output matters, such as art, design, creative marketing, and
 voice-driven writing.  Leave it empty for analysis, engineering, review,
 research, coordination, and mechanical work, and state the role in the
-`<role>` element instead.  The content rule is provisional until the
-persona research reports.
+`<role>` element instead.  The content rule stays provisional while the
+persona research continues.
 
 **Target model family filters every genre choice**:
 

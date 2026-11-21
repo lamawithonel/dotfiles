@@ -53,15 +53,13 @@ load test_helper
 }
 
 # -- valid: persona is required, named, and free-form -----------------
-# Only an agent definition, a charter, and a consultation carry a persona.
+# Only an agent definition carries a persona (ruling 2026-11-20).
 # The name is always present.  The content may be empty.
 
 @test "valid: agent-definition with an empty named persona" { assert_valid_fixture agent-definition-empty-persona; }
-@test "valid: charter with an empty named persona" { assert_valid_fixture charter-empty-persona; }
-@test "valid: consultation with an empty named persona" { assert_valid_fixture consultation-empty-persona; }
+@test "valid: charter without persona" { assert_valid_fixture charter-no-persona; }
+@test "valid: consultation without persona" { assert_valid_fixture consultation-no-persona; }
 @test "valid: agent-definition with a prose persona" { assert_valid_fixture agent-definition-with-persona; }
-@test "valid: charter with a prose persona" { assert_valid_fixture charter-with-persona; }
-@test "valid: consultation with a prose persona" { assert_valid_fixture consultation-with-persona; }
 @test "valid: persona as plain text" { assert_valid_fixture persona-plain-text; }
 @test "valid: persona holding arbitrary child elements" { assert_valid_fixture persona-child-elements; }
 @test "valid: persona mixing text and child elements" { assert_valid_fixture persona-mixed-with-parts; }
@@ -258,12 +256,12 @@ load test_helper
 	assert_rejected agent-definition-no-persona 'agent-definition: missing required element <persona>'
 }
 
-@test "invalid: charter without persona" {
-	assert_rejected charter-no-persona 'charter: missing required element <persona>'
+@test "invalid: charter with a persona" {
+	assert_rejected charter-with-persona "Element 'persona': This element is not expected"
 }
 
-@test "invalid: consultation without persona" {
-	assert_rejected consultation-no-persona 'consultation: missing required element <persona>'
+@test "invalid: consultation with a persona" {
+	assert_rejected consultation-with-persona "Element 'persona': This element is not expected"
 }
 
 @test "invalid: agent definition in .md without persona" {
@@ -292,14 +290,6 @@ load test_helper
 
 @test "invalid: persona name with a closing placeholder fragment" {
 	assert_rejected persona-name-closing-braces "Element 'persona', attribute 'name'"
-}
-
-@test "invalid: charter persona with an empty name" {
-	assert_rejected charter-persona-empty-name "Element 'persona', attribute 'name'"
-}
-
-@test "invalid: consultation persona with a placeholder name" {
-	assert_rejected consultation-persona-placeholder-name "Element 'persona', attribute 'name'"
 }
 
 @test "invalid: prompt with a persona" {

@@ -10,9 +10,8 @@
     glossary, term, and task elements.  Each structured element appears
     only where a document type lists it.  Free-form elements stay in the
     pact:node substitution group.
-  - persona is required in an agent definition and in the startup
-    prompts that the profile defines (charter and consultation).  No
-    other document type carries one.  It always has a non-blank name
+  - persona is required in an agent definition.  No other document type
+    carries one (ruling 2026-11-20).  It always has a non-blank name
     that holds no braces, so an unfilled {{...}} placeholder fails.  Its
     content is free-form: text, child elements of any name, or both, and
     it may be empty.  Write persona text only for creative work where a

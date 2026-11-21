@@ -185,9 +185,8 @@ and what it will not do.  Name concrete habits, not adjectives.  Keep
 it to behavioral framing, never authority decoration; a one-line role
 beats an invented expert persona.  Write persona text for creative work
 where a distinctive voice matters, and leave the persona empty
-elsewhere.  Only an agent definition, a charter, or a consultation
-carries one; a creative worker gets its persona from an agent
-definition, not from a brief.
+elsewhere.  Only an agent definition carries one; a creative worker
+gets its persona from an agent definition, not from a brief.
 
 **Ask-vs-assume economics (GATE).**  A sharp, well-placed question round
 routinely costs the user less than a wrong assumption propagating through a
