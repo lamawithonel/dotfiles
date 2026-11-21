@@ -81,12 +81,12 @@
       },
       "herdr": "env",
       "pi_models_store": {
-        "checked_at": "2026-11-15T22:37:18Z",
-        "count": 128
+        "checked_at": "2026-11-20T02:55:21Z",
+        "count": 137
       },
-      "probed_at": "2026-11-19T11:00:06Z",
+      "probed_at": "2026-11-20T23:00:06Z",
       "probed_with": {
-        "claude": "2.1.326 (Claude Code)",
+        "claude": "2.1.328 (Claude Code)",
         "pi": "1.5.2"
       },
       "roster": {
@@ -167,8 +167,29 @@
             "max"
           ],
           "price": {
-            "input": 0.21,
-            "output": 0.84
+            "input": 0.15,
+            "output": 0.6
+          },
+          "rosters": [
+            "pi-zdr",
+            "pi-enabled"
+          ]
+        },
+        "fireworks/ember-1": {
+          "context_window": 1048576,
+          "enabled": true,
+          "harness": "pi",
+          "model_param": null,
+          "model_ref": "openrouter/fireworks/ember-1",
+          "pi_levels": [
+            "off",
+            "low",
+            "high",
+            "max"
+          ],
+          "price": {
+            "input": 3,
+            "output": 15
           },
           "rosters": [
             "pi-zdr",
@@ -177,10 +198,11 @@
         },
         "google/gemini-3.7-flash": {
           "context_window": null,
-          "enabled": true,
+          "enabled": false,
           "harness": "pi",
           "model_param": null,
           "model_ref": "openrouter/google/gemini-3.7-flash",
+          "note": "not in enabledModels",
           "pi_levels": [],
           "price": null,
           "rosters": [
@@ -189,10 +211,11 @@
         },
         "google/gemini-3.8-flash": {
           "context_window": null,
-          "enabled": true,
+          "enabled": false,
           "harness": "pi",
           "model_param": null,
           "model_ref": "openrouter/google/gemini-3.8-flash",
+          "note": "not in enabledModels",
           "pi_levels": [],
           "price": null,
           "rosters": [
@@ -245,10 +268,11 @@
         },
         "meta/muse-glimmer-30b": {
           "context_window": null,
-          "enabled": true,
+          "enabled": false,
           "harness": "pi",
           "model_param": null,
           "model_ref": "openrouter/meta/muse-glimmer-30b",
+          "note": "not in enabledModels",
           "pi_levels": [],
           "price": null,
           "rosters": [
@@ -367,10 +391,11 @@
         },
         "qwen/qwen3.8-2.4t-a95b": {
           "context_window": null,
-          "enabled": true,
+          "enabled": false,
           "harness": "pi",
           "model_param": null,
           "model_ref": "openrouter/qwen/qwen3.8-2.4t-a95b",
+          "note": "not in enabledModels",
           "pi_levels": [],
           "price": null,
           "rosters": [
@@ -390,8 +415,8 @@
             "xhigh"
           ],
           "price": {
-            "input": 0.04,
-            "output": 1.95
+            "input": 0.24,
+            "output": 2.2
           },
           "rosters": [
             "pi-zdr",
@@ -410,8 +435,8 @@
             "max"
           ],
           "price": {
-            "input": 0.98,
-            "output": 3.08
+            "input": 0.7,
+            "output": 2.2
           },
           "rosters": [
             "pi-zdr",
@@ -549,26 +574,26 @@
       },
       "display_name": "Claude Fable 5.1 (Adaptive Reasoning, Max Effort, Default Fallback)",
       "last_seen": {
-        "aa_free": "2026-11-19",
+        "aa_free": "2026-11-20",
         "aa_omniscience": "2026-11-17",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
-        "aa_page_lcr": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_page_3d": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
+        "aa_page_lcr": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "claude-fable-5-1",
@@ -719,6 +744,41 @@
           "score": 1271.4151,
           "votes": null
         },
+        "arena_chinese": {
+          "as_of": "2026-11-20",
+          "ci": 29.000514003260037,
+          "effort": "max",
+          "score": 1528.2155418188038,
+          "votes": 425
+        },
+        "arena_creative_writing": {
+          "as_of": "2026-11-20",
+          "ci": 18.806781401141734,
+          "effort": "max",
+          "score": 1515.5362378264451,
+          "votes": 1115
+        },
+        "arena_french": {
+          "as_of": "2026-11-20",
+          "ci": 44.82735231503193,
+          "effort": "max",
+          "score": 1523.5101034071336,
+          "votes": 188
+        },
+        "arena_russian": {
+          "as_of": "2026-11-20",
+          "ci": 18.572652263362215,
+          "effort": "max",
+          "score": 1500.9206535715948,
+          "votes": 1009
+        },
+        "arena_spanish": {
+          "as_of": "2026-11-20",
+          "ci": 40.720452454761016,
+          "effort": "max",
+          "score": 1446.0832032079277,
+          "votes": 197
+        },
         "arena_webdev": {
           "as_of": "2026-11-16",
           "ci": 18.806979156855277,
@@ -736,14 +796,19 @@
       },
       "display_name": "Claude Fable 5.2",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_omniscience": "2026-11-19",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
-        "aa_page_lcr": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_omniscience": "2026-11-20",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
+        "aa_page_lcr": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "claude-fable-5-2",
@@ -896,9 +961,9 @@
       },
       "display_name": null,
       "last_seen": {
-        "design_arena": "2026-11-19",
-        "eq_bench": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "design_arena": "2026-11-20",
+        "eq_bench": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "claude-haiku-4-5",
@@ -968,11 +1033,11 @@
           "votes": 165
         },
         "arena_japanese": {
-          "as_of": "2026-11-12",
-          "ci": 42.96752233241659,
+          "as_of": "2026-11-20",
+          "ci": 38.925062273532376,
           "effort": "high",
-          "score": 1367.7413359628385,
-          "votes": 200
+          "score": 1378.311998531439,
+          "votes": 246
         },
         "arena_korean": {
           "as_of": "2026-11-19",
@@ -1026,25 +1091,25 @@
       },
       "display_name": "Claude Haiku 5.5 (Max)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_omniscience": "2026-11-19",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
-        "aa_page_lcr": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_omniscience": "2026-11-20",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
+        "aa_page_lcr": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "claude-haiku-5-5",
@@ -1289,22 +1354,22 @@
       },
       "display_name": "Claude Opus 5 (Adaptive Reasoning, Max Effort)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "eq_bench": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "eq_bench": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "claude-opus-5",
@@ -1482,11 +1547,11 @@
           "votes": 543
         },
         "arena_german": {
-          "as_of": "2026-11-12",
-          "ci": 40.75061839081809,
+          "as_of": "2026-11-20",
+          "ci": 36.59310876639597,
           "effort": "high",
-          "score": 1513.5756648452223,
-          "votes": 224
+          "score": 1524.9581831150463,
+          "votes": 278
         },
         "arena_japanese": {
           "as_of": "2026-11-12",
@@ -1554,27 +1619,27 @@
       },
       "display_name": "Claude Opus 5.5 (Max, Default Fallback)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_omniscience": "2026-11-19",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
-        "aa_page_lcr": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "eq_bench": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_omniscience": "2026-11-20",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
+        "aa_page_lcr": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "eq_bench": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "claude-opus-5-5",
@@ -1820,21 +1885,21 @@
       "display_name": "Claude Sonnet 5 (Adaptive Reasoning, Max Effort)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "eq_bench": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "eq_bench": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "claude-sonnet-5",
@@ -2100,25 +2165,25 @@
       },
       "display_name": "Claude Sonnet 5.5 (Max, Default Fallback)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_omniscience": "2026-11-19",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
-        "aa_page_lcr": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_omniscience": "2026-11-20",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
+        "aa_page_lcr": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "claude-sonnet-5-5",
@@ -2273,9 +2338,9 @@
       "display_name": "DeepSeek V4 Flash 0731 (Reasoning, Max Effort)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "deepseek-v4-flash",
@@ -2419,21 +2484,21 @@
       },
       "display_name": "DeepSeek V4 Pro 0813 (Reasoning, Max Effort)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "deepseek-v4-pro",
@@ -2445,8 +2510,8 @@
         "openrouter": "deepseek/deepseek-v4-pro-0813"
       },
       "pricing": {
-        "input": 0.111,
-        "output": 4.44,
+        "input": 1.32,
+        "output": 3.96,
         "source": "openrouter"
       },
       "provider": "deepseek",
@@ -2539,11 +2604,11 @@
       "display_name": "DeepSeek V4.1 Flash (Reasoning, Max Effort)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "aa_page_cyber": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "aa_page_cyber": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "deepseek-v4-1-flash",
@@ -2555,8 +2620,8 @@
         "openrouter": "deepseek/deepseek-v4.1-flash"
       },
       "pricing": {
-        "input": 0.21,
-        "output": 0.84,
+        "input": 0.15,
+        "output": 0.6,
         "source": "openrouter-key"
       },
       "provider": "deepseek",
@@ -2609,6 +2674,32 @@
         }
       },
       "vendor": "deepseek"
+    },
+    "fireworks/ember-1": {
+      "aa_pricing": null,
+      "boards": {},
+      "display_name": null,
+      "last_seen": {
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
+      },
+      "match": {
+        "aa_slug": "ember-1",
+        "board": [
+          "fireworks/ember-1",
+          "ember-1",
+          "ember-1"
+        ],
+        "openrouter": "fireworks/ember-1"
+      },
+      "pricing": {
+        "input": 3,
+        "output": 15,
+        "source": "openrouter-key"
+      },
+      "provider": "fireworks",
+      "variants": {},
+      "vendor": "fireworks"
     },
     "google/gemini-3.7-flash": {
       "aa_pricing": {
@@ -2711,20 +2802,20 @@
       "display_name": "Gemini 3.7 Flash (high)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "gemini-3-7-flash",
@@ -2921,26 +3012,26 @@
       },
       "display_name": "Gemini 3.8 Flash (high)",
       "last_seen": {
-        "aa_free": "2026-11-19",
+        "aa_free": "2026-11-20",
         "aa_omniscience": "2026-11-12",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
-        "aa_page_lcr": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_page_3d": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
+        "aa_page_lcr": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "gemini-3-8-flash",
@@ -3037,8 +3128,8 @@
       "boards": {},
       "display_name": null,
       "last_seen": {
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "gemma-4-26b-a4b-it",
@@ -3071,9 +3162,9 @@
       },
       "display_name": null,
       "last_seen": {
-        "eq_bench": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "eq_bench": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "gemma-4-31b-it",
@@ -3106,8 +3197,8 @@
       },
       "display_name": null,
       "last_seen": {
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "muse-glimmer-30b",
@@ -3234,23 +3325,23 @@
       },
       "display_name": "Muse Spark 1.3 (max)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "muse-spark-1-3",
@@ -3432,25 +3523,25 @@
       },
       "display_name": "MiniMax-M3",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "eq_bench": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "eq_bench": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "minimax-m3",
@@ -3608,27 +3699,27 @@
       },
       "display_name": "Kimi K3 (max)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
-        "aa_page_lcr": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "eq_bench": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
+        "aa_page_lcr": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "eq_bench": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "kimi-k3",
@@ -3703,9 +3794,9 @@
       "boards": {},
       "display_name": "Nemotron 3.5 Lightning",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "nemotron-3-5-lightning",
@@ -3850,21 +3941,21 @@
       "display_name": "GPT-5.6 Sol (max)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "eq_bench": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "eq_bench": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "gpt-5-6-sol",
@@ -4130,27 +4221,27 @@
       },
       "display_name": "GPT-6 Astra (max)",
       "last_seen": {
-        "aa_free": "2026-11-19",
+        "aa_free": "2026-11-20",
         "aa_omniscience": "2026-11-17",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
         "aa_page_lcr": "2026-11-17",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "gpt-6-astra",
@@ -4293,8 +4384,8 @@
       "boards": {},
       "display_name": "OpenAI: GPT-6 Astra Pro",
       "last_seen": {
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "gpt-6-astra-pro",
@@ -4323,8 +4414,8 @@
       "display_name": "Qwen3.6 35B A3B (Reasoning)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "qwen3-6-35b-a3b",
@@ -4400,8 +4491,8 @@
       "display_name": "Qwen3.8 2.4T A95B",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "aa_page_cyber": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_page_cyber": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "qwen3-8-2-4t-a95b",
@@ -4538,24 +4629,24 @@
       },
       "display_name": "Qwen3.8 27B (xhigh)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_omniscience": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "aa_page_lcr": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_omniscience": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "aa_page_lcr": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "qwen3-8-27b",
@@ -4567,8 +4658,8 @@
         "openrouter": "qwen/qwen3.8-27b"
       },
       "pricing": {
-        "input": 0.04,
-        "output": 1.95,
+        "input": 0.24,
+        "output": 2.2,
         "source": "openrouter-key"
       },
       "provider": "qwen",
@@ -4763,20 +4854,20 @@
       },
       "display_name": "Grok 4.6 (high)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "grok-4-6",
@@ -4998,21 +5089,21 @@
       "display_name": "GLM-5.2 (max)",
       "last_seen": {
         "aa_free": "2026-11-09",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "design_arena": "2026-11-19",
-        "eq_bench": "2026-11-19",
-        "openrouter": "2026-11-19"
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "design_arena": "2026-11-20",
+        "eq_bench": "2026-11-20",
+        "openrouter": "2026-11-20"
       },
       "match": {
         "aa_slug": "glm-5-2",
@@ -5179,26 +5270,26 @@
       },
       "display_name": "GLM-5.3 (max)",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_omniscience": "2026-11-19",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "aa_page_healthbench": "2026-11-19",
-        "aa_page_lcr": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_omniscience": "2026-11-20",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "aa_page_healthbench": "2026-11-20",
+        "aa_page_lcr": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "glm-5-3",
@@ -5210,8 +5301,8 @@
         "openrouter": "z-ai/glm-5.3"
       },
       "pricing": {
-        "input": 0.98,
-        "output": 3.08,
+        "input": 0.7,
+        "output": 2.2,
         "source": "openrouter-key"
       },
       "provider": "z-ai",
@@ -5367,23 +5458,23 @@
       },
       "display_name": "GLM-5.3-Flash",
       "last_seen": {
-        "aa_free": "2026-11-19",
-        "aa_page_3d": "2026-11-19",
-        "aa_page_cyber": "2026-11-19",
-        "arena_chinese": "2026-11-19",
-        "arena_creative_writing": "2026-11-19",
-        "arena_european_mean": "2026-11-19",
-        "arena_french": "2026-11-19",
-        "arena_german": "2026-11-19",
-        "arena_japanese": "2026-11-19",
-        "arena_korean": "2026-11-19",
-        "arena_lang_mean": "2026-11-19",
-        "arena_polish": "2026-11-19",
-        "arena_russian": "2026-11-19",
-        "arena_spanish": "2026-11-19",
-        "arena_webdev": "2026-11-19",
-        "openrouter": "2026-11-19",
-        "openrouter_key": "2026-11-19"
+        "aa_free": "2026-11-20",
+        "aa_page_3d": "2026-11-20",
+        "aa_page_cyber": "2026-11-20",
+        "arena_chinese": "2026-11-20",
+        "arena_creative_writing": "2026-11-20",
+        "arena_european_mean": "2026-11-20",
+        "arena_french": "2026-11-20",
+        "arena_german": "2026-11-20",
+        "arena_japanese": "2026-11-20",
+        "arena_korean": "2026-11-20",
+        "arena_lang_mean": "2026-11-20",
+        "arena_polish": "2026-11-20",
+        "arena_russian": "2026-11-20",
+        "arena_spanish": "2026-11-20",
+        "arena_webdev": "2026-11-20",
+        "openrouter": "2026-11-20",
+        "openrouter_key": "2026-11-20"
       },
       "match": {
         "aa_slug": "glm-5-3-flash",
@@ -5785,19 +5876,19 @@
       "url": "https://artificialanalysis.ai/api/v2/data/llms/models"
     },
     "aa_free": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "GET ?page=N with x-api-key header until pagination.has_more is false; AAI, index cost, domain indexes, pricing; effort from slug or name",
       "fetched_by": "lama-pc-01",
       "matched": 17,
       "name": "aa_free",
       "row_minimum": 600,
-      "rows": 156,
+      "rows": 157,
       "status": "ok",
       "url": "https://artificialanalysis.ai/api/v2/language/models/free"
     },
     "aa_omniscience": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "one GET; embedded omniscience and hallucinationRate (stored as factuality)",
       "fetched_by": "lama-pc-01",
@@ -5809,7 +5900,7 @@
       "url": "https://artificialanalysis.ai/evaluations/omniscience"
     },
     "aa_page_3d": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "one GET; aa3dElo plus its 95% interval, board aa_3d",
       "fetched_by": "lama-pc-01",
@@ -5821,7 +5912,7 @@
       "url": "https://artificialanalysis.ai/evaluations/aa-3d"
     },
     "aa_page_cyber": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "one GET; embedded cyberIndex (aa_cyber) per model record",
       "fetched_by": "lama-pc-01",
@@ -5833,7 +5924,7 @@
       "url": "https://artificialanalysis.ai/evaluations/artificial-analysis-cyber-index"
     },
     "aa_page_healthbench": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "one GET; embedded healthbench per model record",
       "fetched_by": "lama-pc-01",
@@ -5845,7 +5936,7 @@
       "url": "https://artificialanalysis.ai/evaluations/healthbench"
     },
     "aa_page_lcr": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "one GET; embedded fields terminalBench40 (tb4) and lcr per model record",
       "fetched_by": "lama-pc-01",
@@ -5857,31 +5948,31 @@
       "url": "https://artificialanalysis.ai/evaluations/artificial-analysis-long-context-reasoning"
     },
     "arena_chinese": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
-      "matched": 19,
+      "matched": 20,
       "name": "arena_chinese",
       "row_minimum": 236,
-      "rows": 396,
+      "rows": 399,
       "status": "ok",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_creative_writing": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
-      "matched": 19,
+      "matched": 20,
       "name": "arena_creative_writing",
       "row_minimum": 250,
-      "rows": 420,
+      "rows": 424,
       "status": "ok",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_european_mean": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "mean of French, German, Spanish, Polish, Russian Arena boards",
       "fetched_by": "lama-pc-01",
@@ -5893,19 +5984,19 @@
       "url": null
     },
     "arena_french": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
-      "matched": 19,
+      "matched": 20,
       "name": "arena_french",
       "row_minimum": 180,
-      "rows": 302,
+      "rows": 305,
       "status": "ok",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_german": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
@@ -5917,7 +6008,7 @@
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_japanese": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
@@ -5929,7 +6020,7 @@
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_korean": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
@@ -5941,7 +6032,7 @@
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_lang_mean": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "mean of the cached Arena language boards (at least 5 present)",
       "fetched_by": "lama-pc-01",
@@ -5953,7 +6044,7 @@
       "url": null
     },
     "arena_polish": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
@@ -5965,43 +6056,43 @@
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_russian": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
-      "matched": 19,
+      "matched": 20,
       "name": "arena_russian",
       "row_minimum": 230,
-      "rows": 386,
+      "rows": 390,
       "status": "ok",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_spanish": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
-      "matched": 19,
+      "matched": 20,
       "name": "arena_spanish",
       "row_minimum": 180,
-      "rows": 304,
+      "rows": 307,
       "status": "ok",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=text"
     },
     "arena_webdev": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": null,
       "fetched_by": "lama-pc-01",
       "matched": 19,
       "name": "arena_webdev",
       "row_minimum": 90,
-      "rows": 159,
+      "rows": 160,
       "status": "ok",
       "url": "https://datasets-server.huggingface.co/rows?dataset=lmarena-ai/leaderboard-dataset&split=latest&config=webdev"
     },
     "claude_roster": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "candidates: old roster + additionalModelOptionsCache + overrides.*.probe; truth: claude -p probe",
       "fetched_by": "lama-pc-01",
@@ -6022,19 +6113,19 @@
       "url": "https://deepswe.datacurve.ai/"
     },
     "design_arena": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "POST {arenaType:models, category:website}; .data[] {modelId, elo}",
       "fetched_by": "lama-pc-01",
       "matched": 20,
       "name": "design_arena",
       "row_minimum": 40,
-      "rows": 212,
+      "rows": 203,
       "status": "ok",
       "url": "https://www.designarena.ai/api/leaderboard"
     },
     "eq_bench": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "GET; strip 'const EQBENCH4_DATA = ' and trailing ';'; .models[] {model, elo}",
       "fetched_by": "lama-pc-01",
@@ -6046,40 +6137,40 @@
       "url": "https://eqbench.com/eqbench4/eqbench4_data.js"
     },
     "openrouter": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "GET; .data[].pricing USD per token x1e6; negative = alias sentinel, skipped",
       "fetched_by": "lama-pc-01",
-      "matched": 30,
+      "matched": 31,
       "name": "openrouter",
       "row_minimum": 275,
-      "rows": 472,
+      "rows": 468,
       "status": "ok",
       "url": "https://openrouter.ai/api/v1/models"
     },
     "openrouter_key": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "local read; openrouter.models[].cost input/output, the price this key pays",
       "fetched_by": "lama-pc-01",
-      "matched": 14,
+      "matched": 15,
       "name": "openrouter_key",
       "row_minimum": 72,
-      "rows": 121,
+      "rows": 129,
       "status": "ok",
       "url": "file://~/.pi/agent/models-store.json"
     },
     "pi_roster": {
-      "as_of": "2026-11-19",
+      "as_of": "2026-11-20",
       "error": null,
       "fetch": "enabledModels[] intersected with openrouter.models[].id (pi-zdr); enabledModels alone (pi-enabled)",
       "fetched_by": "lama-pc-01",
-      "matched": 15,
+      "matched": 12,
       "name": "Pi enabledModels and models-store",
-      "rows": 128,
+      "rows": 137,
       "status": "ok",
       "url": "file://~/.pi/agent/{settings,models-store}.json"
     }
   },
-  "updated_at": "2026-11-19T11:00:06Z"
+  "updated_at": "2026-11-20T23:00:06Z"
 }
