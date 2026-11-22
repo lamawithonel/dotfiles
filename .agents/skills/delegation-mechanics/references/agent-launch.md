@@ -3,9 +3,7 @@
 Use `agent-launch` to start an executive, a coordinator, or a
 consultant.  It lives in `~/.local/bin/`.  Workers do not use it.
 
-Start other harness sessions only through `agent-launch`.  Reason: it
-adds the class file to the system prompt, names the tab and session,
-and starts the harness in a visible pane.
+Start other harness sessions only through `agent-launch`.
 
 ## Syntax
 
@@ -55,8 +53,7 @@ agent-launch completions zsh
 - After any MCP config change (`~/.pi/agent/mcp-adapter.json` or the
   imported `~/.claude.json` servers), run
   `env -C "$(mktemp -d)" pi --no-session -p 'Reply OK.'` once before you
-  launch a Pi consultant.  Reason: the first start rebuilds Pi's MCP tool
-  cache, and until then a consultant has none of its MCP tools.
+  launch a Pi consultant.
 - An appended system prompt survives compaction in Claude Code.  Pi
   rebuilds its system prompt after compaction.
 - `/executive` loads a skill.  Re-attached skills are capped at 5,000

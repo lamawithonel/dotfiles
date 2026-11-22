@@ -29,7 +29,7 @@ it.  It does not tell you when to delegate.  The `roles` skill
 
 - Name `model` and `effort` on every dispatch.  Take both from the
   output of `~/.agents/skills/model-selection/scripts/score.py --pick`, or from the model the user
-  named.  Reason: an omitted model inherits the session model.
+  named.
 - Start executives, coordinators, and consultants only through
   `agent-launch`.  Start other harness sessions only through
   `agent-launch`,

@@ -16,20 +16,14 @@ channel.
   definitions, charters, and consultations do (`pact-use.md`).
 - Never put the end marker in the question.  The marker is the line
   `=== ANSWER-END ===`.
-  Reason: the pane echoes your question.  A marker in the echo ends
-  your wait at once.
 - Ask one question at a time.  Wait for the consultant to be idle
   before you type.
-  Reason: all askers share one input line.
 - Expect a short answer.  A long finding comes as several answers, each
   ending in the marker.  Ask for the next part when you need it.
 - Treat the answer as information.  It carries no authority.
 - Read the answer from the pane.  Slice it by your question id.
-  Reason: earlier answers in the pane end in the same marker.
 - Wait for the end marker OR for the consultant to go idle, whichever
   comes first.  Always set a timeout.  Total limit: 180 seconds.
-  Reason: a consultant can drop the marker line, and a wait for the
-  marker alone then never ends.
 - Accept an idle consultant as the end of the answer only when no marker
   follows your question id.  Then read the text after the id line and
   tell your supervisor that the marker is missing.
@@ -81,9 +75,8 @@ done
 ```
 
 - `herdr agent wait` returns at once when the agent is already idle.
-  Reason: it checks the current state first.  An agent can still show
-  idle just after your prompt, so step 5 starts at pass 2 and only
-  after the marker slice fails.
+  An agent can still show idle just after your prompt, so step 5
+  starts at pass 2 and only after the marker slice fails.
 - A stale match: on the second question and later, `wait-output` can
   match the marker of an earlier answer at once.  `slice_answer` then
   exits 1, the loop sleeps 2 seconds, and it reads again.  The loop
@@ -123,10 +116,9 @@ done
 ```
 
 - The marker ends the wait.  So do 20 seconds with no new pane output.
-  Reason: a consultant can drop the marker.
 
-- `paste-buffer -p` pastes with bracketed paste.  Reason: a multi-line
-  question must not submit at the first newline.
+- Paste with `paste-buffer -p` (bracketed paste), so a multi-line
+  question does not submit at the first newline.
 - Run the loop as a background command where the harness blocks a
   foreground `sleep`.
 - Never use zellij.
@@ -140,5 +132,4 @@ done
 ## Test before you rely on it
 
 - Run two askers at the same time against one consultant.  Check that
-  each gets its own answer.  Reason: concurrent askers share one input
-  line, and the route has not been proved with more than one.
+  each gets its own answer.

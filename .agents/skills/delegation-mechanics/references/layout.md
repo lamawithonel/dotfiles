@@ -18,8 +18,7 @@ each class.  This file holds the commands.
 - Only the user creates Herdr workspaces.
 
 - Keep each agent name to 32 characters or fewer, from `[a-z0-9_-]`,
-  starting with a letter.  Reason: Herdr rejects other agent names.
-  Shorten a long `<sub-domain>` to fit.
+  starting with a letter.  Shorten a long `<sub-domain>` to fit.
 - When the user declares an executive, it renames its own tab and
   workspace.  It moves neither.
 
@@ -59,9 +58,9 @@ each class.  This file holds the commands.
   `herdr agent list`.
 - Target your own pane with `--current` or the ID.  A command with no
   target acts on the pane the user has focused.
-- For syntax, run `herdr <group>` and read the group list.  Reason: the
-  installed binary is the authority.  Bare `herdr` opens the TUI, and an
-  incomplete mutating command can run with defaults.
+- For syntax, run `herdr <group>` and read the group list.  Bare
+  `herdr` opens the TUI.  An incomplete mutating command can run with
+  defaults.
 - To address a session that shares a name with another, follow the
   `roles` skill (`~/.agents/skills/roles/`).
 
