@@ -25,14 +25,11 @@ Claude Code specifics:
 - Name `model` and `effort` in every `Agent` call and in every
   `agent()` call of a `Workflow`.  Take `model` from the `model_param`
   that `model-selection` returns, or use the model the user named.
-  Reason: an omitted model inherits the session's model.
 - Run a `mythos`-band model only when the user names it, or when a
   user ruling recorded in the project authorizes it for that work
   (cite the ruling file).  Set each workflow agent's model yourself,
   from `model-selection`.
 - Omit `name` on an `Agent` call when the caller needs the tool result.
-  Reason: with `CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS=1`, `name` spawns
-  a teammate whose output does not return to the caller.
 - Use `Agent` and `Workflow` for Anthropic models only.  For a
   non-Anthropic model (such as Gemini, GPT, DeepSeek, or Qwen), run the
   `command` that `model-selection` returns through `Bash` (a shell-out
