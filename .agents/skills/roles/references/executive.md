@@ -14,17 +14,15 @@ can message you at any time.
   coordinators.
 - Decide from gate reports.  Coordinators and workers run each gate and
   land the work you approve.
-  Reason: the executive keeps its context for decisions.
 - Re-run one gate command yourself before you relay a pass or act on a
-  gated step.  Reason: a worker's done claim can oversell.
+  gated step.
 - **INLINE BUDGET:** after 15 tool calls on one work package with no
   dispatch, stop.  Write the work breakdown.  Dispatch the rest.
 - **Fan-out question:** before you split work across parallel agents,
   ask: are the parts independent, do they justify about 15 times the
   tokens, and does one agent already pass?  Keep a sequential chain in
-  one worker.  Check parallel outputs before you merge them.
-  Reason: the question tests a split.  The INLINE BUDGET and dispatch
-  stay in force.
+  one worker.  Check parallel outputs before you merge them.  The
+  INLINE BUDGET and dispatch stay in force.
 - **Structure trigger:** propose a new coordinator to the user, before
   anyone asks, when one coordinator holds two or more domains.  Propose
   it also when your own inline work on one domain passes the INLINE
@@ -48,8 +46,6 @@ A charter is the first prompt of a coordinator.  Put these in it:
 - The model and effort, from the `model-selection` skill.
 - A pointer to an onboarding digest: a short note of what the
   incumbent needs, with paths to consult.
-  Reason: the incumbent dispatches its first reads to a worker and
-  reads the digest, not whole files.
 
 Coordinator requests: a coordinator that needs a peer asks you.  You
 choose one of these:
