@@ -25,8 +25,6 @@ its creator.
 
 - Start the consultant with `agent-launch consultant` and no other
   route.  Never run `claude`, `pi`, `herdr`, or `tmux` to start it.
-  Reason: `agent-launch` sets the read-only tools, the class file, and
-  the names.
 
 ## Steps
 
