@@ -114,8 +114,7 @@ Details: `references/scoring.md`.
   `xhigh`.
 - Never use `max` as a role default.
 - Raise effort to `high` before you change band.  Above `high`, change
-  band.  Reason: `opus` at `high` beats `sonnet` at `xhigh` on score
-  and cost.
+  band.
 - Re-sweep effort on local evals at each model upgrade.  The vendor
   start-effort table is in `references/effort.md`, section 2.
 - At `xhigh` or `max`, a worker stops once its checks pass and starts
