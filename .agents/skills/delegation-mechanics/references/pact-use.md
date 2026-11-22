@@ -47,15 +47,15 @@ The examples are the authority on element names.
   other document.  A charter, a consultation, and a worker brief carry
   none (user ruling:
   `~/.local/state/agents/persona-rule-ruling-2026-11-20.pact`).  The
-  name is required: not blank, and no `{{` or `}}`.  Leave the persona empty
-  (`<persona name="..."/>`) unless the agent does creative work where a
-  distinctive voice or divergent output matters: art, design, creative
-  marketing, and voice-driven writing.  Then write free-form text, and
-  free child elements.  Give a creative worker its persona through an
-  agent definition, never through a worker brief.  State the role of a
-  non-creative agent in the `<role>` element.  The content rule for an
-  agent definition stays provisional while the persona research
-  continues.
+  name is required: not blank, and no `{{` or `}}`.  Leave the persona
+  empty (`<persona name="..."/>`) by default.  When an agent needs
+  persona text, keep it to a short identity and its working method, as
+  free-form text and free child elements.  Name no people, studios, or
+  works as taste references unless the user approves it for that agent.
+  Write taste or style text only to steer a house look the user wants,
+  in the persona's voice or as plain rules.  Give a creative worker its
+  persona through an agent definition, never through a worker brief.
+  State the role of an agent in the `<role>` element.
 - Write in STE: short imperative sentences.  Declare technical names
   and verbs in the glossary (`glossary` and `term`).
 - Write `priority="critical"` with `required="true"` for a rule that
@@ -76,9 +76,8 @@ The examples are the authority on element names.
   (rules 7 and 8 of the `model-selection` `references/effort.md`) into
   the brief.
 - Lint before you send: `~/.agents/schemas/pact-lint.sh <file>`.  The lint runs
-  `xmllint` and checks the required elements of the type.
-  Reason: the writer owns validity.  A receiver never rejects a message
-  that fails validation.  It reads what it can.
+  `xmllint` and checks the required elements of the type.  Never reject
+  a received message that fails validation.  Read what you can.
 - Name the file `*.pact`.  The MIME type is `application/pact+xml` or
   `application/prs.pact+xml`.  A PACT body inside a file whose harness
   needs another extension keeps that extension (an agent definition

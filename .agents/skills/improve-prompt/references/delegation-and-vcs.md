@@ -49,8 +49,7 @@ Pick the PACT document type from the target:
 Rules for the slots:
 
 - Add a one-line dispatch note after a worker brief: `Dispatch:
-  model=<model_param>, effort=<effort>`.  Reason: the brief alone sets
-  neither.
+  model=<model_param>, effort=<effort>`.
 - Send a charter as the first prompt of `agent-launch`.  Only an
   executive charters a coordinator.  Put these in the charter: the
   executive as `<org:supervisor>`, the `<org:milestones>`, the
@@ -155,7 +154,7 @@ PICCO still drives the diagnosis.  Only the emitted form changes.
 
 | PICCO slot | PACT element |
 | --- | --- |
-| Persona | `<persona name="...">` in an agent definition only; free-form prose for creative work (`genre-recipes.md`), empty otherwise; behavioral framing only |
+| Persona | `<persona name="...">` in an agent definition only; empty by default, and if used, a short identity and method (`genre-recipes.md`); behavioral framing only |
 | Role (not a PICCO slot; the position and its scope) | `<role>` in a worker brief or `prompt`; `<org:position>` and `<org:supervisor>` in a charter |
 | Instructions | `<objective>` (one sentence), then `<tasks>` in a worker brief or `<instructions>` in a charter or `prompt` |
 | Context | `<context>`: absolute paths, revisions, shape and level, source-document pointers; `<org:onboarding digest>` in a charter |
@@ -165,17 +164,16 @@ PICCO still drives the diagnosis.  Only the emitted form changes.
 Document rules:
 
 - Write a named persona in an agent definition, and in no other
-  document.  Write it first.  Add text only
-  for creative work where a distinctive voice or divergent output
-  matters, such as art, design, creative marketing, and voice-driven
-  writing.  Leave it empty (`<persona name="..."/>`) for analysis,
-  engineering, review, research, coordination, and mechanical work, and
-  state the role in `<role>` instead.  A charter, a consultation, and a
-  worker brief have no persona.  The content rule stays provisional
-  while the persona research continues.
+  document.  Write it first, and leave it empty
+  (`<persona name="..."/>`) by default.  If an agent needs persona text,
+  keep it to a short identity and working method, name no taste
+  references unless the user approves them, and write taste text only
+  to steer a house look the user wants, in voice or as rules.  State the
+  role in `<role>`.  A charter, a consultation, and a worker brief have
+  no persona.
 - Write the worker's rules as `<constraints>`.  A worker brief carries
   no guard text: no stall watchdog, no scope-limit rule, no final report
-  contract.  Reason: `pact-lint.sh` rejects guard text.
+  contract.
 - Write STE: short imperative sentences, and a `<glossary>` for each
   technical name or verb the reader may not know.
 - Pass paths, not file dumps.  Keep a brief under 2,000 tokens.  A
@@ -184,7 +182,6 @@ Document rules:
   Lint it: `bash ~/.agents/schemas/pact-lint.sh <file>`.  Exit 0 and no
   output mean valid.  Fix each reported line, then lint again.  When the
   script is absent, say "not linted" in the Assumptions block.
-  Reason: the writer owns validity.
 - Copy the example of the type from `~/.agents/schemas/examples/`
   (`worker-brief.pact`, `charter.pact`, `consultation.pact`,
   `prompt.pact`), then fill it.  The examples are the authority on

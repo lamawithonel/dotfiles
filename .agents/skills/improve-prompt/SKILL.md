@@ -134,13 +134,12 @@ When a genre does warrant a persona, write it as short free-form prose
 (see `references/genre-recipes.md`).  PACT allows a persona only in an
 agent definition, and requires a named one there (`<persona name="..."/>`,
 empty is valid).  No other document carries a persona, so a charter, a
-consultation, a worker brief, and a generic prompt have none.  Write
-persona text only for creative work where a distinctive voice or
-divergent output matters, such as art, design, creative marketing, and
-voice-driven writing.  Leave it empty for analysis, engineering, review,
-research, coordination, and mechanical work, and state the role in the
-`<role>` element instead.  The content rule stays provisional while the
-persona research continues.
+consultation, a worker brief, and a generic prompt have none.  Leave
+the persona empty by default, and state the role in the `<role>`
+element.  When an agent needs persona text, keep it to a short identity
+and working method.  Name no taste references unless the user approves
+them, and write taste text only to steer a house look the user wants,
+in voice or as rules.
 
 **Target model family filters every genre choice**:
 

@@ -157,9 +157,9 @@ To recover from crashes or paused sessions...
 
 Write every instruction for another agent as a PACT message: XML,
 imperative.  Only an agent definition carries a named
-`<persona name="...">`, empty unless the agent does creative work
-(provisional rule for content).  A charter, a consultation, and every
-other document carry no persona.
+`<persona name="...">`, empty by default; `pact-use.md` holds the rule
+for persona text.  A charter, a consultation, and every other document
+carry no persona.
 The `delegation-mechanics` skill holds the PACT types and their use.  The
 schemas are in `~/.agents/schemas/`.
 

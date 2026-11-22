@@ -14,9 +14,9 @@
     carries one (ruling 2026-11-20).  It always has a non-blank name
     that holds no braces, so an unfilled {{...}} placeholder fails.  Its
     content is free-form: text, child elements of any name, or both, and
-    it may be empty.  Write persona text only for creative work where a
-    distinctive voice or divergent output matters.  A non-creative agent
-    gets an empty persona that carries only its name.
+    it may be empty.  Leave it empty by default.  Persona text, when an
+    agent needs it, is a short identity and working method (ruling
+    2026-11-22).
   - priority="critical" with required="true" replaces priority="MUST".
     The required attribute has no default.  A constraint states it.
     XSD 1.0 cannot test "critical implies required"; pact-lint.sh does.
@@ -417,7 +417,7 @@
        frontmatter (name, description, tools, model, effort) stays
        outside this body, and so does the agent's name.  Persona, role,
        and instructions are required.  The persona carries the name.
-       Its content stays empty unless the agent does creative work. -->
+       Its content is empty by default. -->
   <xs:complexType name="AgentDefinitionType">
     <xs:all>
       <xs:element ref="pact:persona"/>
