@@ -137,7 +137,8 @@ CONTRACT_POLICY: dict[str, Any] = {
 }
 
 # enabledModels (OpenRouter, minus auto and :free) intersected with the
-# models-store ids, recorded at migration on 2026-11-09.
+# models-store ids, recorded at migration on 2026-11-09.  The roster may
+# grow after that; a later refresh adds each model that Pi enables.
 PI_ZDR_AT_MIGRATION = {
     "deepseek/deepseek-v4.1-flash",
     "google/gemma-4-26b-a4b-it",
@@ -405,10 +406,10 @@ class StagedRegistry(unittest.TestCase):
                     )
                 )
 
-    def test_pi_zdr_roster_at_migration(self) -> None:
+    def test_pi_zdr_roster_keeps_migration_set(self) -> None:
         roster = self.reg["hosts"]["lama-pc-01"]["roster"]
         got = {k for k, v in roster.items() if "pi-zdr" in v.get("rosters", [])}
-        self.assertEqual(got, PI_ZDR_AT_MIGRATION)
+        self.assertLessEqual(PI_ZDR_AT_MIGRATION, got)
 
     def test_placements_present_with_confidence(self) -> None:
         for (model, effort), (aai, conf) in PLACEMENTS.items():
