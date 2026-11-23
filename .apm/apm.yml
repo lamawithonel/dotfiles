@@ -14,8 +14,10 @@ dependencies:
     - microsoft/playwright-cli/skills/playwright-cli
     - modular/skills/mojo-python-interop
     - modular/skills/mojo-syntax
-    # Reverse Engineer Anything.  Keep this tag, the `rea` MCP server below,
-    # and `npm:rea-agents` in ~/.config/mise/config.toml on one version.
+    # Reverse Engineer Anything.  Keep this tag and `npm:rea-agents` in
+    # ~/.config/mise/config.toml on one version.  The `rea` MCP server is
+    # off by default (it costs memory in every session): start a session
+    # with `-- --mcp-config ~/.agents/mcp/rea.json` to load it.
     - morluto/rea/.agents/skills/reverse-engineer-anything#rea-agents-6.9.0
     - OpenRouterTeam/skills/skills/openrouter-analytics
     - OpenRouterTeam/skills/skills/openrouter-analytics-query
@@ -51,20 +53,14 @@ dependencies:
       headers:
         CONTEXT7_API_KEY: ${CONTEXT7_API_KEY:-}
 
-    # paper-search -- Local MCP search service for scholarly papers
+    # paper-search -- Shared local MCP search service for scholarly papers
     # https://github.com/openags/paper-search-mcp
+    # Served by ~/.config/systemd/user/paper-search-mcp.service (port 8791,
+    # 127.0.0.1 only).  The API keys live in the service, not in sessions.
     - name: paper-search
       registry: false
-      transport: stdio
-      command: paper-search-mcp
-      env:
-        PAPER_SEARCH_MCP_CORE_API_KEY: '${PAPER_SEARCH_MCP_CORE_API_KEY:-}'
-        PAPER_SEARCH_MCP_DOAJ_API_KEY: '${PAPER_SEARCH_MCP_DOAJ_API_KEY:-}'
-        PAPER_SEARCH_MCP_IEEE_API_KEY: '${PAPER_SEARCH_MCP_IEEE_API_KEY:-}'
-        PAPER_SEARCH_MCP_OPENALEX_API_KEY: '${PAPER_SEARCH_MCP_OPENALEX_API_KEY:-}'
-        PAPER_SEARCH_MCP_UNPAYWALL_EMAIL: '${PAPER_SEARCH_MCP_UNPAYWALL_EMAIL:-}'
-        PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY: '${PAPER_SEARCH_MCP_SEMANTIC_SCHOLAR_API_KEY:-}'
-        PAPER_SEARCH_MCP_ZENODO_ACCESS_TOKEN: '${PAPER_SEARCH_MCP_ZENODO_ACCESS_TOKEN:-}'
+      transport: http
+      url: http://127.0.0.1:8791/mcp
 
     # Hugging Face -- Repository tools
     # https://huggingface.co/mcp
@@ -74,21 +70,5 @@ dependencies:
       url: https://huggingface.co/mcp?login
       env:
         HF_TOKEN: '${HF_TOKEN:-}'
-
-    # Reverse Engineer Anything -- stdio MCP server from the mise-installed
-    # `rea` binary (npm:rea-agents).  Output schemas are 92% of the default
-    # catalog (4.6 MB); `compact` plus this family list gives 174 tools at
-    # about 460 KB.  Add a family here when a job needs it (frida, pcap, ...).
-    # https://github.com/morluto/rea
-    - name: rea
-      registry: false
-      transport: stdio
-      command: rea
-      args:
-        - mcp
-      env:
-        REA_MCP_TOOL_FAMILIES: session,enhanced,native,electron,application,android,apktool,adb,artifact
-        REA_MCP_INPUT_SCHEMA_PROFILE: compact
-        REA_MCP_OUTPUT_SCHEMA_PROFILE: compact
 includes: auto
 scripts: {}
