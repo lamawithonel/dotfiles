@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "rea": {
+      "type": "stdio",
+      "command": "rea",
+      "args": ["mcp"],
+      "env": {
+        "REA_MCP_TOOL_FAMILIES": "session,enhanced,native,electron,application,android,apktool,adb,artifact",
+        "REA_MCP_INPUT_SCHEMA_PROFILE": "compact",
+        "REA_MCP_OUTPUT_SCHEMA_PROFILE": "compact"
+      }
+    }
+  }
+}

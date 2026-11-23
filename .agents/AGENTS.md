@@ -287,6 +287,9 @@ schemas are in `~/.agents/schemas/`.
   the default.
 - Use SELinux-aware bind mounts (`:Z`) when mounting host paths into
   containers.
+- Sessions have no browser tools: dispatch the `browser` agent for
+  Chrome DevTools work.  `rea` is off by default: start a session with
+  `-- --mcp-config ~/.agents/mcp/rea.json` for reverse-engineering work.
 
 ### Dependency & Third-Party Licensing
 
