@@ -17,6 +17,15 @@ dependencies:
     # Reverse Engineer Anything.  Keep this tag, the `rea` MCP server below,
     # and `npm:rea-agents` in ~/.config/mise/config.toml on one version.
     - morluto/rea/.agents/skills/reverse-engineer-anything#rea-agents-6.9.0
+    - OpenRouterTeam/skills/skills/openrouter-analytics
+    - OpenRouterTeam/skills/skills/openrouter-analytics-query
+    - OpenRouterTeam/skills/skills/openrouter-analytics-schema
+    - OpenRouterTeam/skills/skills/openrouter-benchmarks
+    - OpenRouterTeam/skills/skills/openrouter-models
+    - OpenRouterTeam/skills/skills/openrouter-stt
+    - OpenRouterTeam/skills/skills/openrouter-tts
+    - OpenRouterTeam/skills/skills/openrouter-images
+    - OpenRouterTeam/skills/skills/openrouter-video
     - shadcn/improve
   mcp:
     # Write each secret as ${VAR:-}.  apm resolves a plain ${VAR} to its
