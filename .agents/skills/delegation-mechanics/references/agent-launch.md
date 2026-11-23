@@ -26,7 +26,10 @@ agent-launch completions zsh
   charter there.  A consultant gets its consultation there.  Neither
   carries a persona (`pact-use.md`).
 - `--resume ID` resumes a session.  Use it to relaunch a coordinator
-  after a class-file update.
+  after a class-file update.  Resume a launched session only this way.
+  The `claude --resume ID` line that Claude Code prints at exit carries
+  no class flags, so a consultant resumed with it loses its read-only
+  tools.
 - `agent-launch completions zsh` prints zsh completion code.
 
 ## What it does
