@@ -1,4 +1,5 @@
-"""Contract tests for the effort guidance (ruling 2026-11-19: P06, P13).
+#!/usr/bin/env python3
+"""Contract tests for the effort guidance (start-effort table and role defaults).
 
 The prose lives in references/effort.md and SKILL.md.  These tests pin
 the facts a later edit must not drop: the vendor start-effort table,
@@ -74,15 +75,24 @@ class ResweepRuleTests(unittest.TestCase):
         self.assertIn("references/effort.md", text)
 
 
-class ExecutiveCandidateTests(unittest.TestCase):
-    def test_xhigh_marked_candidate_in_both_files(self) -> None:
+class ExecutiveDefaultTests(unittest.TestCase):
+    def test_executive_default_is_opus_at_high(self) -> None:
+        self.assertIn("Executive: `opus` at `high`", flat(SKILL_MD))
+        self.assertIn("Executives run `high`", flat(EFFORT))
+        self.assertIn("executives `high`, coordinators `high`", flat(EFFORT))
+
+    def test_no_xhigh_executive_default_remains(self) -> None:
         for name, body in (("effort.md", EFFORT), ("SKILL.md", SKILL_MD)):
             with self.subTest(file=name):
                 text = flat(body)
-                self.assertRegex(
-                    text,
-                    r"executive[^.]*xhigh[^.]*candidate to test",
-                )
+                self.assertNotRegex(text, r"[Ee]xecutives?[^.]*`xhigh`[^.]*default")
+                self.assertNotRegex(text, r"Executives? (run|:)[^.]*`xhigh`")
+                self.assertNotIn("candidate to test", text)
+
+    def test_skill_files_carry_no_reason_passage(self) -> None:
+        for name, body in (("effort.md", EFFORT), ("SKILL.md", SKILL_MD)):
+            with self.subTest(file=name):
+                self.assertNotIn("Reason:", body)
 
 
 class WorkerEffortLinesTests(unittest.TestCase):

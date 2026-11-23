@@ -9,7 +9,7 @@ dispatch names its effort (see SKILL.md, "Name the model and effort").
 `score.py` returns the best-value variant of the band at whatever
 effort it was measured (`banded_effort`: `single`, `low`, up to `max`).
 For a Claude Code pick, `effort` is the role effort (executives
-`xhigh`, coordinators `high`, workers `medium`; see the `roles`
+`high`, coordinators `high`, workers `medium`; see the `roles`
 skill).  It may lower a pick but never lifts it out of its band,
 except in the top floor band; a warning says when that cap applies.
 For a Pi pick, `effort` is the exact `--thinking` level the command
@@ -23,9 +23,7 @@ sends.  Change a default only with a one-line reason.
 3. On a quality failure, raise effort to `high` first.  Above `high`,
    change band.  Opus at `high` beats Sonnet at `xhigh` on score and
    cost.  The change counts toward the higher band's share of the mix.
-4. Executives run `xhigh`.  The executive `xhigh` default is a
-   candidate to test on local evals, not a measured result (see
-   section 2).
+4. Executives run `high`.
 5. Never use `max` as a Claude role default.  Use it on a user
    directive or for a final adversarial review.  A Pi pick may come
    back at `max` when that is the variant measured best in the band.
@@ -62,8 +60,8 @@ in section 1 stay in force until a local eval shows a gain.
   until the sweep shows a better level.  A higher effort can solve
   fewer tasks: one measured run solved 90 tasks at `high` and 85 at
   `xhigh`.[^sweep]
-- The executive `xhigh` default is a candidate to test in the same
-  sweep.  Do not lower it before a sweep supports the change.
+- Test any raise of the executive default above `high` in the same
+  sweep.
 
 [^vendor]: https://platform.claude.com/docs/en/build-with-claude/effort
     (undated).

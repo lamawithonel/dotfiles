@@ -5781,7 +5781,7 @@
       },
       "executive": {
         "band": "opus",
-        "effort": "xhigh",
+        "effort": "high",
         "rank_on": "long-horizon"
       },
       "worker": {

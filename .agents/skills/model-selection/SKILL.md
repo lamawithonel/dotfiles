@@ -103,8 +103,7 @@ Details: `references/scoring.md`.
 
 ## 5. Class defaults and effort
 
-- Executive: `opus` at `xhigh`.  The executive `xhigh` default is a
-  candidate to test on local evals.
+- Executive: `opus` at `high`.
 - Coordinator: `sonnet` at `high`.  An executive may charter an `opus`
   coordinator with a one-line reason.
 - Worker: `medium` effort at the band the package needs.

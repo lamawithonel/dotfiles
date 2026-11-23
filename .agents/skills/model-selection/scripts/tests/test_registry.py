@@ -3,7 +3,10 @@
 
 import copy
 import importlib.util
+import json
 import os
+import subprocess
+import sys
 import unittest
 from pathlib import Path
 from typing import Any
@@ -86,7 +89,7 @@ CONTRACT_POLICY: dict[str, Any] = {
         "japanese": {"kind": "language", "board": "arena_japanese", "margin": "ci"},
     },
     "roles": {
-        "executive": {"band": "opus", "effort": "xhigh", "rank_on": "long-horizon"},
+        "executive": {"band": "opus", "effort": "high", "rank_on": "long-horizon"},
         "coordinator": {"band": "sonnet", "effort": "high", "rank_on": "long-horizon"},
         "worker": {"band": None, "effort": "medium"},
     },
@@ -350,6 +353,26 @@ class StagedRegistry(unittest.TestCase):
 
     def test_passes_validate(self) -> None:
         self.assertEqual(registry.validate(self.reg), [])
+
+    def test_executive_pick_is_opus_at_high(self) -> None:
+        proc = subprocess.run(
+            [
+                sys.executable,
+                str(SCRIPTS / "score.py"),
+                "--registry",
+                str(REGISTRY_FILE),
+                "--pick",
+                "--role",
+                "executive",
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        self.assertEqual(proc.returncode, 0, proc.stderr)
+        data = json.loads(proc.stdout)
+        self.assertEqual(data["band"], "opus")
+        self.assertEqual(data["pick"]["effort"], "high")
 
     def test_ci_less_tags_have_numeric_margin(self) -> None:
         tags = self.reg["policy"]["tags"]
