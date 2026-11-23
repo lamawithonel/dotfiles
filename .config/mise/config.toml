@@ -44,9 +44,7 @@ node = "lts"
 "npm:@vtsls/language-server" = "latest"
 "npm:bmad-method" = "latest"
 "npm:bash-language-server" = "latest"
-# Reverse Engineer Anything: pin exactly.  The apm skill tag and the MCP
-# server in ~/.apm/apm.yml must match this version; bump all three together.
-"npm:rea-agents" = "6.9.0"
+"npm:rea-agents" = "6.10.1"
 "npm:some-sass-language-server" = "latest"
 "npm:yaml-language-server" = "latest"
 "pipx:apm-cli" = "latest"
