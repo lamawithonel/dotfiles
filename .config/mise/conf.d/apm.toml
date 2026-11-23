@@ -1,16 +1,23 @@
 # apm check for the agent harnesses.  Copy to ~/.config/mise/conf.d/apm.toml
 # (or merge the task into any mise config).
 
-# Prove that no secret value landed in ~/.claude.json.  apm bakes a plain
+# Prove that no secret value landed in ~/.claude.json, and that the file is
+# mode 600 (the file holds session and account state).  apm bakes a plain
 # ${VAR} into the harness config at install time; only ${VAR:-} passes
 # through.  Prints server and key names only, never a value.  Exit 1 when any
-# env or header value is not a ${VAR} or ${VAR:-default} reference.  The
-# REA_MCP_* keys are tool-catalog settings, not credentials, and are skipped.
+# env or header value is not a ${VAR} or ${VAR:-default} reference, or when
+# the mode is not 600.  The REA_MCP_* keys are tool-catalog settings, not
+# credentials, and are skipped.
 [tasks.apm-mcp-check]
-description = "Check that ~/.claude.json MCP env and headers hold only ${VAR:-} references"
+description = "Check that ~/.claude.json is mode 600 and its MCP env and headers hold only ${VAR:-} references"
 run = '''
 set -eu
 f="${HOME}/.claude.json"
+mode="$(stat -c '%a' "$f")"
+if [ "$mode" != 600 ]; then
+  printf 'apm-mcp-check: %s is mode %s, want 600 (run: chmod 600 %s)\n' "$f" "$mode" "$f" >&2
+  exit 1
+fi
 jq -r '
   (.mcpServers // {}) | to_entries[] | .key as $s
   | ((.value.env // {}) + (.value.headers // {})) | to_entries[]
@@ -21,3 +28,17 @@ jq -r '
 ' "$f" | tee /dev/stderr | { ! grep -q 'LITERAL$'; }
 printf 'apm-mcp-check: ok\n'
 '''
+
+# Apply the MCP block of ~/.apm/apm.yml to ~/.claude.json.  apm rewrites the
+# file with its own mode (644 on this host, whatever the umask), so the task
+# restores 600 right after the install and then runs the check.  `--only mcp`
+# keeps apm from touching skills.  Use this task, not a bare `apm install`,
+# for an MCP change.
+[tasks.apm-mcp-install]
+description = "Apply the apm MCP block to ~/.claude.json, restore mode 600, then check"
+run = '''
+set -eu
+apm install -g --only mcp
+chmod 600 "${HOME}/.claude.json"
+'''
+depends_post = ["apm-mcp-check"]
